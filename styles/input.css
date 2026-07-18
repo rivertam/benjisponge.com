@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/* Section stylesheets (kept separate so each area owns its file). */
+@import "./site.css";
+@import "./planes-form.css";
+@import "./planes-receipt.css";
+@import "./planes-charts.css";
+
+/*
+ * The shell: "mill and oxide". Cool steel paper, iron ink, and one accent —
+ * the color literally named rust. Type is the Mozilla lineage Rust grew up
+ * in: Zilla Slab display, Fira Sans body, Fira Mono metadata.
+ */
+@theme {
+  --color-page: #f4f5f7;
+  --color-card: #ffffff;
+  --color-ink: #1d2126;
+  --color-ink2: #4c545e;
+  --color-muted: #8a929c;
+  --color-hairline: #dde1e6;
+  --color-oxide: #b7410e;
+  --color-oxide-hot: #d24a10;
+  --color-patina: #3e7a6c;
+
+  --font-display: "Zilla Slab", "Rockwell", serif;
+  --font-body: "Fira Sans", "Segoe UI", sans-serif;
+  --font-meta: "Fira Mono", ui-monospace, monospace;
+}
+
+/* Oxidation hover: interactive ink corrodes toward oxide. */
+a,
+button {
+  transition:
+    color 160ms ease,
+    text-decoration-color 160ms ease,
+    background-color 160ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition: none !important;
+    animation: none !important;
+  }
+}
