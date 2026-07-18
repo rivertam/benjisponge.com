@@ -31,11 +31,25 @@ fn chip_class(tech: &Tech) -> &'static str {
     }
 }
 
+fn is_active(tech: &Tech, filter: Option<&Tech>) -> bool {
+    filter.is_some_and(|active| active.name == tech.name)
+}
+
 /// Class for a stack chip, marking the one the page is filtered on.
 fn stack_chip_class(tech: &Tech, filter: Option<&Tech>) -> String {
-    match filter {
-        Some(active) if active.name == tech.name => format!("{} chip-active", chip_class(tech)),
-        _ => chip_class(tech).to_string(),
+    if is_active(tech, filter) {
+        format!("{} chip-active", chip_class(tech))
+    } else {
+        chip_class(tech).to_string()
+    }
+}
+
+/// The active chip toggles the filter off; every other chip turns it on.
+fn chip_href_for(tech: &Tech, filter: Option<&Tech>) -> String {
+    if is_active(tech, filter) {
+        "/resume".to_string()
+    } else {
+        filter_href(tech.name)
     }
 }
 
@@ -131,8 +145,13 @@ async fn resume(cx: &Cx) -> Result {
                                 for tech in role.stack.iter() {
                                     <a
                                         class=(stack_chip_class(tech, filter))
-                                        href=(filter_href(tech.name))
-                                    >(tech.name)</a>
+                                        href=(chip_href_for(tech, filter))
+                                    >
+                                        (tech.name)
+                                        if is_active(tech, filter) {
+                                            " ×"
+                                        }
+                                    </a>
                                 }
                             </div>
                         }
@@ -159,8 +178,13 @@ async fn resume(cx: &Cx) -> Result {
                         if find_tech(skill.name).is_some() {
                             <a
                                 class=(stack_chip_class(skill, filter))
-                                href=(filter_href(skill.name))
-                            >(skill.name)</a>
+                                href=(chip_href_for(skill, filter))
+                            >
+                                (skill.name)
+                                if is_active(skill, filter) {
+                                    " ×"
+                                }
+                            </a>
                         } else if let Some(href) = skill.href {
                             <a class=(chip_class(skill)) href=(href)>(skill.name)</a>
                         } else {
@@ -177,8 +201,10 @@ async fn resume(cx: &Cx) -> Result {
             <div class="rail-row">
                 <p class="rail-stamp uppercase tracking-[0.18em]">"patches"</p>
                 <p class="min-w-0 max-w-prose text-ink2">
-                    "Merged upstream, hand-picked from 138 — \
-                     proof of interest in interesting things."
+                    "I technically made these contributions to these projects."
+                    <br />
+                    "Almost all meaningless, but, hey, I've been \
+                     interested in cool stuff for a long time!"
                 </p>
             </div>
             for patch in PATCHES.iter() {
