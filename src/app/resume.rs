@@ -1,7 +1,7 @@
 use topcoat::{Result, router::page, view::view};
 
 use crate::{
-    content::experience::{EDUCATION, ROLES, Role, SKILLS},
+    content::experience::{EDUCATION, ROLES, Role, SKILLS, chip},
     design::{page_head, shell},
 };
 
@@ -13,29 +13,18 @@ fn org_line(role: &Role) -> String {
     }
 }
 
-/// Chip color encodes kind: languages oxidize, frameworks and disciplines
-/// patina, tools and infrastructure stay steel.
-fn chip_class(tech: &str) -> &'static str {
-    match tech {
-        "C++" | "TypeScript" | "Rust" | "Python" | "JavaScript" | "Ruby" => "chip chip-oxide",
-        "React Router" | "React" | "Prisma" | "DBOS" | "Ruby on Rails" | "ROS"
-        | "Software Design" | "Robotics" => "chip chip-patina",
-        _ => "chip chip-steel",
-    }
+// The view! grammar wants plain calls, so the parsed [`Chip`] is reached
+// through one accessor per field.
+fn chip_class(spec: &str) -> &'static str {
+    chip(spec).class
 }
 
-/// Project pages for the names a reader might not know on sight. Chips with
-/// an entry here render as links; household names stay plain text.
-fn chip_href(tech: &str) -> Option<&'static str> {
-    match tech {
-        "React Router" => Some("https://reactrouter.com"),
-        "Prisma" => Some("https://www.prisma.io"),
-        "DBOS" => Some("https://www.dbos.dev"),
-        "Railway" => Some("https://railway.com"),
-        "Graphite" => Some("https://graphite.dev"),
-        "ROS" => Some("https://www.ros.org"),
-        _ => None,
-    }
+fn chip_name(spec: &str) -> &str {
+    chip(spec).name
+}
+
+fn chip_href(spec: &str) -> Option<&str> {
+    chip(spec).href
 }
 
 #[page("/resume")]
@@ -61,9 +50,9 @@ async fn resume() -> Result {
                             <div class="mt-2 flex flex-wrap gap-1.5">
                                 for tech in role.stack.iter() {
                                     if let Some(href) = chip_href(tech) {
-                                        <a class=(chip_class(tech)) href=(href)>(*tech)</a>
+                                        <a class=(chip_class(tech)) href=(href)>(chip_name(tech))</a>
                                     } else {
-                                        <span class=(chip_class(tech))>(*tech)</span>
+                                        <span class=(chip_class(tech))>(chip_name(tech))</span>
                                     }
                                 }
                             </div>
@@ -87,9 +76,9 @@ async fn resume() -> Result {
                 <div class="flex min-w-0 flex-wrap gap-1.5">
                     for skill in SKILLS.iter() {
                         if let Some(href) = chip_href(skill) {
-                            <a class=(chip_class(skill)) href=(href)>(*skill)</a>
+                            <a class=(chip_class(skill)) href=(href)>(chip_name(skill))</a>
                         } else {
-                            <span class=(chip_class(skill))>(*skill)</span>
+                            <span class=(chip_class(skill))>(chip_name(skill))</span>
                         }
                     }
                 </div>

@@ -1,8 +1,3 @@
-//! Experience data for the resume page. Titles, orgs, and dates follow Ben's
-//! 2026 resume PDF (LinkedIn fills the internships the PDF omits); the
-//! bullets carry the resume's facts, reworded into the site's quieter voice.
-//! Empty fields mean the sources list nothing there.
-
 pub struct Role {
     /// Year span stamped in the margin rail.
     pub span: &'static str,
@@ -13,8 +8,41 @@ pub struct Role {
     pub dates: &'static str,
     /// What the work actually was, one line per point. Empty for internships.
     pub bullets: &'static [&'static str],
-    /// The tools of the era, rendered as chips. Empty to omit.
+    /// The tools of the era, rendered as chips. Each entry is a spec of the
+    /// form `[accent:]Name[ url]` — `oxide:` for languages, `patina:` for
+    /// frameworks and disciplines, no prefix for tools and infrastructure
+    /// (steel); a trailing ` https://…` turns the chip into a link. Parsed
+    /// by [`chip`].
     pub stack: &'static [&'static str],
+}
+
+/// A stack/skill chip, parsed from its spec string.
+pub struct Chip<'a> {
+    pub name: &'a str,
+    pub class: &'static str,
+    pub href: Option<&'a str>,
+}
+
+/// Parse a chip spec (see [`Role::stack`] for the format).
+pub fn chip(spec: &str) -> Chip<'_> {
+    let (class, rest) = match spec.split_once(':') {
+        Some(("oxide", rest)) => ("chip chip-oxide", rest),
+        Some(("patina", rest)) => ("chip chip-patina", rest),
+        // Any other colon belongs to the name (or a URL's `https://`).
+        _ => ("chip chip-steel", spec),
+    };
+    match rest.rsplit_once(' ') {
+        Some((name, url)) if url.starts_with("https://") || url.starts_with("http://") => Chip {
+            name,
+            class,
+            href: Some(url),
+        },
+        _ => Chip {
+            name: rest,
+            class,
+            href: None,
+        },
+    }
 }
 
 pub static ROLES: [Role; 6] = [
@@ -25,48 +53,48 @@ pub static ROLES: [Role; 6] = [
         place: "New York",
         dates: "Aug 2024 – present",
         bullets: &[
-            "Co-founded a chemical synthesis startup with two chemists; raised \
-             a seed round, along with the investor relations and business \
-             development that follow from one.",
-            "Leads a team of three engineers building a custom ERP/MRP for \
-             novel chemical synthesis and optimization — zero to one.",
-            "Durable agentic LLM workflows run through the product itself; \
-             built with heavy use of the agentic coding tools (Claude Code, \
-             Cursor, Codex, pi).",
+            "Co-founded a chemical synthesis startup with two chemists",
+            "Raised a seed round with MVP",
+            "Lead and mentored a team of three engineers building a custom ERP/MRP for \
+             novel chemical synthesis and optimization from zero to one, along with a handful of domain-oriented pivots",
+            "Product powered by LLM-powered durable workflows",
         ],
         stack: &[
-            "React Router",
-            "TypeScript",
-            "Prisma",
+            "oxide:TypeScript",
+            "patina:React Router https://reactrouter.com",
+            "patina:Prisma https://www.prisma.io",
+            "patina:DBOS https://www.dbos.dev",
             "Postgres",
-            "DBOS",
-            "Railway",
+            "Railway https://railway.com",
+            "AWS",
             "GitHub Actions",
+            "Graphite https://graphite.dev",
         ],
     },
     Role {
         span: "2017–2023",
         title: "Software Engineer",
         org: "Standard Bots",
-        place: "New York / remote",
+        place: "New York / hybrid",
         dates: "Sep 2017 – Mar 2023",
         bullets: &[
             "First dedicated software engineer; left a post-Series A company \
-             of ten-plus engineers and twenty employees.",
-            "Built and maintained the robotics engine — kinematics, control \
-             systems, motion planning, vision.",
+             of ten-plus engineers and twenty employees",
+            "Built and maintained the robotics engine — kinematics, dynamics, control \
+             systems, motion planning, vision",
             "Built the platform that runs the robots: a React remote control, \
-             a real-time server, WebRTC, ThreeJS, WebAssembly.",
+             a real-time server, WebRTC, ThreeJS, WebAssembly",
         ],
         stack: &[
-            "C++",
-            "TypeScript",
-            "Rust",
+            "oxide:C++",
+            "oxide:TypeScript",
+            "oxide:Rust",
+            "patina:React",
             "Linux",
-            "Postgres",
+            "WebRTC",
             "Firebase",
-            "Python",
             "Docker",
+            "patina:ROS https://www.ros.org",
         ],
     },
     Role {
@@ -75,8 +103,17 @@ pub static ROLES: [Role; 6] = [
         org: "A Plus",
         place: "New York",
         dates: "Jun 2015 – Dec 2016",
-        bullets: &["Ran every part of a digital publishing site's engineering."],
-        stack: &["Ruby on Rails", "React", "JavaScript"],
+        bullets: &[
+            "Joined a team of 6",
+            "As the company dwindled, became lead and only engineer, running the entire site's engineering",
+        ],
+        stack: &[
+            "oxide:Ruby",
+            "oxide:JavaScript",
+            "patina:Ruby on Rails",
+            "patina:React",
+            "AWS",
+        ],
     },
     Role {
         span: "2014",
@@ -84,7 +121,11 @@ pub static ROLES: [Role; 6] = [
         org: "Wolverine Trading",
         place: "Chicago",
         dates: "Summer 2014",
-        bullets: &[],
+        bullets: &[
+            "Fun summer during which I learned how to drink",
+            "Good environment but low-impact and not intellectually stimulating",
+            "While I already knew a good amount about finance, they did have us take an options trading course in which I learned a lot",
+        ],
         stack: &[],
     },
     Role {
@@ -93,7 +134,7 @@ pub static ROLES: [Role; 6] = [
         org: "Royal Caribbean",
         place: "",
         dates: "Summer 2012",
-        bullets: &[],
+        bullets: &["Kinda regret this one. Cruises are terrible for the environment!"],
         stack: &[],
     },
     Role {
@@ -102,7 +143,9 @@ pub static ROLES: [Role; 6] = [
         org: "Jackson Memorial Hospital",
         place: "",
         dates: "Summer 2009",
-        bullets: &[],
+        bullets: &[
+            "Kinda regret this one too. A lotta mice died, fortunately none directly by my hand.",
+        ],
         stack: &[],
     },
 ];
@@ -121,4 +164,11 @@ pub static EDUCATION: School = School {
     note: "Minor in Design.",
 };
 
-pub static SKILLS: [&str; 5] = ["Software Design", "Robotics", "C++", "TypeScript", "Rust"];
+/// Chip specs, same format as [`Role::stack`].
+pub static SKILLS: [&str; 5] = [
+    "patina:Software Design",
+    "patina:Robotics",
+    "oxide:C++",
+    "oxide:TypeScript",
+    "oxide:Rust",
+];
