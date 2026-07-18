@@ -1,3 +1,4 @@
+mod not_found;
 mod resume;
 mod thoughts;
 
