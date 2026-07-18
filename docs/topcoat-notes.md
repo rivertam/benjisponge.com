@@ -151,6 +151,11 @@ PORT=4610 ./target/debug/bens-site     # serve (defaults 127.0.0.1:3000)
 searches `target/assets`). Release: `cargo build -r && topcoat asset bundle -r`.
 `topcoat dev` = watch mode (build+bundle+serve), not script-friendly.
 `topcoat::dev::script()` = live-reload in dev; harmless in release.
+`PORT=4670 topcoat dev` — app keeps the PORT; the reload broadcast
+server takes its own ephemeral port (TOPCOAT_DEV_URL). Verified: save a
+src file → rebuild → open tabs reload themselves in a few seconds.
+CAVEAT: the watcher covers each package's `src/` ONLY — edits under
+`styles/` (or `data/`) don't trigger it; touch a src file or restart.
 
 ## Gotchas (several LEARNED THE HARD WAY here)
 
