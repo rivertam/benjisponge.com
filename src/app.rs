@@ -1,4 +1,4 @@
-mod experience;
+mod resume;
 mod thoughts;
 
 use topcoat::{
@@ -8,10 +8,7 @@ use topcoat::{
     view::view,
 };
 
-use crate::{
-    content::{experience::ROLES, posts::POSTS},
-    design::shell,
-};
+use crate::{content::posts::POSTS, design::shell};
 
 pub fn router() -> Router {
     Router::builder()
@@ -22,7 +19,6 @@ pub fn router() -> Router {
 
 #[page("/")]
 async fn home() -> Result {
-    let current = &ROLES[0];
     let body = view! {
         // Hero: the three-word bio, huge. "Rust." takes the accent — it is,
         // after all, the color the palette is named for.
@@ -53,23 +49,6 @@ async fn home() -> Result {
                     </div>
                 </article>
             }
-        </section>
-
-        <section class="mt-20 space-y-8 border-t border-hairline pt-8">
-            <div class="rail-row">
-                <h2 class="rail-stamp uppercase tracking-[0.18em]">"Experience"</h2>
-                <div></div>
-            </div>
-            <div class="rail-row">
-                <p class="rail-stamp">(current.span)</p>
-                <div class="min-w-0">
-                    <p class="font-display text-xl leading-snug font-semibold">(current.title)</p>
-                    <p class="mt-1 text-ink2">(format!("{} · {}", current.org, current.place))</p>
-                    <p class="mt-4">
-                        <a class="oxlink font-meta text-sm" href="/experience">"full timeline →"</a>
-                    </p>
-                </div>
-            </div>
         </section>
     }?;
     view! { shell(title: "Ben Berman", body: body) }

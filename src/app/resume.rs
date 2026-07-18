@@ -13,10 +13,10 @@ fn org_line(role: &Role) -> String {
     }
 }
 
-#[page("/experience")]
-async fn experience() -> Result {
+#[page("/resume")]
+async fn resume() -> Result {
     let body = view! {
-        page_head(stamp: "timeline", title: "Experience", lede: "")
+        page_head(stamp: "timeline", title: "Resume", lede: "")
         <section class="mt-14 space-y-12">
             for role in ROLES.iter() {
                 <article class="rail-row">
@@ -48,5 +48,5 @@ async fn experience() -> Result {
             </div>
         </section>
     }?;
-    view! { shell(title: "Experience — Ben Berman", body: body) }
+    view! { shell(title: "Resume — Ben Berman", body: body) }
 }

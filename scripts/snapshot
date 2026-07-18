@@ -28,7 +28,7 @@ ROUTES=$'/\thome
 /thoughts/how-bad-are-planes\tplanes-empty
 /thoughts/how-bad-are-planes?from=JFK&to=LHR\tplanes-jfk-lhr
 /thoughts/how-bad-are-planes?from=JFK&to=LHR&view=compare\tplanes-compare
-/experience\texperience'
+/resume\tresume'
 
 WIDTHS=(1440 390)
 VIEW_H=900 # viewport height; full-page capture extends beyond it
