@@ -13,10 +13,21 @@ fn org_line(role: &Role) -> String {
     }
 }
 
+/// Chip color encodes kind: languages oxidize, frameworks and disciplines
+/// patina, tools and infrastructure stay steel.
+fn chip_class(tech: &str) -> &'static str {
+    match tech {
+        "C++" | "TypeScript" | "Rust" | "Python" | "JavaScript" => "chip chip-oxide",
+        "React Router" | "React" | "Prisma" | "DBOS" | "Ruby on Rails" | "Software Design"
+        | "Robotics" => "chip chip-patina",
+        _ => "chip chip-steel",
+    }
+}
+
 #[page("/resume")]
 async fn resume() -> Result {
     let body = view! {
-        page_head(stamp: "timeline", title: "Resume", lede: "")
+        page_head(stamp: "timeline", title: "Résumé", lede: "")
         <section class="mt-14 space-y-12">
             for role in ROLES.iter() {
                 <article class="rail-row">
@@ -33,7 +44,11 @@ async fn resume() -> Result {
                         }
                         <p class="mt-3 font-meta text-xs text-muted">(role.dates)</p>
                         if !role.stack.is_empty() {
-                            <p class="mt-1 font-meta text-xs text-muted">(role.stack)</p>
+                            <div class="mt-2 flex flex-wrap gap-1.5">
+                                for tech in role.stack.iter() {
+                                    <span class=(chip_class(tech))>(*tech)</span>
+                                }
+                            </div>
                         }
                     </div>
                 </article>
@@ -51,9 +66,13 @@ async fn resume() -> Result {
             </article>
             <div class="rail-row">
                 <p class="rail-stamp uppercase tracking-[0.18em]">"Skills"</p>
-                <p class="min-w-0 font-meta text-sm text-ink2">(SKILLS.join(" · "))</p>
+                <div class="flex min-w-0 flex-wrap gap-1.5">
+                    for skill in SKILLS.iter() {
+                        <span class=(chip_class(skill))>(*skill)</span>
+                    }
+                </div>
             </div>
         </section>
     }?;
-    view! { shell(title: "Resume — Ben Berman", body: body) }
+    view! { shell(title: "Résumé — Ben Berman", body: body) }
 }

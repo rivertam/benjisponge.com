@@ -13,8 +13,8 @@ pub struct Role {
     pub dates: &'static str,
     /// What the work actually was, one line per point. Empty for internships.
     pub bullets: &'static [&'static str],
-    /// The tools of the era, rendered as a mono footnote. Empty to omit.
-    pub stack: &'static str,
+    /// The tools of the era, rendered as chips. Empty to omit.
+    pub stack: &'static [&'static str],
 }
 
 pub static ROLES: [Role; 6] = [
@@ -34,7 +34,15 @@ pub static ROLES: [Role; 6] = [
              built with heavy use of the agentic coding tools (Claude Code, \
              Cursor, Codex, pi).",
         ],
-        stack: "React Router · TypeScript · Prisma · Postgres · DBOS · Railway · GitHub Actions",
+        stack: &[
+            "React Router",
+            "TypeScript",
+            "Prisma",
+            "Postgres",
+            "DBOS",
+            "Railway",
+            "GitHub Actions",
+        ],
     },
     Role {
         span: "2017–2023",
@@ -50,7 +58,16 @@ pub static ROLES: [Role; 6] = [
             "Built the platform that runs the robots: a React remote control, \
              a real-time server, WebRTC, ThreeJS, WebAssembly.",
         ],
-        stack: "C++ · TypeScript · Rust · Linux · Postgres · Firebase · Python · Docker",
+        stack: &[
+            "C++",
+            "TypeScript",
+            "Rust",
+            "Linux",
+            "Postgres",
+            "Firebase",
+            "Python",
+            "Docker",
+        ],
     },
     Role {
         span: "2015–2016",
@@ -59,7 +76,7 @@ pub static ROLES: [Role; 6] = [
         place: "New York",
         dates: "Jun 2015 – Dec 2016",
         bullets: &["Ran every part of a digital publishing site's engineering."],
-        stack: "Ruby on Rails · React · JavaScript",
+        stack: &["Ruby on Rails", "React", "JavaScript"],
     },
     Role {
         span: "2014",
@@ -68,7 +85,7 @@ pub static ROLES: [Role; 6] = [
         place: "Chicago",
         dates: "Summer 2014",
         bullets: &[],
-        stack: "",
+        stack: &[],
     },
     Role {
         span: "2012",
@@ -77,7 +94,7 @@ pub static ROLES: [Role; 6] = [
         place: "",
         dates: "Summer 2012",
         bullets: &[],
-        stack: "",
+        stack: &[],
     },
     Role {
         span: "2009",
@@ -86,7 +103,7 @@ pub static ROLES: [Role; 6] = [
         place: "",
         dates: "Summer 2009",
         bullets: &[],
-        stack: "",
+        stack: &[],
     },
 ];
 

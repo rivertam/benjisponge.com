@@ -42,7 +42,7 @@ pub async fn shell(title: &str, body: View) -> Result {
                     >"Ben Berman"</a>
                     <nav class="flex gap-6 font-meta text-sm">
                         <a href="/thoughts" class="quiet-link">"thoughts"</a>
-                        <a href="/resume" class="quiet-link">"resume"</a>
+                        <a href="/resume" class="quiet-link">"résumé"</a>
                     </nav>
                 </header>
                 <main class="mx-auto w-full max-w-4xl flex-1 px-5 pb-20">(body)</main>

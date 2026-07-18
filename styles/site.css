@@ -75,6 +75,41 @@
   color: var(--color-oxide);
 }
 
+/*
+ * Tech chips: mono tags for the résumé's stacks and skills. Color encodes
+ * kind — languages oxidize, frameworks and disciplines patina, tools and
+ * infrastructure stay steel.
+ */
+.chip {
+  display: inline-block;
+  font-family: var(--font-meta);
+  font-size: 0.7rem;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  padding: 0.32rem 0.55rem;
+  border-radius: 0.3rem;
+  border: 1px solid;
+  white-space: nowrap;
+}
+
+.chip-oxide {
+  color: var(--color-oxide);
+  border-color: color-mix(in srgb, var(--color-oxide) 30%, transparent);
+  background: color-mix(in srgb, var(--color-oxide) 6%, transparent);
+}
+
+.chip-patina {
+  color: var(--color-patina);
+  border-color: color-mix(in srgb, var(--color-patina) 32%, transparent);
+  background: color-mix(in srgb, var(--color-patina) 7%, transparent);
+}
+
+.chip-steel {
+  color: var(--color-ink2);
+  border-color: var(--color-hairline);
+  background: color-mix(in srgb, var(--color-ink) 3%, transparent);
+}
+
 /* Quiet chrome links (nav, footer): muted until they oxidize. */
 .quiet-link {
   color: var(--color-ink2);
