@@ -110,6 +110,19 @@
   background: color-mix(in srgb, var(--color-ink) 3%, transparent);
 }
 
+/* Chips that link out: quiet until hover, when the border takes full ink. */
+a.chip {
+  text-decoration: none;
+}
+
+a.chip:hover,
+a.chip:focus-visible {
+  border-color: currentColor;
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
+  text-underline-offset: 0.22em;
+}
+
 /* Quiet chrome links (nav, footer): muted until they oxidize. */
 .quiet-link {
   color: var(--color-ink2);

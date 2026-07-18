@@ -24,6 +24,18 @@ fn chip_class(tech: &str) -> &'static str {
     }
 }
 
+/// Project pages for the names a reader might not know on sight. Chips with
+/// an entry here render as links; household names stay plain text.
+fn chip_href(tech: &str) -> Option<&'static str> {
+    match tech {
+        "React Router" => Some("https://reactrouter.com"),
+        "Prisma" => Some("https://www.prisma.io"),
+        "DBOS" => Some("https://www.dbos.dev"),
+        "Railway" => Some("https://railway.com"),
+        _ => None,
+    }
+}
+
 #[page("/resume")]
 async fn resume() -> Result {
     let body = view! {
@@ -46,7 +58,11 @@ async fn resume() -> Result {
                         if !role.stack.is_empty() {
                             <div class="mt-2 flex flex-wrap gap-1.5">
                                 for tech in role.stack.iter() {
-                                    <span class=(chip_class(tech))>(*tech)</span>
+                                    if let Some(href) = chip_href(tech) {
+                                        <a class=(chip_class(tech)) href=(href)>(*tech)</a>
+                                    } else {
+                                        <span class=(chip_class(tech))>(*tech)</span>
+                                    }
                                 }
                             </div>
                         }
@@ -68,7 +84,11 @@ async fn resume() -> Result {
                 <p class="rail-stamp uppercase tracking-[0.18em]">"Skills"</p>
                 <div class="flex min-w-0 flex-wrap gap-1.5">
                     for skill in SKILLS.iter() {
-                        <span class=(chip_class(skill))>(*skill)</span>
+                        if let Some(href) = chip_href(skill) {
+                            <a class=(chip_class(skill)) href=(href)>(*skill)</a>
+                        } else {
+                            <span class=(chip_class(skill))>(*skill)</span>
+                        }
                     }
                 </div>
             </div>
