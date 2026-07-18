@@ -1,0 +1,21 @@
+# snapshot 2026-07-18T2232 sha=0bfdc0e label=v2 base=http://127.0.0.1:4630
+# full-page via CDP Page.captureScreenshot captureBeyondViewport (viewport 900px)
+name	url	width	file	bytes	dimensions
+home	/	1440	home@1440.png	49883	1440x900
+home	/	390	home@390.png	42183	390x900
+thoughts	/thoughts	1440	thoughts@1440.png	40288	1440x900
+thoughts	/thoughts	390	thoughts@390.png	34783	390x900
+pesky-code	/thoughts/pesky-code	1440	pesky-code@1440.png	49124	1440x900
+pesky-code	/thoughts/pesky-code	390	pesky-code@390.png	47133	390x900
+planes-empty	/thoughts/how-bad-are-planes	1440	planes-empty@1440.png	58568	1440x900
+planes-empty	/thoughts/how-bad-are-planes	390	planes-empty@390.png	53795	390x945
+planes-jfk-lhr	/thoughts/how-bad-are-planes?from=JFK&to=LHR	1440	planes-jfk-lhr@1440.png	1191611	1440x7656
+planes-jfk-lhr	/thoughts/how-bad-are-planes?from=JFK&to=LHR	390	planes-jfk-lhr@390.png	1110260	403x13513
+planes-compare	/thoughts/how-bad-are-planes?from=JFK&to=LHR&view=compare	1440	planes-compare@1440.png	1024032	1440x6656
+planes-compare	/thoughts/how-bad-are-planes?from=JFK&to=LHR&view=compare	390	planes-compare@390.png	965499	390x11941
+resume	/resume	1440	resume@1440.png	298605	1440x2633
+resume	/resume	390	resume@390.png	279821	390x3766
+resume-filtered-rust	/resume?tech=Rust	1440	resume-filtered-rust@1440.png	156196	1440x1432
+resume-filtered-rust	/resume?tech=Rust	390	resume-filtered-rust@390.png	146119	390x2126
+not-found	/thouhgts	1440	not-found@1440.png	40098	1440x900
+not-found	/thouhgts	390	not-found@390.png	33139	390x900
