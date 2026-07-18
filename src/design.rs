@@ -48,10 +48,17 @@ pub async fn shell(title: &str, body: View) -> Result {
                 <main class="mx-auto w-full max-w-4xl flex-1 px-5 pb-20">(body)</main>
                 <footer class="mx-auto w-full max-w-4xl px-5 pb-8">
                     <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-t border-hairline pt-4 font-meta text-xs text-muted">
-                        <a
-                            href="https://www.linkedin.com/in/benmberman"
-                            class="quiet-link"
-                        >"LinkedIn"</a>
+                        <span class="flex flex-wrap gap-x-5 gap-y-2">
+                            <a
+                                href="https://www.linkedin.com/in/benmberman"
+                                class="quiet-link"
+                            >"LinkedIn"</a>
+                            <a href="https://github.com/rivertam" class="quiet-link">"GitHub"</a>
+                            <a
+                                href="https://www.reddit.com/user/BenjiSponge"
+                                class="quiet-link"
+                            >"Reddit"</a>
+                        </span>
                         <span>
                             "made with "
                             <a href="https://github.com/tokio-rs/topcoat" class="quiet-link">"topcoat"</a>
