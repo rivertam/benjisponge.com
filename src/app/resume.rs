@@ -17,9 +17,9 @@ fn org_line(role: &Role) -> String {
 /// patina, tools and infrastructure stay steel.
 fn chip_class(tech: &str) -> &'static str {
     match tech {
-        "C++" | "TypeScript" | "Rust" | "Python" | "JavaScript" => "chip chip-oxide",
-        "React Router" | "React" | "Prisma" | "DBOS" | "Ruby on Rails" | "Software Design"
-        | "Robotics" => "chip chip-patina",
+        "C++" | "TypeScript" | "Rust" | "Python" | "JavaScript" | "Ruby" => "chip chip-oxide",
+        "React Router" | "React" | "Prisma" | "DBOS" | "Ruby on Rails" | "ROS"
+        | "Software Design" | "Robotics" => "chip chip-patina",
         _ => "chip chip-steel",
     }
 }
@@ -32,6 +32,8 @@ fn chip_href(tech: &str) -> Option<&'static str> {
         "Prisma" => Some("https://www.prisma.io"),
         "DBOS" => Some("https://www.dbos.dev"),
         "Railway" => Some("https://railway.com"),
+        "Graphite" => Some("https://graphite.dev"),
+        "ROS" => Some("https://www.ros.org"),
         _ => None,
     }
 }
