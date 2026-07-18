@@ -110,6 +110,12 @@
   background: color-mix(in srgb, var(--color-ink) 3%, transparent);
 }
 
+/* The chip the résumé is currently filtered on. */
+.chip-active {
+  border-color: currentColor;
+  font-weight: 700;
+}
+
 /* Chips that link out: quiet until hover, when the border takes full ink. */
 a.chip {
   text-decoration: none;

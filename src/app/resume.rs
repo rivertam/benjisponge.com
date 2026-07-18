@@ -1,7 +1,15 @@
-use topcoat::{Result, router::page, view::view};
+use topcoat::{
+    Result,
+    context::Cx,
+    router::{page, query_params},
+    view::view,
+};
 
 use crate::{
-    content::experience::{EDUCATION, ROLES, Role, SKILLS, Tech, TechKind},
+    content::{
+        experience::{EDUCATION, ROLES, Role, SKILLS, Tech, TechKind},
+        patches::PATCHES,
+    },
     design::{page_head, shell},
 };
 
@@ -23,12 +31,88 @@ fn chip_class(tech: &Tech) -> &'static str {
     }
 }
 
+/// Class for a stack chip, marking the one the page is filtered on.
+fn stack_chip_class(tech: &Tech, filter: Option<&Tech>) -> String {
+    match filter {
+        Some(active) if active.name == tech.name => format!("{} chip-active", chip_class(tech)),
+        _ => chip_class(tech).to_string(),
+    }
+}
+
+/// The canonical chip for a (case-insensitively matched) tech name, if any
+/// role's stack mentions it.
+fn find_tech(name: &str) -> Option<&'static Tech> {
+    ROLES
+        .iter()
+        .flat_map(|role| role.stack.iter())
+        .find(|tech| tech.name.eq_ignore_ascii_case(name))
+}
+
+fn touches(role: &Role, name: &str) -> bool {
+    role.stack.iter().any(|tech| tech.name == name)
+}
+
+/// Filter link for a chip: the résumé queried by one technology.
+fn filter_href(name: &str) -> String {
+    let mut encoded = String::new();
+    for byte in name.bytes() {
+        match byte {
+            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
+                encoded.push(byte as char)
+            }
+            _ => encoded.push_str(&format!("%{byte:02X}")),
+        }
+    }
+    format!("/resume?tech={encoded}")
+}
+
+#[query_params(error = redirect("?"))]
+struct ResumeQuery {
+    tech: Option<String>,
+}
+
 #[page("/resume")]
-async fn resume() -> Result {
+async fn resume(cx: &Cx) -> Result {
+    let q = query_params::<ResumeQuery>(cx)?;
+    // An unrecognized tech silently falls back to the full timeline.
+    let filter = q.tech.as_deref().and_then(|name| find_tech(name.trim()));
+
+    let shown: Vec<&Role> = match filter {
+        Some(active) => ROLES.iter().filter(|r| touches(r, active.name)).collect(),
+        None => ROLES.iter().collect(),
+    };
+    let filter_line = filter.map(|active| {
+        format!(
+            "{} of {} roles touched {}.",
+            shown.len(),
+            ROLES.len(),
+            active.name
+        )
+    });
+
+    let title = match filter {
+        Some(active) => format!("Résumé · {} — Ben Berman", active.name),
+        None => "Résumé — Ben Berman".to_string(),
+    };
+
     let body = view! {
         page_head(stamp: "timeline", title: "Résumé", lede: "")
+        if let Some(line) = filter_line {
+            <div class="rail-row mt-8">
+                <p class="rail-stamp uppercase tracking-[0.18em]">"filter"</p>
+                <div class="flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-1">
+                    <p class="text-ink2">(line)</p>
+                    if let Some(active) = filter {
+                        if let Some(href) = active.href {
+                            <a class="oxlink font-meta text-sm" href=(href)>"project page →"</a>
+                        }
+                    }
+                    <a class="oxlink font-meta text-sm" href="/resume">"clear ×"</a>
+                </div>
+            </div>
+        }
         <section class="mt-14 space-y-12">
-            for role in ROLES.iter() {
+            for role in shown.iter() {
                 <article class="rail-row">
                     <p class="rail-stamp">(role.span)</p>
                     <div class="min-w-0">
@@ -45,11 +129,10 @@ async fn resume() -> Result {
                         if !role.stack.is_empty() {
                             <div class="mt-2 flex flex-wrap gap-1.5">
                                 for tech in role.stack.iter() {
-                                    if let Some(href) = tech.href {
-                                        <a class=(chip_class(tech)) href=(href)>(tech.name)</a>
-                                    } else {
-                                        <span class=(chip_class(tech))>(tech.name)</span>
-                                    }
+                                    <a
+                                        class=(stack_chip_class(tech, filter))
+                                        href=(filter_href(tech.name))
+                                    >(tech.name)</a>
                                 }
                             </div>
                         }
@@ -71,7 +154,14 @@ async fn resume() -> Result {
                 <p class="rail-stamp uppercase tracking-[0.18em]">"Skills"</p>
                 <div class="flex min-w-0 flex-wrap gap-1.5">
                     for skill in SKILLS.iter() {
-                        if let Some(href) = skill.href {
+                        // Skills that appear in a role's stack filter the
+                        // timeline like any chip; the rest are plain tags.
+                        if find_tech(skill.name).is_some() {
+                            <a
+                                class=(stack_chip_class(skill, filter))
+                                href=(filter_href(skill.name))
+                            >(skill.name)</a>
+                        } else if let Some(href) = skill.href {
                             <a class=(chip_class(skill)) href=(href)>(skill.name)</a>
                         } else {
                             <span class=(chip_class(skill))>(skill.name)</span>
@@ -80,6 +170,28 @@ async fn resume() -> Result {
                 </div>
             </div>
         </section>
+
+        // The aside: hand-picked merged patches, shortlog-style. Small type
+        // on purpose — the timeline above is the résumé; this is a hobby.
+        <section class="mt-16 space-y-3 border-t border-hairline pt-10">
+            <div class="rail-row">
+                <p class="rail-stamp uppercase tracking-[0.18em]">"patches"</p>
+                <p class="min-w-0 max-w-prose text-ink2">
+                    "Merged upstream, hand-picked from 138 — \
+                     proof of interest in interesting things."
+                </p>
+            </div>
+            for patch in PATCHES.iter() {
+                <div class="rail-row">
+                    <p class="rail-stamp">(patch.year)</p>
+                    <p class="min-w-0 font-meta text-sm text-ink2">
+                        (patch.repo)
+                        " — "
+                        <a class="oxlink" href=(patch.url)>(patch.title)</a>
+                    </p>
+                </div>
+            }
+        </section>
     }?;
-    view! { shell(title: "Résumé — Ben Berman", body: body) }
+    view! { shell(title: title.as_str(), body: body) }
 }
