@@ -61,6 +61,20 @@
   text-decoration-thickness: 0.14em;
 }
 
+/* Resume bullets: en-dash markers in the rail's mono voice, tipped oxide. */
+.role-bullets li {
+  position: relative;
+  padding-left: 1.25rem;
+}
+
+.role-bullets li::before {
+  content: "–";
+  position: absolute;
+  left: 0;
+  font-family: var(--font-meta);
+  color: var(--color-oxide);
+}
+
 /* Quiet chrome links (nav, footer): muted until they oxidize. */
 .quiet-link {
   color: var(--color-ink2);

@@ -24,10 +24,17 @@ async fn resume() -> Result {
                     <div class="min-w-0">
                         <h2 class="font-display text-2xl leading-snug font-semibold">(role.title)</h2>
                         <p class="mt-1 text-ink2">(org_line(role))</p>
-                        if !role.note.is_empty() {
-                            <p class="mt-1 text-ink2">(role.note)</p>
+                        if !role.bullets.is_empty() {
+                            <ul class="role-bullets mt-3 max-w-prose space-y-1.5 text-ink2">
+                                for bullet in role.bullets.iter() {
+                                    <li>(*bullet)</li>
+                                }
+                            </ul>
                         }
-                        <p class="mt-2 font-meta text-xs text-muted">(role.dates)</p>
+                        <p class="mt-3 font-meta text-xs text-muted">(role.dates)</p>
+                        if !role.stack.is_empty() {
+                            <p class="mt-1 font-meta text-xs text-muted">(role.stack)</p>
+                        }
                     </div>
                 </article>
             }

@@ -52,7 +52,10 @@ pub async fn shell(title: &str, body: View) -> Result {
                             href="https://www.linkedin.com/in/benmberman"
                             class="quiet-link"
                         >"LinkedIn"</a>
-                        <span>"server-rendered Rust · topcoat"</span>
+                        <span>
+                            "made with "
+                            <a href="https://github.com/tokio-rs/topcoat" class="quiet-link">"topcoat"</a>
+                        </span>
                     </div>
                 </footer>
             </body>
