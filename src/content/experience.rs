@@ -8,41 +8,65 @@ pub struct Role {
     pub dates: &'static str,
     /// What the work actually was, one line per point. Empty for internships.
     pub bullets: &'static [&'static str],
-    /// The tools of the era, rendered as chips. Each entry is a spec of the
-    /// form `[accent:]Name[ url]` — `oxide:` for languages, `patina:` for
-    /// frameworks and disciplines, no prefix for tools and infrastructure
-    /// (steel); a trailing ` https://…` turns the chip into a link. Parsed
-    /// by [`chip`].
-    pub stack: &'static [&'static str],
+    /// The tools of the era, rendered as chips. Built with the semantic
+    /// constructors below: [`language`], [`library`], [`discipline`],
+    /// [`tool`].
+    pub stack: &'static [Tech],
 }
 
-/// A stack/skill chip, parsed from its spec string.
-pub struct Chip<'a> {
-    pub name: &'a str,
-    pub class: &'static str,
-    pub href: Option<&'a str>,
+/// What kind of thing a chip names. Purely semantic — the résumé page
+/// decides what each kind looks like.
+#[derive(Clone, Copy)]
+pub enum TechKind {
+    Language,
+    Library,
+    Discipline,
+    Tool,
 }
 
-/// Parse a chip spec (see [`Role::stack`] for the format).
-pub fn chip(spec: &str) -> Chip<'_> {
-    let (class, rest) = match spec.split_once(':') {
-        Some(("oxide", rest)) => ("chip chip-oxide", rest),
-        Some(("patina", rest)) => ("chip chip-patina", rest),
-        // Any other colon belongs to the name (or a URL's `https://`).
-        _ => ("chip chip-steel", spec),
-    };
-    match rest.rsplit_once(' ') {
-        Some((name, url)) if url.starts_with("https://") || url.starts_with("http://") => Chip {
+/// One chip: a name, what kind of thing it is, and an optional project
+/// page for names a reader might not know on sight. Build with
+/// [`language`], [`library`], [`discipline`], or [`tool`]; chain
+/// [`Tech::at`] to link it.
+pub struct Tech {
+    pub name: &'static str,
+    pub kind: TechKind,
+    pub href: Option<&'static str>,
+}
+
+impl Tech {
+    const fn new(kind: TechKind, name: &'static str) -> Self {
+        Tech {
             name,
-            class,
-            href: Some(url),
-        },
-        _ => Chip {
-            name: rest,
-            class,
+            kind,
             href: None,
-        },
+        }
     }
+
+    /// Attach the project page: `library("DBOS").at("https://www.dbos.dev")`.
+    pub const fn at(self, url: &'static str) -> Self {
+        Tech {
+            name: self.name,
+            kind: self.kind,
+            href: Some(url),
+        }
+    }
+}
+
+pub const fn language(name: &'static str) -> Tech {
+    Tech::new(TechKind::Language, name)
+}
+
+pub const fn library(name: &'static str) -> Tech {
+    Tech::new(TechKind::Library, name)
+}
+
+pub const fn discipline(name: &'static str) -> Tech {
+    Tech::new(TechKind::Discipline, name)
+}
+
+pub const fn tool(name: &'static str) -> Tech {
+    Tech::new(TechKind::Tool, name)
 }
 
 pub static ROLES: [Role; 6] = [
@@ -60,15 +84,15 @@ pub static ROLES: [Role; 6] = [
             "Product powered by LLM-powered durable workflows",
         ],
         stack: &[
-            "oxide:TypeScript",
-            "patina:React Router https://reactrouter.com",
-            "patina:Prisma https://www.prisma.io",
-            "patina:DBOS https://www.dbos.dev",
-            "Postgres",
-            "Railway https://railway.com",
-            "AWS",
-            "GitHub Actions",
-            "Graphite https://graphite.dev",
+            language("TypeScript"),
+            library("React Router").at("https://reactrouter.com"),
+            library("Prisma").at("https://www.prisma.io"),
+            library("DBOS").at("https://www.dbos.dev"),
+            tool("Postgres"),
+            tool("Railway").at("https://railway.com"),
+            tool("AWS"),
+            tool("GitHub Actions"),
+            tool("Graphite").at("https://graphite.dev"),
         ],
     },
     Role {
@@ -86,15 +110,15 @@ pub static ROLES: [Role; 6] = [
              a real-time server, WebRTC, ThreeJS, WebAssembly",
         ],
         stack: &[
-            "oxide:C++",
-            "oxide:TypeScript",
-            "oxide:Rust",
-            "patina:React",
-            "Linux",
-            "WebRTC",
-            "Firebase",
-            "Docker",
-            "patina:ROS https://www.ros.org",
+            language("C++"),
+            language("TypeScript"),
+            language("Rust"),
+            library("React"),
+            tool("Linux"),
+            tool("WebRTC"),
+            tool("Firebase"),
+            tool("Docker"),
+            library("ROS").at("https://www.ros.org"),
         ],
     },
     Role {
@@ -108,11 +132,11 @@ pub static ROLES: [Role; 6] = [
             "As the company dwindled, became lead and only engineer, running the entire site's engineering",
         ],
         stack: &[
-            "oxide:Ruby",
-            "oxide:JavaScript",
-            "patina:Ruby on Rails",
-            "patina:React",
-            "AWS",
+            language("Ruby"),
+            language("JavaScript"),
+            library("Ruby on Rails"),
+            library("React"),
+            tool("AWS"),
         ],
     },
     Role {
@@ -164,11 +188,10 @@ pub static EDUCATION: School = School {
     note: "Minor in Design.",
 };
 
-/// Chip specs, same format as [`Role::stack`].
-pub static SKILLS: [&str; 5] = [
-    "patina:Software Design",
-    "patina:Robotics",
-    "oxide:C++",
-    "oxide:TypeScript",
-    "oxide:Rust",
+pub static SKILLS: [Tech; 5] = [
+    discipline("Software Design"),
+    discipline("Robotics"),
+    language("C++"),
+    language("TypeScript"),
+    language("Rust"),
 ];
