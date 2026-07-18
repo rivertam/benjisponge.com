@@ -1,4 +1,9 @@
-//! Shared chrome: fonts, the document shell, and the margin rail.
+//! Shared chrome: fonts, the document shell, the margin rail, and page heads.
+//!
+//! The shell is "mill and oxide": cool steel paper, iron ink, one accent — the
+//! color literally named rust. The signature is the margin rail (`.rail-row` /
+//! `.rail-stamp` in `styles/site.css`): a narrow left column of Fira Mono
+//! metadata, like the stamped margin of an engineering logbook.
 
 use topcoat::{
     Result,
@@ -29,16 +34,45 @@ pub async fn shell(title: &str, body: View) -> Result {
                 topcoat::font::link(font: FIRA_SANS)
                 topcoat::font::link(font: FIRA_MONO)
             </head>
-            <body class="min-h-screen bg-page font-body text-ink">
-                <header class="mx-auto flex max-w-4xl items-baseline justify-between px-5 pt-6">
-                    <a href="/" class="font-display text-lg font-semibold no-underline">"Ben Berman"</a>
-                    <nav class="flex gap-5 font-meta text-sm">
-                        <a href="/thoughts" class="no-underline hover:text-oxide">"thoughts"</a>
-                        <a href="/experience" class="no-underline hover:text-oxide">"experience"</a>
+            <body class="flex min-h-screen flex-col bg-page font-body text-ink">
+                <header class="mx-auto flex w-full max-w-4xl items-baseline justify-between px-5 pt-6">
+                    <a
+                        href="/"
+                        class="font-display text-lg font-semibold text-ink no-underline hover:text-oxide"
+                    >"Ben Berman"</a>
+                    <nav class="flex gap-6 font-meta text-sm">
+                        <a href="/thoughts" class="quiet-link">"thoughts"</a>
+                        <a href="/experience" class="quiet-link">"experience"</a>
                     </nav>
                 </header>
-                <main class="mx-auto max-w-4xl px-5 pb-16">(body)</main>
+                <main class="mx-auto w-full max-w-4xl flex-1 px-5 pb-20">(body)</main>
+                <footer class="mx-auto w-full max-w-4xl px-5 pb-8">
+                    <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-t border-hairline pt-4 font-meta text-xs text-muted">
+                        <a
+                            href="https://www.linkedin.com/in/benmberman"
+                            class="quiet-link"
+                        >"LinkedIn"</a>
+                        <span>"server-rendered Rust · topcoat"</span>
+                    </div>
+                </footer>
             </body>
         </html>
+    }
+}
+
+/// A page's opening rail row: a mono stamp in the margin, a Zilla Slab title,
+/// and an optional one-line lede (pass `""` to omit).
+#[component]
+pub async fn page_head(stamp: &str, title: &str, lede: &str) -> Result {
+    view! {
+        <header class="rail-row mt-16">
+            <p class="rail-stamp uppercase tracking-[0.18em]">(stamp)</p>
+            <div class="min-w-0">
+                <h1 class="font-display text-4xl font-bold tracking-tight">(title)</h1>
+                if !lede.is_empty() {
+                    <p class="mt-3 max-w-prose text-ink2">(lede)</p>
+                }
+            </div>
+        </header>
     }
 }

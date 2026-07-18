@@ -1,1 +1,76 @@
-/* filled in by the port */
+/*
+ * Shell chrome: the margin rail and the oxidation links.
+ * Palette and fonts are theme tokens in input.css.
+ */
+
+/*
+ * The margin rail — the site's signature. A narrow left column of Fira Mono
+ * metadata (dates on the log, year spans on the timeline, section stamps
+ * elsewhere), like the stamped margin of an engineering logbook. Below 40rem
+ * the column collapses and each stamp becomes an inline eyebrow above its
+ * entry.
+ */
+.rail-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  row-gap: 0.4rem;
+}
+
+.rail-stamp {
+  font-family: var(--font-meta);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  letter-spacing: 0.05em;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+@media (min-width: 40rem) {
+  .rail-row {
+    grid-template-columns: 8.5rem minmax(0, 1fr);
+    column-gap: 2.5rem;
+    align-items: baseline; /* stamp sits on the entry's first line */
+  }
+
+  .rail-row > .rail-stamp {
+    text-align: right;
+  }
+}
+
+/*
+ * Oxidation hover: interactive ink corrodes toward oxide and the underline
+ * thickens. The reduced-motion kill switch in input.css disables the
+ * transition; the color change still happens.
+ */
+.oxlink {
+  color: var(--color-ink);
+  text-decoration-line: underline;
+  text-decoration-color: var(--color-hairline);
+  text-decoration-thickness: 0.055em;
+  text-underline-offset: 0.22em;
+  transition:
+    color 160ms ease,
+    text-decoration-color 160ms ease,
+    text-decoration-thickness 160ms ease;
+}
+
+.oxlink:hover,
+.oxlink:focus-visible {
+  color: var(--color-oxide);
+  text-decoration-color: var(--color-oxide-hot);
+  text-decoration-thickness: 0.14em;
+}
+
+/* Quiet chrome links (nav, footer): muted until they oxidize. */
+.quiet-link {
+  color: var(--color-ink2);
+  text-decoration: none;
+}
+
+.quiet-link:hover,
+.quiet-link:focus-visible {
+  color: var(--color-oxide);
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.3em;
+}

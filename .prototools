@@ -1,0 +1,3 @@
+# Toolchain pins for bens-site (managed with proto).
+# topcoat 0.1.3 requires Rust >= 1.95; proto's rust tool delegates to rustup.
+rust = "~1.97"

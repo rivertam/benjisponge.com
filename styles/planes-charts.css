@@ -1,1 +1,886 @@
-/* filled in by the port */
+/*
+ * Charts for the planes post: chart tabs, the FlightScale "Cuts" view
+ * (effort rows, sacrifice bars, cut chips, zoom panel), the ComparisonScale
+ * "Compare" view (makeup chips), the ice callout and the budget chart.
+ * Ported from ~/how-bad/src/index.css, scoped under .paper-warm.
+ *
+ * Two departures from the original, both CSS stand-ins for what was
+ * JavaScript there:
+ *  - tooltips are .tip children revealed on :hover/:focus-visible instead of
+ *    the JS-positioned .viz-tooltip layer;
+ *  - "erased" slices are driven by data-pick-* attributes on .effort-rows
+ *    (reactively bound to the cut-chip signals) as well as the original
+ *    .bar-seg.erased class.
+ */
+
+.paper-warm {
+  --page: #f2ead9;
+  --card: #fdf9ef;
+  --ink: #2b2620;
+  --ink-2: #5d5648;
+  --muted: #8f8676;
+  --hairline: #e7dfcc;
+  --baseline: #cdc2a9;
+  --cost: #eb6834;
+  --save: #2a78d6;
+  --save-soft: #86b6ef;
+  --focus: #2a78d6;
+  --domain-transport: #2a78d6;
+  --domain-food: #5a7a4a;
+  --domain-home: #b07900;
+  --domain-habits: #a63d2f;
+  --sans: Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif;
+  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
+  /* content ~900px; side space reserved for future illustrations */
+  --content-max: 56.25rem; /* 900px */
+  --gutter-min: 2.5rem;
+  color-scheme: light;
+}
+
+/* [hidden] must beat the display:grid/flex the panels below set. */
+.paper-warm [hidden] {
+  display: none !important;
+}
+
+.paper-warm .section {
+  margin-top: 2.5rem;
+}
+
+.paper-warm .section > h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+}
+
+.paper-warm .section > .section-sub {
+  color: var(--ink-2);
+  margin: 0 0 1rem;
+  max-width: 62ch;
+}
+
+.paper-warm .section > .section-sub:last-of-type {
+  margin-bottom: 1.5rem;
+}
+
+.paper-warm sup.cite {
+  line-height: 0;
+  font-size: 0.72em;
+}
+
+.paper-warm sup.cite a {
+  color: var(--save);
+  font-weight: 600;
+  text-decoration: none;
+  padding: 0 0.12em;
+}
+
+.paper-warm sup.cite a:hover {
+  text-decoration: underline;
+  text-decoration-color: var(--save);
+}
+
+.paper-warm sup.cite + sup.cite::before {
+  content: ',';
+  color: var(--save);
+}
+
+/* ---------- ice callout ---------- */
+
+.paper-warm .ice-callout {
+  display: none;
+}
+
+.paper-warm .ice-callout p {
+  margin: 0 0 0.35rem;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.paper-warm .ice-callout .ice-figure {
+  margin: 0.25rem auto 0;
+  max-width: 100%;
+}
+
+.paper-warm .ice-callout .ice-figure svg {
+  width: 100%;
+  height: auto;
+}
+
+.paper-warm .ice-callout .ice-note {
+  display: none;
+}
+
+.paper-warm .scale-layout {
+  display: grid;
+  gap: 1rem;
+}
+
+.paper-warm .scale-main {
+  min-width: 0;
+}
+
+.paper-warm .chart-tabs {
+  display: flex;
+  gap: 0.35rem;
+  margin: 0 0 0.85rem;
+}
+
+.paper-warm .chart-tab {
+  font: inherit;
+  font-size: 0.85rem;
+  padding: 0.35rem 0.75rem;
+  border: 1px solid var(--hairline);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink-2);
+  cursor: pointer;
+}
+
+.paper-warm .chart-tab:hover {
+  border-color: var(--ink);
+}
+
+.paper-warm .chart-tab.is-active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--card);
+}
+
+@media (min-width: 820px) {
+  .paper-warm .scale-layout--ice {
+    grid-template-columns: minmax(0, 1fr) minmax(13rem, 16.5rem);
+    align-items: start;
+    gap: 1.1rem;
+  }
+
+  .paper-warm .ice-callout {
+    display: block;
+    position: sticky;
+    top: 4.5rem; /* clear the docked form */
+    margin: 0;
+    padding: 0.85rem 0.75rem;
+    background: var(--card);
+    border: 1px solid var(--hairline);
+    border-radius: 12px;
+  }
+}
+
+.paper-warm .ice-figure {
+  margin: 0.9rem 0 0.5rem;
+}
+
+.paper-warm .ice-figure svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.paper-warm .ice-figure .ice-dots {
+  transition: opacity 1.5s ease;
+}
+
+.paper-warm .ice-figure:hover .ice-dots {
+  opacity: 0.22;
+}
+
+.paper-warm .ice-note {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.72rem;
+  margin-top: 0.3rem;
+}
+
+/* ---------- charts (shared) ---------- */
+
+.paper-warm .chart-card {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 14px;
+  padding: 1.5rem;
+  position: relative;
+}
+
+.paper-warm .chart-card.breakout {
+  margin-inline: calc(-1 * clamp(0rem, (100vw - var(--content-max)) / 2, var(--gutter-min)));
+  clear: both;
+}
+
+.paper-warm .aside-card {
+  float: right;
+  width: min(290px, 100%);
+  margin: 0.25rem 0 1rem 1.75rem;
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 1rem 1.1rem;
+  font-size: 0.85rem;
+  line-height: 1.55;
+  color: var(--ink-2);
+}
+
+.paper-warm .aside-card h3 {
+  margin: 0 0 0.55rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.09em;
+  color: var(--ink);
+}
+
+.paper-warm .aside-card p {
+  margin: 0 0 0.6rem;
+}
+
+.paper-warm .aside-card p:last-child {
+  margin-bottom: 0;
+}
+
+.paper-warm .aside-card strong {
+  color: var(--ink);
+}
+
+@media (max-width: 700px) {
+  .paper-warm .aside-card {
+    float: none;
+    width: 100%;
+    margin: 0 0 1.25rem;
+  }
+}
+
+.paper-warm .bar-h-track {
+  height: 15px;
+  display: flex;
+  align-items: stretch;
+  gap: 2px; /* the surface gap between stacked slices */
+  position: relative;
+}
+
+.paper-warm .bar-h,
+.paper-warm .bar-seg {
+  border-radius: 0 4px 4px 0;
+  min-width: 2px;
+  transition: width 480ms cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+/* interior slices are square; only the bar's free end is rounded */
+.paper-warm .bar-seg {
+  min-width: 1px;
+  border-radius: 0;
+  position: relative; /* anchors the CSS tooltip */
+}
+
+.paper-warm .bar-seg:last-of-type {
+  border-radius: 0 4px 4px 0;
+}
+
+.paper-warm .bar-cell {
+  min-width: 0;
+}
+
+.paper-warm .row-cuts {
+  margin: 0.3rem 0 0;
+  font-size: 0.72rem;
+  line-height: 1.35;
+  color: var(--muted);
+}
+
+/* a slice the chosen cut erases stays in the chart as a shadow of itself.
+   The data-pick-* attributes mirror the cut-chip signals (see charts.rs);
+   within a ladder 1 = the mild cut, 2 = the deep cut, and a deeper cut also
+   erases every slice outside it. */
+.paper-warm .bar-seg.erased,
+.paper-warm .effort-rows[data-pick-driving='2'] .seg-driving-ev-share,
+.paper-warm .effort-rows[data-pick-driving='1'] .seg-driving-gas-premium,
+.paper-warm .effort-rows[data-pick-driving='2'] .seg-driving-gas-premium,
+.paper-warm .effort-rows[data-pick-heat='2'] .seg-climate-gas-premium,
+.paper-warm .effort-rows[data-pick-heat='1'] .seg-climate-thermostat,
+.paper-warm .effort-rows[data-pick-heat='2'] .seg-climate-thermostat,
+.paper-warm .effort-rows[data-pick-cool='1'] .seg-climate-ac-all,
+.paper-warm .effort-rows[data-pick-diet='2'] .seg-eating-veg-to-vegan,
+.paper-warm .effort-rows[data-pick-diet='1'] .seg-eating-avg-to-veg,
+.paper-warm .effort-rows[data-pick-diet='2'] .seg-eating-avg-to-veg,
+.paper-warm .effort-rows[data-pick-waste='2'] .seg-eating-farming,
+.paper-warm .effort-rows[data-pick-waste='1'] .seg-eating-methane,
+.paper-warm .effort-rows[data-pick-waste='2'] .seg-eating-methane,
+.paper-warm .effort-rows[data-pick-fashion='2'] .seg-fashion-average-wardrobe,
+.paper-warm .effort-rows[data-pick-fashion='1'] .seg-fashion-fast-premium,
+.paper-warm .effort-rows[data-pick-fashion='2'] .seg-fashion-fast-premium,
+.paper-warm .effort-rows[data-pick-coffee='2'] .seg-coffee-beans,
+.paper-warm .effort-rows[data-pick-coffee='1'] .seg-coffee-milk,
+.paper-warm .effort-rows[data-pick-coffee='2'] .seg-coffee-milk,
+.paper-warm .effort-rows[data-pick-phone='1'] .seg-phone-handset,
+.paper-warm .effort-rows[data-pick-soda='1'] .seg-soda-cans,
+.paper-warm .effort-rows[data-pick-bottle='1'] .seg-bottled-water-bottles,
+.paper-warm .effort-rows[data-pick-stream='1'] .seg-streaming-hours,
+.paper-warm .effort-rows[data-pick-gpt='1'] .seg-chatgpt-queries,
+.paper-warm .effort-rows[data-pick-straw='1'] .seg-straws-straws {
+  opacity: 0.22;
+  transition:
+    opacity 320ms ease,
+    width 480ms cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.paper-warm .cut-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: 0.4rem;
+}
+
+.paper-warm .cut-chip {
+  font: inherit;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--baseline);
+  border-radius: 999px;
+  padding: 0.12rem 0.55rem;
+  cursor: pointer;
+}
+
+.paper-warm .cut-chip:hover {
+  border-color: var(--ink-2);
+}
+
+.paper-warm .cut-chip[aria-pressed='true'] {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--card);
+}
+
+/* the rounding errors, redrawn at their own scale */
+.paper-warm .zoom-panel {
+  display: grid;
+  gap: 0.7rem;
+  border: 1px dashed var(--baseline);
+  border-radius: 10px;
+  padding: 0.85rem 0.9rem;
+  margin: 0.1rem 0;
+}
+
+.paper-warm .zoom-panel .zoom-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.paper-warm .zoom-panel .zoom-note {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--muted);
+}
+
+.paper-warm .zoom-panel .zoom-close {
+  font-size: 0.74rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.paper-warm .link-btn {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: 0;
+  padding: 0;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.paper-warm .flight-tick {
+  position: absolute;
+  top: -5px;
+  bottom: -5px;
+  width: 0;
+  border-left: 2px dashed var(--cost);
+  transform: translateX(-1px);
+  pointer-events: none;
+}
+
+/* the flight, quoted in the row's own currency, riding the dashed line */
+.paper-warm .flight-tick .tick-label {
+  position: absolute;
+  bottom: calc(100% + 1px);
+  left: 5px;
+  white-space: nowrap;
+  font-size: 0.68rem;
+  font-weight: 600;
+  line-height: 1;
+  color: var(--cost);
+  pointer-events: auto;
+  cursor: default;
+}
+
+/* near the right edge, hang the label off the line's left side instead */
+.paper-warm .flight-tick .tick-label.flip {
+  left: auto;
+  right: 5px;
+}
+
+/* rows with a quoted line need headroom above the bar for the label */
+.paper-warm .bar-cell.labeled .bar-h-track {
+  margin-top: 1.35rem;
+}
+
+/* CSS-only stand-in for the original's JS-positioned .viz-tooltip */
+.paper-warm .tip {
+  display: none;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 0;
+  z-index: 50;
+  background: var(--ink);
+  color: var(--card);
+  font-size: 0.8rem;
+  font-weight: 400;
+  line-height: 1.4;
+  letter-spacing: normal;
+  text-transform: none;
+  padding: 0.4rem 0.6rem;
+  border-radius: 8px;
+  width: max-content;
+  max-width: 270px;
+  white-space: normal;
+  text-align: left;
+  pointer-events: none;
+}
+
+.paper-warm .bar-seg:hover > .tip,
+.paper-warm .bar-seg:focus-visible > .tip,
+.paper-warm .tick-label:hover > .tip,
+.paper-warm .tick-label:focus-visible > .tip,
+.paper-warm .budget-col .seg:hover > .tip,
+.paper-warm .budget-col .seg:focus-visible > .tip {
+  display: block;
+}
+
+.paper-warm .flight-tick .tick-label .tip {
+  bottom: calc(100% + 4px);
+}
+
+.paper-warm .flight-tick .tick-label.flip .tip {
+  left: auto;
+  right: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .paper-warm .bar-h,
+  .paper-warm .bar-seg {
+    transition: none;
+  }
+  .paper-warm .ice-figure .ice-dots {
+    transition: none;
+  }
+}
+
+.paper-warm .pull-quote {
+  margin: 2rem auto 0;
+  max-width: 32ch;
+  text-align: center;
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  line-height: 1.4;
+  font-weight: 600;
+  color: var(--ink);
+  text-wrap: balance;
+}
+
+.paper-warm .pull-quote .mark {
+  background: linear-gradient(transparent 55%, rgba(235, 104, 52, 0.28) 55%);
+  padding: 0 0.1em;
+  white-space: nowrap;
+}
+
+.paper-warm .chart-note {
+  color: var(--ink-2);
+  font-size: 0.9rem;
+  margin: 1.1rem 0 0;
+}
+
+.paper-warm .chart-note strong {
+  color: var(--ink);
+}
+
+.paper-warm .chart-note.caveat {
+  color: var(--muted);
+  font-size: 0.84rem;
+  margin-top: 0.6rem;
+}
+
+.paper-warm .swatch {
+  display: inline-block;
+  width: 0.7em;
+  height: 0.7em;
+  border-radius: 2px;
+  margin-right: 0.35em;
+}
+
+.paper-warm .data-table {
+  margin-top: 1.1rem;
+  font-size: 0.88rem;
+}
+
+.paper-warm .data-table summary {
+  cursor: pointer;
+  color: var(--muted);
+}
+
+.paper-warm .data-table table {
+  margin-top: 0.5rem;
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.paper-warm .data-table th,
+.paper-warm .data-table td {
+  text-align: left;
+  padding: 0.25rem 0.75rem 0.25rem 0;
+  border-bottom: 1px solid var(--hairline);
+  font-weight: 400;
+}
+
+.paper-warm .data-table td:last-child,
+.paper-warm .data-table th:last-child {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---------- the flight vs. everything else ---------- */
+
+.paper-warm .toggle-note {
+  color: var(--muted);
+  font-size: 0.78rem;
+  margin: 0 0 1.1rem;
+}
+
+.paper-warm .chart-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.paper-warm .chart-card-head .toggle-note {
+  flex: 1;
+}
+
+.paper-warm .chart-card-controls {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.45rem;
+  flex-shrink: 0;
+}
+
+.paper-warm .makeup-chip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 0.25rem;
+  max-width: 22rem;
+}
+
+.paper-warm .makeup-chip-btn {
+  font: inherit;
+  font-size: 0.7rem;
+  line-height: 1.2;
+  color: var(--ink-2);
+  background: transparent;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+  cursor: pointer;
+}
+
+.paper-warm .makeup-chip-btn:hover {
+  color: var(--ink);
+  border-color: var(--baseline);
+}
+
+.paper-warm .makeup-chip-btn.is-active {
+  background: var(--ink);
+  border-color: var(--ink);
+  color: var(--card);
+}
+
+@media (max-width: 560px) {
+  .paper-warm .chart-card-head {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .paper-warm .chart-card-controls {
+    align-items: flex-start;
+  }
+
+  .paper-warm .makeup-chip {
+    justify-content: flex-start;
+    max-width: none;
+  }
+}
+
+.paper-warm .data-table .table-note {
+  margin: 0.9rem 0 0.4rem;
+}
+
+.paper-warm .effort-rows {
+  display: grid;
+  gap: 1.25rem;
+}
+
+.paper-warm .effort-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 215px) 1fr minmax(84px, auto);
+  gap: 0.75rem;
+  align-items: center;
+}
+
+@media (max-width: 560px) {
+  .paper-warm .effort-row {
+    grid-template-columns: 1fr auto;
+  }
+  .paper-warm .effort-row .row-head {
+    grid-column: 1 / -1;
+  }
+}
+
+.paper-warm .effort-row .row-head {
+  font-size: 0.9rem;
+  line-height: 1.35;
+}
+
+.paper-warm .effort-row .row-detail {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.paper-warm .effort-row .row-equals {
+  font-size: 0.9rem;
+  text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+
+.paper-warm .effort-row .row-equals strong {
+  font-weight: 700;
+}
+
+.paper-warm .effort-row .row-equals .row-sub {
+  display: block;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 400;
+}
+
+.paper-warm .flight-row-divider {
+  border: 0;
+  border-top: 1px dashed var(--baseline);
+  margin: 0.35rem 0;
+}
+
+/* ---------- budget chart ---------- */
+
+.paper-warm .budget-plot {
+  display: flex;
+  align-items: flex-end;
+  gap: 4%;
+  border-bottom: 1px solid var(--baseline);
+  min-height: 60px;
+  margin-top: 2.25rem;
+}
+
+.paper-warm .budget-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  gap: 2px;
+}
+
+.paper-warm .budget-col .seg {
+  width: 100%;
+  position: relative; /* anchors the CSS tooltip */
+}
+
+.paper-warm .budget-col .seg.top {
+  border-radius: 4px 4px 0 0;
+}
+
+.paper-warm .budget-col .col-value {
+  text-align: center;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-2);
+  margin-bottom: 0.25rem;
+}
+
+.paper-warm .budget-labels {
+  display: flex;
+  gap: 4%;
+  margin-top: 0.4rem;
+}
+
+.paper-warm .budget-labels .col-label {
+  flex: 1;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.paper-warm .benchmark-legend {
+  margin: 1.25rem 0 0;
+  padding: 0;
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.88rem;
+  color: var(--ink-2);
+}
+
+.paper-warm .benchmark-legend div {
+  display: grid;
+  grid-template-columns: 5.5rem 1fr;
+  gap: 0.75rem;
+}
+
+.paper-warm .benchmark-legend dt {
+  font-weight: 700;
+  color: var(--ink);
+  font-variant-numeric: tabular-nums;
+}
+
+.paper-warm .benchmark-legend dd {
+  margin: 0;
+}
+
+/* ---------- sources ----------
+ * The original's sources drawer (.sources-drawer-body in index.css) becomes an
+ * in-page footer section; the card grid, :target light-up and methodology
+ * styles are ported verbatim, the drawer chrome dropped. The single drawer
+ * column becomes a responsive grid — the article is far wider than 22rem. */
+
+.paper-warm .sources-section {
+  margin-top: 3rem;
+  border-top: 1px solid var(--baseline);
+  padding-top: 1.5rem;
+}
+
+.paper-warm .sources-section h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0 0 0.4rem;
+}
+
+.paper-warm .sources-section .section-sub {
+  color: var(--ink-2);
+  margin: 0 0 1rem;
+  max-width: 62ch;
+}
+
+.paper-warm .about-copy {
+  color: var(--ink-2);
+  max-width: 64ch;
+}
+
+.paper-warm .sources-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+}
+
+.paper-warm .source-card {
+  display: block;
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 12px;
+  padding: 0.8rem 0.95rem;
+  text-decoration: none;
+  font-size: 0.88rem;
+  line-height: 1.45;
+  scroll-margin-top: 1.25rem;
+}
+
+.paper-warm .source-card:hover {
+  border-color: var(--baseline);
+}
+
+.paper-warm .source-card:target {
+  border-color: var(--cost);
+  box-shadow: 0 0 0 3px rgba(235, 104, 52, 0.22);
+  animation: card-knock 900ms ease-out 1;
+}
+
+@keyframes card-knock {
+  0% {
+    box-shadow: 0 0 0 3px rgba(235, 104, 52, 0.4);
+  }
+  45% {
+    box-shadow: 0 0 0 10px rgba(235, 104, 52, 0.1);
+  }
+  100% {
+    box-shadow: 0 0 0 3px rgba(235, 104, 52, 0.22);
+  }
+}
+
+.paper-warm .source-card .src-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.paper-warm .source-card .src-kicker {
+  color: var(--muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.paper-warm .source-card .src-num {
+  flex-shrink: 0;
+  color: var(--ink-2);
+  font-size: 0.72rem;
+  font-variant-numeric: tabular-nums;
+  border: 1px solid var(--hairline);
+  border-radius: 999px;
+  padding: 0 0.45em;
+}
+
+.paper-warm .source-card:target .src-num {
+  border-color: var(--cost);
+  color: var(--cost);
+}
+
+.paper-warm .source-card .src-title {
+  display: block;
+  margin-top: 0.15rem;
+}
+
+.paper-warm .methodology {
+  margin-top: 2rem;
+  font-size: 0.92rem;
+  color: var(--ink-2);
+}
+
+.paper-warm .methodology summary {
+  cursor: pointer;
+  color: var(--ink);
+  font-weight: 700;
+}
+
+.paper-warm .methodology code {
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 4px;
+  padding: 0 0.3em;
+  font-family: var(--mono);
+  font-size: 0.88em;
+}
+
+.paper-warm .methodology ul {
+  padding-left: 1.2rem;
+}
