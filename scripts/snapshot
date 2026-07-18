@@ -71,8 +71,11 @@ done
 curl -sf -o /dev/null "$BASE/" || { echo "server not ready after 30s" >&2; exit 1; }
 
 # --- start headless Chrome with a DevTools port -----------------------------
+# --force-prefers-reduced-motion: snapshots must be deterministic — without it
+# the receipt's print-feed animation is mid-flight at capture time.
 "$CHROME" --headless=new --disable-gpu --hide-scrollbars \
     --force-device-scale-factor=1 --disable-extensions \
+    --force-prefers-reduced-motion \
     --remote-debugging-port=0 --remote-allow-origins='*' \
     --user-data-dir="$TMP/profile" \
     about:blank >/dev/null 2>&1 &
