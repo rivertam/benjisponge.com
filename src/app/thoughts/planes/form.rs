@@ -3,21 +3,21 @@
 //!
 //! The baseline is a plain GET form submitting to the page's own URL: the
 //! route fields are text inputs named `from`/`to` holding IATA codes, so the
-//! whole flow works with JavaScript disabled. The combobox is an enhancement
-//! on top: a signal mirrors each input and a shard re-renders up to eight
-//! matches server-side (`search_airports` — prefix, one-edit fuzzy, metro
-//! aliases) as the text changes.
+//! whole flow works with JavaScript disabled. The combobox is a client-side
+//! enhancement (`airport-combobox.js`): it fetches the bundled airports
+//! dataset once and runs the same search (prefix, fuzzy, metros, country)
+//! in the browser — no shard round-trips.
 
 use topcoat::{
     Result,
-    runtime::{Event, ReadSignal, shard},
+    asset::{Asset, asset},
     view::{component, view},
 };
 
-use crate::flight::{
-    airports::{Airport, search_airports},
-    emissions::Cabin,
-};
+use crate::flight::{airports::Airport, emissions::Cabin};
+
+const AIRPORT_COMBOBOX_JS: Asset = asset!("./airport-combobox.js");
+const AIRPORTS_JSON: Asset = asset!("../../../../data/airports.json");
 
 #[component]
 pub async fn flight_form(
@@ -28,7 +28,10 @@ pub async fn flight_form(
     revealed: bool,
 ) -> Result {
     view! {
-        <form class=(if revealed { "flight-form form-dock" } else { "flight-form" })>
+        <form
+            class=(if revealed { "flight-form form-dock" } else { "flight-form" })
+            data-airports-url=(AIRPORTS_JSON)
+        >
             <header class=(if revealed { "form-head form-head--dock" } else { "form-head" })>
                 <p class="eyebrow">
                     <a href="/thoughts">"thoughts"</a>
@@ -66,24 +69,19 @@ pub async fn flight_form(
             // submit control, so the button stays — condensed by .form-dock.
             <button type="submit" class="print-btn">"See how it compares"</button>
         </form>
+        <script type="module" src=(AIRPORT_COMBOBOX_JS)></script>
     }
 }
 
-/// One route endpoint. The visible input is the GET baseline: it submits its
-/// literal text as the `from`/`to` query param (an IATA code when picked from
-/// the suggestions). The suggestion list is the enhancement.
+/// One route endpoint. Plain text input for the GET baseline; the client
+/// script upgrades `.combobox[data-airport-combobox]` into a typeahead.
 #[component]
 async fn airport_field(label: &str, name: &str, iata: String) -> Result {
     let input_id = format!("airport-{name}");
     view! {
-        signal text = iata;
-        // A re-rendered shard has no access to the page's signals, so hand it
-        // the input signal's id; its suggestion rows write the pick back
-        // through it (see `airport_suggestions`).
-        let sid = ReadSignal::new(text).id().to_string();
         <div class="field">
             <label for=(input_id.as_str())>(label)</label>
-            <div class="combobox">
+            <div class="combobox" data-airport-combobox="">
                 <input
                     id=(input_id.as_str())
                     type="text"
@@ -92,49 +90,9 @@ async fn airport_field(label: &str, name: &str, iata: String) -> Result {
                     placeholder=(format!("{label} — city or code"))
                     autocomplete="off"
                     spellcheck="false"
-                    :value=$(text.get())
-                    @input=$(|e: Event| text.set(e.target.value))
+                    value=(iata.as_str())
                 >
-                airport_suggestions(sid: $(sid), input: $(text.get()))
             </div>
         </div>
-    }
-}
-
-/// Up to eight server-searched matches for the field's text, rendered as the
-/// combobox's listbox. Each row's `mousedown` sets the input signal (by the
-/// `sid` id, via `raw!` — the one place the port needs hand-written JS) to the
-/// row's IATA code; the changed signal re-renders this shard, which then
-/// renders nothing because the field holds an exact code. CSS shows the list
-/// only while the field has focus (`mousedown` fires before the blur), so it
-/// opens while typing and closes on pick or click-away.
-#[shard]
-async fn airport_suggestions(sid: String, input: String) -> Result {
-    let query = input.trim().to_owned();
-    let options = if query.is_empty() {
-        Vec::new()
-    } else {
-        search_airports(&query, 8)
-    };
-    // The field already holds the top match's exact code: nothing to suggest.
-    let settled = options
-        .first()
-        .is_some_and(|a| a.iata.eq_ignore_ascii_case(&query));
-    view! {
-        if !settled && !options.is_empty() {
-            <ul class="combobox-list" role="listbox">
-                for airport in options {
-                    let code = airport.iata.clone();
-                    let sid = sid.clone();
-                    <li
-                        role="option"
-                        @mousedown=$(|_e: Event| raw!("cx.signal(${sid}.toString()).set(${code})"))
-                    >
-                        <span class="opt-main">(format!("{}, {}", airport.city, airport.country))</span>
-                        <span class="opt-code">(airport.iata.as_str())</span>
-                    </li>
-                }
-            </ul>
-        }
     }
 }

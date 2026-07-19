@@ -176,15 +176,10 @@
   overflow-y: auto;
 }
 
-/* Open/close was React state in the original; here the list (re-rendered
- * server-side by the shard) shows only while its field has focus. Picking a
- * row works because mousedown fires before the field blurs. */
-.paper-warm .combobox .combobox-list {
+/* Open/close is client state in airport-combobox.js (class is-open), matching
+ * the React original's `open` flag. The list is only in the DOM while open. */
+.paper-warm .combobox:not(.is-open) .combobox-list {
   display: none;
-}
-
-.paper-warm .combobox:focus-within .combobox-list {
-  display: block;
 }
 
 .paper-warm .combobox-list li {
@@ -196,8 +191,8 @@
   gap: 0.75rem;
 }
 
-/* hover stands in for the original's mouseenter/aria-selected highlight */
-.paper-warm .combobox-list li:hover {
+/* Keyboard/mouse highlight — mirrors how-bad's aria-selected styling. */
+.paper-warm .combobox-list li[aria-selected="true"] {
   background: var(--hairline);
 }
 

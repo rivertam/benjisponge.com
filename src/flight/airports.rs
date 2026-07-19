@@ -1,6 +1,10 @@
 //! Airport lookup and search: port of `src/lib/airports.ts` plus the metro
 //! groupings from `src/data/metros.ts` in ~/how-bad. The OurAirports-derived
 //! dataset is embedded from `data/airports.json` and indexed once, lazily.
+//!
+//! Live typeahead runs in `airport-combobox.js` (client-side). `search_airports`
+//! stays here as the unit-tested twin of that logic; `find_airport` resolves
+//! submitted IATA codes on the server.
 
 use std::collections::HashMap;
 use std::sync::LazyLock;
@@ -182,6 +186,8 @@ struct Indexed {
     airport: usize,
     city: String,
     city_words: Vec<Vec<char>>,
+    country: String,
+    country_words: Vec<Vec<char>>,
     name_words: Vec<Vec<char>>,
     /// The folded name words re-joined with single spaces (`nameWords.join(' ')`).
     name_joined: String,
@@ -215,13 +221,19 @@ static DB: LazyLock<Db> = LazyLock::new(|| {
         .enumerate()
         .map(|(i, airport)| {
             let city = fold(&airport.city);
+            let country = fold(&airport.country);
             let name_words = split_words(&fold(&airport.name));
             Indexed {
                 airport: i,
                 city_words: split_words(&city).iter().map(|w| word_chars(w)).collect(),
+                country_words: split_words(&country)
+                    .iter()
+                    .map(|w| word_chars(w))
+                    .collect(),
                 name_joined: name_words.join(" "),
                 name_words: name_words.iter().map(|w| word_chars(w)).collect(),
                 city,
+                country,
                 iata: airport.iata.to_lowercase(),
                 aliases: Vec::new(),
                 alias_word_lists: Vec::new(),
@@ -364,15 +376,32 @@ fn match_quality(entry: &Indexed, q: &str, tokens: &[Token]) -> i32 {
     if let Some(exact) = tokens_match_words(tokens, &entry.name_words) {
         quality = quality.max(if exact { 55 } else { 28 });
     }
+    // Country is below city/metro/name so "Paris" still prefers the city, but
+    // above the substring fallback and fuzzy name noise ("Japan" → GEO/Jagan).
+    // how-bad never searched country; this is an intentional extension.
+    if let Some(exact) = tokens_match_words(tokens, &entry.country_words) {
+        let base = if entry.country.starts_with(&tokens[0].text) {
+            45
+        } else {
+            38
+        };
+        quality = quality.max(if exact { base } else { base - 15 });
+    }
 
     if quality == 0
         && q.chars().count() >= 3
-        && (entry.city.contains(q) || entry.name_joined.contains(q))
+        && (entry.city.contains(q) || entry.name_joined.contains(q) || entry.country.contains(q))
     {
         quality = 20;
     }
     quality
 }
+
+/// Mirror of the client search in `airport-combobox.js`. The form does not call
+/// this at request time; unit tests and the `#[used]` keep below pin it in the
+/// binary so the two stay compile-checked together.
+#[used]
+static SEARCH_AIRPORTS_CLIENT_TWIN: fn(&str, usize) -> Vec<&'static Airport> = search_airports;
 
 pub fn search_airports(query: &str, limit: usize) -> Vec<&'static Airport> {
     let db = LazyLock::force(&DB);
@@ -415,6 +444,13 @@ pub fn search_airports(query: &str, limit: usize) -> Vec<&'static Airport> {
 mod tests {
     use super::*;
 
+    fn codes(q: &str) -> Vec<&'static str> {
+        search_airports(q, 8)
+            .iter()
+            .map(|a| a.iata.as_str())
+            .collect()
+    }
+
     #[test]
     fn find_airport_is_case_insensitive() {
         assert!(find_airport("JFK").is_some());
@@ -428,5 +464,50 @@ mod tests {
         assert!(!search_airports("new york", 5).is_empty());
         assert!(!search_airports("LHR", 5).is_empty());
         assert!(search_airports("zzzzzzzz", 5).is_empty());
+    }
+
+    #[test]
+    fn nyc_lists_new_york_airports_biggest_first() {
+        assert_eq!(&codes("NYC")[..3], ["JFK", "EWR", "LGA"]);
+        assert!(codes("nyc").contains(&"SWF"));
+    }
+
+    #[test]
+    fn metro_city_name_reaches_airports_whose_municipality_differs() {
+        assert!(codes("new york").contains(&"EWR"));
+        assert_eq!(&codes("tokyo")[..2], ["HND", "NRT"]);
+        assert_eq!(&codes("washington")[..3], ["IAD", "BWI", "DCA"]);
+    }
+
+    #[test]
+    fn metro_codes_and_abbreviations_resolve() {
+        assert_eq!(&codes("dc")[..3], ["IAD", "BWI", "DCA"]);
+        assert_eq!(codes("la")[0], "LAX");
+        assert_eq!(codes("ny")[0], "JFK");
+    }
+
+    #[test]
+    fn aliases_map_old_and_local_names() {
+        assert_eq!(codes("saigon")[0], "SGN");
+        assert_eq!(codes("bombay")[0], "BOM");
+        assert_eq!(codes("münchen")[0], "MUC");
+    }
+
+    #[test]
+    fn country_name_lists_that_countrys_airports() {
+        let japan = codes("Japan");
+        assert!(japan.contains(&"HND"), "{japan:?}");
+        assert!(japan.contains(&"NRT"), "{japan:?}");
+        assert!(japan.contains(&"KIX"), "{japan:?}");
+        assert!(!japan.contains(&"GEO"), "fuzzy Jagan must not beat Japan");
+
+        let top = search_airports("Japan", 8);
+        assert!(top.iter().all(|a| a.country == "Japan"), "{top:?}");
+    }
+
+    #[test]
+    fn separator_only_queries_return_nothing() {
+        assert!(search_airports("-", 8).is_empty());
+        assert!(search_airports("...", 8).is_empty());
     }
 }
