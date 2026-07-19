@@ -3,10 +3,11 @@
 ## Setup
 
 The project uses [proto](https://moonrepo.dev/proto) to pin development tools.
-Install the configured toolchain, then start the development server:
+Install the configured toolchain and Git hooks, then start the development server:
 
 ```sh
 proto use
+just install-hooks
 just dev
 ```
 

@@ -1,0 +1,17 @@
+pre-commit:
+  parallel: false
+  commands:
+    rustfix:
+      glob: "*.rs"
+      run: cargo fix --all-targets --allow-dirty --allow-staged
+      stage_fixed: true
+    clippy:
+      glob: "*.rs"
+      run: cargo clippy --fix --all-targets --allow-dirty --allow-staged -- -D warnings
+      stage_fixed: true
+    format:
+      glob: "*.rs"
+      run: cargo fmt
+      stage_fixed: true
+    check:
+      run: just check

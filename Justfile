@@ -1,6 +1,11 @@
 default:
     @just --list
 
+# Enable the repository-managed Git hooks in this checkout
+install-hooks:
+    proto install lefthook
+    lefthook install
+
 # Start the development server with live reload
 dev port="3000":
     PORT={{port}} topcoat dev
