@@ -8,7 +8,6 @@ use topcoat::{
 use crate::{
     content::{
         experience::{EDUCATION, ROLES, Role, SKILLS, Tech, TechKind},
-        interests::INTERESTS,
         patches::PATCHES,
     },
     design::{page_head, shell},
@@ -194,34 +193,6 @@ async fn resume(cx: &Cx) -> Result {
                     }
                 </div>
             </div>
-        </section>
-
-        // Interests, each with its public evidence linked. Sits between the
-        // credentials and the patches shortlog: professional, then personal.
-        <section class="mt-16 space-y-6 border-t border-hairline pt-10">
-            <div class="rail-row">
-                <p class="rail-stamp uppercase tracking-[0.18em]">"off the clock"</p>
-                <p class="min-w-0 max-w-prose text-ink2">
-                    "Skills of no professional value whatsoever."
-                    <br />
-                    "Everything below is, regrettably, public record."
-                </p>
-            </div>
-            for interest in INTERESTS.iter() {
-                <div class="rail-row">
-                    <p class="rail-stamp">(interest.stamp)</p>
-                    <div class="min-w-0 max-w-prose">
-                        <p class="text-ink2">(interest.line)</p>
-                        if !interest.links.is_empty() {
-                            <p class="mt-1 flex flex-wrap gap-x-4 gap-y-0.5 font-meta text-sm">
-                                for link in interest.links.iter() {
-                                    <a class="oxlink" href=(link.url)>(link.label)</a>
-                                }
-                            </p>
-                        }
-                    </div>
-                </div>
-            }
         </section>
 
         // The aside: hand-picked merged patches, shortlog-style. Small type

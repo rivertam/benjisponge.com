@@ -10,17 +10,27 @@ use topcoat::{
     view::view,
 };
 
-use crate::{content::posts::POSTS, design::shell};
+use crate::{
+    content::{interests::INTERESTS, posts::POSTS},
+    design::shell,
+};
 
-/// Every real route on the site. `/` and `/resume` by hand, posts from the
-/// registry, so new posts join the suggestion pool automatically.
+/// Every real route on the site. `/`, `/resume`, and `/off-the-clock` by
+/// hand; posts and interests from their registries, so new entries join the
+/// suggestion pool automatically.
 fn routes() -> Vec<String> {
     let mut routes = vec![
         "/".to_string(),
         "/thoughts".to_string(),
         "/resume".to_string(),
+        "/off-the-clock".to_string(),
     ];
     routes.extend(POSTS.iter().map(|post| format!("/thoughts/{}", post.slug)));
+    routes.extend(
+        INTERESTS
+            .iter()
+            .map(|interest| format!("/off-the-clock/{}", interest.stamp)),
+    );
     routes
 }
 

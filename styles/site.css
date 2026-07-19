@@ -142,3 +142,73 @@ a.chip:focus-visible {
   text-decoration-thickness: 0.1em;
   text-underline-offset: 0.3em;
 }
+
+/* Nav dropdown (off the clock): CSS-only via <details>, no JS to close —
+   clicking the summary again does. Menu is a small logbook card. */
+.nav-dd {
+  position: relative;
+}
+
+.nav-dd > summary {
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.nav-dd > summary::-webkit-details-marker {
+  display: none;
+}
+
+.nav-dd > summary::after {
+  content: " \25BE"; /* ▾ */
+  color: var(--color-muted);
+}
+
+.nav-dd[open] > summary::after {
+  content: " \25B4"; /* ▴ */
+}
+
+.nav-dd-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.6rem);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 10rem;
+  padding: 0.9rem 1.1rem;
+  background: var(--color-page);
+  border: 1px solid var(--color-hairline);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--color-ink) 8%, transparent);
+}
+
+/* YouTube evidence on interest pages: thumbnail cards, hairline-framed. */
+.video-card {
+  display: flex;
+  width: 15rem;
+  max-width: 100%;
+  flex-direction: column;
+  gap: 0.4rem;
+  text-decoration: none;
+}
+
+.video-card img {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border: 1px solid var(--color-hairline);
+}
+
+.video-card:hover img,
+.video-card:focus-visible img {
+  border-color: var(--color-oxide);
+}
+
+.video-card:hover .video-card-label,
+.video-card:focus-visible .video-card-label {
+  color: var(--color-oxide);
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.3em;
+}

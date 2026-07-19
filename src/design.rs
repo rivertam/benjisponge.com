@@ -11,6 +11,8 @@ use topcoat::{
     view::{View, component, view},
 };
 
+use crate::content::interests::INTERESTS;
+
 pub const ZILLA_SLAB: Font = fontsource_font!(ZILLA_SLAB, host: Asset);
 pub const FIRA_SANS: Font = fontsource_font!(FIRA_SANS, host: Asset);
 pub const FIRA_MONO: Font = fontsource_font!(FIRA_MONO, host: Asset);
@@ -43,6 +45,18 @@ pub async fn shell(title: &str, body: View) -> Result {
                     <nav class="flex gap-6 font-meta text-sm">
                         <a href="/thoughts" class="quiet-link">"thoughts"</a>
                         <a href="/resume" class="quiet-link">"résumé"</a>
+                        <details class="nav-dd">
+                            <summary class="quiet-link">"off the clock"</summary>
+                            <div class="nav-dd-menu">
+                                <a class="quiet-link" href="/off-the-clock">"all exhibits →"</a>
+                                for interest in INTERESTS.iter() {
+                                    <a
+                                        class="quiet-link"
+                                        href=(format!("/off-the-clock/{}", interest.stamp))
+                                    >(interest.stamp)</a>
+                                }
+                            </div>
+                        </details>
                     </nav>
                 </header>
                 <main class="mx-auto w-full max-w-4xl flex-1 px-5 pb-20">(body)</main>
