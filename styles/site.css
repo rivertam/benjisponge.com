@@ -22,7 +22,8 @@
   line-height: 1.5;
   letter-spacing: 0.05em;
   color: var(--color-muted);
-  white-space: nowrap;
+  min-width: 0;
+  overflow-wrap: break-word;
 }
 
 /* Label stamps ("footage", "links", "patches") shout quietly; data stamps
@@ -156,6 +157,20 @@ a.chip:focus-visible {
   text-decoration-line: underline;
   text-decoration-thickness: 0.1em;
   text-underline-offset: 0.3em;
+}
+
+/* Em dashes linked to /llms: typographic at rest, oxide on interest. */
+.emdash-link {
+  color: inherit;
+  text-decoration: none;
+}
+
+.emdash-link:hover,
+.emdash-link:focus-visible {
+  color: var(--color-oxide);
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.2em;
 }
 
 /* Interests nav dropdown: CSS-only via <details>, no JS to close —
