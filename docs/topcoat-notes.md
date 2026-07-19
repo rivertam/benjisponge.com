@@ -2,9 +2,10 @@
 
 Ground truth (read these, don't guess APIs):
 
-- Vendored crate sources: `~/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/topcoat-*-0.1.3/`
-- Repo checkout at the same version (examples!):
-  `/tmp/claude-1000/-home-benji-bens-site/1fd0c26b-2dba-4346-afc9-3184c224d86c/scratchpad/topcoat-repo/`
+- Vendored crate sources: `~/.cargo/registry/src/index.crates.io-*/topcoat-*-0.1.3/`
+- Repo (examples!): `https://github.com/tokio-rs/topcoat` — clone at the
+  `v0.1.3` tag into a scratch dir when needed:
+  `git clone --depth 1 --branch v0.1.3 https://github.com/tokio-rs/topcoat`
   — `examples/{hello-world,module-router,path-query-params,runtime,shard,tailwind,font,asset,htmx,session,ui,toasty-todo}`
 - docs.rs: https://docs.rs/topcoat/0.1.3
 
