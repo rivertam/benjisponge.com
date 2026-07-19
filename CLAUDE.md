@@ -8,15 +8,13 @@ Rust SSR personal site on topcoat 0.1.3 — a niche framework; read
 - `just dev [port]` — live-reload server (default 3000)
 - `just build` — cargo build + `topcoat asset bundle`; serving without the bundle step panics
 - `just check` — fmt + clippy -D warnings + tests; must pass before claiming done
-- `just snapshot [label]` / `just snapshot-diff A B` — full-page PNG capture/diff (needs Chrome, bun, magick)
-- Verify UI changes by snapshot-diffing against a pre-change capture; never regenerate the "before" after editing
 
 ## Adding a page
 
 - Post: `src/app/thoughts/<slug>.rs` + `mod <slug>;` in `thoughts.rs` + entry in `src/content/posts.rs`
 - Interest: `src/app/interests/<name>.rs` (copy one; it pulls its copy via `interest("<name>")`) + `mod <name>;` in `interests.rs` + entry in `src/content/interests.rs`
 - Other fixed page: also add its route to `src/content/routes.rs::site_routes()`
-- Nav, indexes, 404, and the snapshot manifest all derive from these registries — touch nothing else
+- Nav, indexes, and 404 all derive from these registries — touch nothing else
 
 ## Gotchas
 

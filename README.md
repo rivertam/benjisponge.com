@@ -24,10 +24,4 @@ Run `just` or `just --list` to see the available commands.
 just build
 just release
 just check
-just snapshot homepage
-just snapshot-diff snapshots/before snapshots/after
 ```
-
-Snapshot capture requires Bun and Google Chrome; snapshot comparison requires
-ImageMagick. Command wrappers live in the `Justfile`; substantial automation
-remains in `scripts/`.

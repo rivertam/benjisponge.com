@@ -1,7 +1,7 @@
 //! RSS 2.0 feed at `/feed.xml`, generated from the logbook registry — every
 //! entry, long or short, becomes an `<item>`, so publishing to the log
 //! publishes to the feed. Not a page: it renders no shell and stays out of
-//! `site_routes()` (the snapshot manifest and 404 index are for pages).
+//! `site_routes()` (the 404 index is for pages).
 
 use topcoat::{Result, router::route};
 

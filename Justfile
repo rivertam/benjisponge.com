@@ -24,11 +24,3 @@ check:
 # Run the test suite
 test:
     cargo test
-
-# Capture visual snapshots, optionally with a label
-snapshot label="":
-    scripts/snapshot "{{label}}"
-
-# Compare two snapshot directories
-snapshot-diff before after:
-    scripts/snapshot-diff "{{before}}" "{{after}}"

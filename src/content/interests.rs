@@ -2,9 +2,9 @@
 //! page module under `app/interests/`; this list is the single source of
 //! truth for its slug (route `/interests/{slug}`, nav label, rail stamp),
 //! display title, and teaser (the index card copy, doubling as the page's
-//! lede). The nav dropdown, the interests index, the 404's route list, and
-//! the snapshot manifest all derive from here — adding an interest means one
-//! entry here plus the page module.
+//! lede). The nav dropdown, the interests index, and the 404's route list
+//! all derive from here — adding an interest means one entry here plus the
+//! page module.
 
 pub struct Interest {
     pub slug: &'static str,
@@ -56,8 +56,7 @@ pub static INTERESTS: [Interest; 8] = [
 ];
 
 /// An interest page's own registry entry. Panics on a slug not in the
-/// registry — pages pass literals, and every page renders in the snapshot
-/// run, so a typo surfaces on the first capture.
+/// registry — pages pass literals, so a typo surfaces on the first render.
 pub fn interest(slug: &str) -> &'static Interest {
     INTERESTS
         .iter()
