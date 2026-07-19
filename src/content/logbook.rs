@@ -88,10 +88,10 @@ pub static LOG: [Entry; 7] = [
     Entry::Update {
         date: "2026-06-28",
         stamp: "pr",
-        label: "keys",
+        label: "keyboards",
         body: "TypeRacer now has me at 117wpm.",
-        href: "/keys",
-        link_label: "keys →",
+        href: "/keyboards",
+        link_label: "keyboards →",
         tags: &["keyboards"],
     },
     Entry::Update {

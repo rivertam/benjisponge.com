@@ -3,7 +3,7 @@
 
 mod drums;
 mod felix;
-mod keys;
+mod keyboards;
 mod lifting;
 mod puzzles;
 mod simulation;

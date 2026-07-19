@@ -29,7 +29,7 @@ pub static INTERESTS: [Interest; 8] = [
         teaser: "Deadlift PR 345 lbs, Squat PR 235 lbs, Bench PR like 165 but I never 1RM it",
     },
     Interest {
-        slug: "keys",
+        slug: "keyboards",
         title: "Keyboards",
         teaser: "Big fan of dactyls, dactyl manuform, and split-columnar keyboards. Currently on \
                  a glove80.",
