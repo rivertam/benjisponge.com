@@ -1,0 +1,4 @@
+# Markup components/shards take the whole page state as props; the default
+# threshold of 7 fights the view layer. Raised to cover receipt (8) and
+# combined_swaps (10).
+too-many-arguments-threshold = 10

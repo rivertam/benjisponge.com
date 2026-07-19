@@ -7,7 +7,7 @@ fn group_thousands(digits: &str) -> String {
     let bytes = digits.as_bytes();
     let mut out = String::with_capacity(digits.len() + digits.len() / 3);
     for (i, b) in bytes.iter().enumerate() {
-        if i > 0 && (bytes.len() - i) % 3 == 0 {
+        if i > 0 && (bytes.len() - i).is_multiple_of(3) {
             out.push(',');
         }
         out.push(*b as char);
@@ -144,7 +144,7 @@ pub fn format_count(n: f64) -> String {
 
 /// Like roundCount but allows values below 1 (e.g. 0.6 miles/day).
 pub fn round_rate_count(n: f64) -> f64 {
-    if !(n > 0.0) {
+    if n.is_nan() || n <= 0.0 {
         return 0.0;
     }
     if n < 1.0 {

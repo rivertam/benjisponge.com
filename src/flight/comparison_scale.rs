@@ -319,7 +319,7 @@ const MIN_COUNT: f64 = 0.5;
 const MAX_COUNT: f64 = 8.0;
 
 fn pick_unit<'a>(scale_kg: f64, units: &[&'a DomainUnit]) -> (&'a DomainUnit, f64, f64) {
-    if !(scale_kg > 0.0) {
+    if scale_kg.is_nan() || scale_kg <= 0.0 {
         let unit = units[0];
         return (unit, 1.0, unit.kg_per_unit);
     }
@@ -327,15 +327,15 @@ fn pick_unit<'a>(scale_kg: f64, units: &[&'a DomainUnit]) -> (&'a DomainUnit, f6
     let mut best: Option<(&DomainUnit, f64, f64, f64)> = None;
 
     for &unit in units {
-        if !(unit.kg_per_unit > 0.0) {
+        if unit.kg_per_unit.is_nan() || unit.kg_per_unit <= 0.0 {
             continue;
         }
         let raw = scale_kg / unit.kg_per_unit;
         let count = round_count(raw).max(1.0);
         let fill_kg = count * unit.kg_per_unit;
         let ratio = fill_kg / scale_kg;
-        let in_band = ratio >= MIN_RATIO && ratio <= MAX_RATIO;
-        let count_ok = raw >= MIN_COUNT && raw <= MAX_COUNT * 1.5;
+        let in_band = (MIN_RATIO..=MAX_RATIO).contains(&ratio);
+        let count_ok = (MIN_COUNT..=MAX_COUNT * 1.5).contains(&raw);
         // Prefer in-band fills; among those, prefer friendlier raw counts.
         let score = (if in_band { 0.0 } else { 100.0 })
             + (if count_ok { 0.0 } else { 20.0 })
@@ -356,7 +356,7 @@ fn pick_unit<'a>(scale_kg: f64, units: &[&'a DomainUnit]) -> (&'a DomainUnit, f6
 /// Mirrors pick_unit but scores against a daily rate: counts below 1/day are
 /// allowed (no max(1, ...)) and rounding uses round_rate_count.
 fn pick_rate_unit<'a>(daily_kg: f64, units: &[&'a DomainUnit]) -> (&'a DomainUnit, f64, f64) {
-    if !(daily_kg > 0.0) {
+    if daily_kg.is_nan() || daily_kg <= 0.0 {
         let unit = units[0];
         return (unit, 0.0, 0.0);
     }
@@ -364,15 +364,15 @@ fn pick_rate_unit<'a>(daily_kg: f64, units: &[&'a DomainUnit]) -> (&'a DomainUni
     let mut best: Option<(&DomainUnit, f64, f64, f64)> = None;
 
     for &unit in units {
-        if !(unit.kg_per_unit > 0.0) {
+        if unit.kg_per_unit.is_nan() || unit.kg_per_unit <= 0.0 {
             continue;
         }
         let raw = daily_kg / unit.kg_per_unit;
         let count_per_day = round_rate_count(raw);
         let daily_fill_kg = count_per_day * unit.kg_per_unit;
         let ratio = daily_fill_kg / daily_kg;
-        let in_band = ratio >= MIN_RATIO && ratio <= MAX_RATIO;
-        let count_ok = raw >= MIN_COUNT && raw <= MAX_COUNT * 1.5;
+        let in_band = (MIN_RATIO..=MAX_RATIO).contains(&ratio);
+        let count_ok = (MIN_COUNT..=MAX_COUNT * 1.5).contains(&raw);
         let score = (if in_band { 0.0 } else { 100.0 })
             + (if count_ok { 0.0 } else { 20.0 })
             + ratio.ln().abs()
@@ -408,7 +408,7 @@ pub fn pick_domain_rows(scale_kg: f64, options: &PickDomainRowsOptions) -> Vec<D
         let units: Vec<&DomainUnit> = domain
             .units
             .iter()
-            .filter(|u| !excluded.iter().any(|e| *e == u.id))
+            .filter(|u| !excluded.contains(&u.id))
             .collect();
         if units.is_empty() {
             continue;
@@ -610,7 +610,7 @@ pub fn pick_makeup_row(
         MakeupKind::Switch => chip.dirty_kg_per_unit - chip.clean_kg_per_unit.unwrap_or(0.0),
         MakeupKind::Abstain => chip.dirty_kg_per_unit,
     };
-    if !(delta > 0.0) || !(scale_kg > 0.0) {
+    if delta.is_nan() || delta <= 0.0 || scale_kg.is_nan() || scale_kg <= 0.0 {
         return DomainRow {
             id: format!("{}:makeup:{}", chip.domain, chip.id),
             domain: chip.domain.to_string(),
