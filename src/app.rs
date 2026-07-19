@@ -30,8 +30,8 @@ async fn home() -> Result {
                 <span class="text-oxide">"Rust."</span>
             </h1>
             <p class="mt-6 max-w-prose text-lg text-ink2">
-                "Ben Berman — software engineer in New York; co-founder of \
-                 DigiChem; this site is where he thinks out loud."
+                "I'm a software engineer in New York; co-founder of DigiChem; \
+                 this site is where I think out loud."
             </p>
         </section>
 
