@@ -32,6 +32,16 @@ and static assets. Config in `deploy/wrangler.jsonc`; image in
   (regenerates `worker-configuration.d.ts`), then `npx tsc`.
 - RELEASE_ID has a `"dev"` placeholder in `vars` so types/`wrangler dev`
   work; real deploys override it — keep passing `--var RELEASE_ID:<sha>`.
+- The Dockerfile's `ENV CARGO_HOME=/root/.cargo` is load-bearing: topcoat-cli
+  strips `CARGO_HOME` before the internal `cargo build` that
+  `topcoat asset bundle` runs, and the rust image's default
+  (`/usr/local/cargo`) would make that inner build a full recompile instead
+  of a cache hit. Don't remove it.
+- If the `topcoat asset bundle` build step sits silent for minutes, it is
+  almost certainly downloading its ~31 fontsource woff2 files serially with
+  broken container DNS (an unreachable first nameserver costs a 5s timeout
+  per lookup). Verify with a `curl -w '%{time_namelookup}'` inside any
+  container; fix DNS at the docker daemon/host level, not in this repo.
 - Local deploys and `wrangler dev` need the docker buildx plugin
   (`pacman -S docker-buildx`); CI sets up buildx itself.
 - Container scales to zero (`sleepAfter = "15m"`); 1–3 s cold start on first

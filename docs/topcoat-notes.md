@@ -1,13 +1,19 @@
-# Topcoat 0.1.3 crib sheet
+# Topcoat 0.3.0 crib sheet
+
+(Written against 0.1.3; verified still accurate on 0.3.0 — the 0.2.0
+"breaking" changes were server behavior, not API: response compression on by
+default via a new `compression` feature, plus graceful shutdown. Examples are
+byte-identical between the two tags.)
 
 Ground truth (read these, don't guess APIs):
 
-- Vendored crate sources: `~/.cargo/registry/src/index.crates.io-*/topcoat-*-0.1.3/`
-- Repo (examples!): `https://github.com/tokio-rs/topcoat` — clone at the
-  `v0.1.3` tag into a scratch dir when needed:
-  `git clone --depth 1 --branch v0.1.3 https://github.com/tokio-rs/topcoat`
+- Vendored crate sources: `~/.cargo/registry/src/index.crates.io-*/topcoat-*-0.3.0/`
+- Repo (examples!): `https://github.com/tokio-rs/topcoat` — tags are now
+  per-crate (`topcoat-v0.3.0`, not `v0.3.0`); clone into a scratch dir:
+  `git clone --depth 1 --branch topcoat-v0.3.0 https://github.com/tokio-rs/topcoat`
   — `examples/{hello-world,module-router,path-query-params,runtime,shard,tailwind,font,asset,htmx,session,ui,toasty-todo}`
-- docs.rs: https://docs.rs/topcoat/0.1.3
+- Changelogs: `crates/<crate>/CHANGELOG.md` in the repo (no GitHub releases)
+- docs.rs: https://docs.rs/topcoat/0.3.0
 
 ## Pages, layouts, routes (explicit paths + discover)
 
@@ -111,7 +117,7 @@ stay server-computed.
 
 ## Tailwind
 
-- `build.rs` (build-dep: `topcoat = { version = "0.1.3", default-features = false, features = ["tailwind"] }`):
+- `build.rs` (build-dep: `topcoat = { version = "0.3.0", default-features = false, features = ["tailwind"] }`):
   ```rust
   fn main() {
       println!("cargo:rerun-if-changed=styles/input.css");
