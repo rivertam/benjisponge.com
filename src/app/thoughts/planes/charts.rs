@@ -104,6 +104,22 @@ fn fmt_count(n: f64) -> String {
     }
 }
 
+/// Slice widths for a track, clamped so they never sum past 100%. Without
+/// the clamp, a bar that outweighs its track (a habit year vs. a short
+/// flight in the zoom panel) would flex-shrink every slice proportionally —
+/// the track would still look full-width, but every slice's share and the
+/// dashed tick's position would silently lie. Overflow past one track is
+/// truncated instead, matching the Compare view's `.min(100.0)`.
+fn clamped_widths(kgs: impl Iterator<Item = f64>, denom_kg: f64) -> Vec<f64> {
+    let mut remaining = 100.0_f64;
+    kgs.map(|kg| {
+        let w = (kg / denom_kg * 100.0).min(remaining).max(0.0);
+        remaining -= w;
+        w
+    })
+    .collect()
+}
+
 /// A bar row's head: the year being dissected, its detail line and cites.
 #[component]
 async fn row_head(noun: &str, detail: &str, source_ids: Vec<&'static str>) -> Result {
@@ -153,27 +169,36 @@ async fn bar_track(
     };
     let flip = tick_pct > 55.0;
 
+    struct Seg {
+        class: String,
+        style: String,
+        tip: String,
+    }
+    let widths = clamped_widths(bar.slices.iter().map(|s| s.kg), denom_kg);
+    let segs: Vec<Seg> = bar
+        .slices
+        .iter()
+        .zip(widths)
+        .map(|(slice, width)| Seg {
+            class: format!("bar-seg seg-{}-{}", bar.id, slice.id),
+            style: format!("width:{width}%;background:{}", slice.color),
+            tip: format!(
+                "{} — {}",
+                if tonnes_tips {
+                    format_tonnes_smart(slice.kg / 1000.0)
+                } else {
+                    format_bar_value(slice.kg)
+                },
+                slice.label
+            ),
+        })
+        .collect();
+
     view! {
         <div class="bar-h-track">
-            for slice in bar.slices.iter() {
-                <div
-                    class=(format!("bar-seg seg-{}-{}", bar.id, slice.id))
-                    tabindex="0"
-                    style=(format!(
-                        "width:{}%;background:{}",
-                        slice.kg / denom_kg * 100.0,
-                        slice.color
-                    ))
-                >
-                    <span class="tip">(format!(
-                        "{} — {}",
-                        if tonnes_tips {
-                            format_tonnes_smart(slice.kg / 1000.0)
-                        } else {
-                            format_kg(slice.kg)
-                        },
-                        slice.label
-                    ))</span>
+            for seg in segs {
+                <div class=(seg.class) tabindex="0" style=(seg.style)>
+                    <span class="tip">(seg.tip)</span>
                 </div>
             }
             if has_tick {
@@ -203,20 +228,20 @@ async fn habits_track(
         style: String,
         tip: String,
     }
-    let mut segs = Vec::new();
-    for bar in HABIT_BARS.iter() {
-        for slice in bar.slices.iter() {
-            segs.push(Seg {
-                class: format!("bar-seg seg-{}-{}", bar.id, slice.id),
-                style: format!(
-                    "width:{}%;background:{}",
-                    slice.kg / denom_kg * 100.0,
-                    slice.color
-                ),
-                tip: format!("{} — {}", format_kg(slice.kg), slice.label),
-            });
-        }
-    }
+    let slices: Vec<_> = HABIT_BARS
+        .iter()
+        .flat_map(|bar| bar.slices.iter().map(move |slice| (bar, slice)))
+        .collect();
+    let widths = clamped_widths(slices.iter().map(|(_, s)| s.kg), denom_kg);
+    let segs: Vec<Seg> = slices
+        .iter()
+        .zip(widths)
+        .map(|((bar, slice), width)| Seg {
+            class: format!("bar-seg seg-{}-{}", bar.id, slice.id),
+            style: format!("width:{width}%;background:{}", slice.color),
+            tip: format!("{} — {}", format_bar_value(slice.kg), slice.label),
+        })
+        .collect();
 
     let pool: Vec<FlightAnalogy> = HABIT_BARS
         .iter()
