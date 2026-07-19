@@ -42,5 +42,5 @@ async fn interests() -> Result {
             }
         </section>
     }?;
-    view! { shell(title: "Interests — Ben Berman", body: body) }
+    view! { shell(title: "Interests — Ben Berman", active: "interests", body: body) }
 }

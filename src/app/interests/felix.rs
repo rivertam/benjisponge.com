@@ -37,5 +37,5 @@ async fn felix() -> Result {
             </p>
         </div>
     }?;
-    view! { shell(title: title.as_str(), body: body) }
+    view! { shell(title: title.as_str(), active: "interests", body: body) }
 }

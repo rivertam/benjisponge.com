@@ -129,6 +129,14 @@ a.chip:focus-visible {
   text-underline-offset: 0.22em;
 }
 
+/* The nav item for the section the page lives under: already oxidized. */
+.nav-active {
+  color: var(--color-oxide);
+  text-decoration-line: underline;
+  text-decoration-thickness: 0.1em;
+  text-underline-offset: 0.3em;
+}
+
 /* Quiet chrome links (nav, footer): muted until they oxidize. */
 .quiet-link {
   color: var(--color-ink2);

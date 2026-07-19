@@ -81,5 +81,5 @@ async fn not_found(cx: &Cx) -> Result {
             </header>
         </section>
     }?;
-    view! { shell(title: "404 — Ben Berman", body: body) }
+    view! { shell(title: "404 — Ben Berman", active: "", body: body) }
 }

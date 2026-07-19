@@ -157,5 +157,5 @@ async fn planes(cx: &Cx) -> Result {
             </div>
         </article>
     }?;
-    view! { shell(title: title.as_str(), body: body) }
+    view! { shell(title: title.as_str(), active: "", body: body) }
 }

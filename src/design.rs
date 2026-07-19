@@ -11,7 +11,7 @@ use topcoat::{
     view::{View, component, view},
 };
 
-use crate::content::interests::INTERESTS;
+use crate::content::{interests::INTERESTS, logbook::LOG};
 
 pub const ZILLA_SLAB: Font = fontsource_font!(ZILLA_SLAB, host: Asset);
 pub const FIRA_SANS: Font = fontsource_font!(FIRA_SANS, host: Asset);
@@ -19,9 +19,19 @@ pub const FIRA_MONO: Font = fontsource_font!(FIRA_MONO, host: Asset);
 
 /// The full document: every page renders through this, so every page owns its
 /// title. Pages invoke it as markup with the body as a prop:
-/// `view! { shell(title: "…", body: body) }`.
+/// `view! { shell(title: "…", active: "…", body: body) }`.
+///
+/// `active` names the nav item the page lives under — `"log"`, `"resume"`,
+/// `"interests"`, or `""` for none — and gets the oxide underline.
 #[component]
-pub async fn shell(title: &str, body: View) -> Result {
+pub async fn shell(title: &str, active: &str, body: View) -> Result {
+    let nav = |item: &str| {
+        if active == item {
+            "nav-active"
+        } else {
+            "quiet-link"
+        }
+    };
     view! {
         <!DOCTYPE html>
         <html lang="en">
@@ -35,6 +45,12 @@ pub async fn shell(title: &str, body: View) -> Result {
                 topcoat::font::link(font: ZILLA_SLAB)
                 topcoat::font::link(font: FIRA_SANS)
                 topcoat::font::link(font: FIRA_MONO)
+                <link
+                    rel="alternate"
+                    type="application/rss+xml"
+                    title="Ben Berman — logbook"
+                    href="/feed.xml"
+                >
             </head>
             <body class="flex min-h-screen flex-col bg-page font-body text-ink">
                 <header class="mx-auto flex w-full max-w-4xl items-baseline justify-between px-5 pt-6">
@@ -43,10 +59,10 @@ pub async fn shell(title: &str, body: View) -> Result {
                         class="font-display text-lg font-semibold text-ink no-underline hover:text-oxide"
                     >"Ben Berman"</a>
                     <nav class="flex gap-6 font-meta text-sm">
-                        <a href="/thoughts" class="quiet-link">"thoughts"</a>
-                        <a href="/resume" class="quiet-link">"résumé"</a>
+                        <a href="/" class=(nav("log"))>"log"</a>
+                        <a href="/resume" class=(nav("resume"))>"résumé"</a>
                         <details class="nav-dd">
-                            <summary class="quiet-link">"interests"</summary>
+                            <summary class=(nav("interests"))>"interests"</summary>
                             <div class="nav-dd-menu">
                                 <a class="quiet-link" href="/interests">"all interests →"</a>
                                 for interest in INTERESTS.iter() {
@@ -74,6 +90,7 @@ pub async fn shell(title: &str, body: View) -> Result {
                             >"Reddit"</a>
                         </span>
                         <span>
+                            (format!("entry № {:04} of {:04} · ", LOG.len(), LOG.len()))
                             "made with "
                             <a href="https://github.com/tokio-rs/topcoat" class="quiet-link">"topcoat"</a>
                         </span>

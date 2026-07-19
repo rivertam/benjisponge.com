@@ -22,5 +22,5 @@ async fn pesky_code() -> Result {
             </div>
         </article>
     }?;
-    view! { shell(title: "Pesky code — Ben Berman", body: body) }
+    view! { shell(title: "Pesky code — Ben Berman", active: "", body: body) }
 }

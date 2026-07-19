@@ -30,5 +30,5 @@ async fn thoughts() -> Result {
             }
         </section>
     }?;
-    view! { shell(title: "Thoughts — Ben Berman", body: body) }
+    view! { shell(title: "Thoughts — Ben Berman", active: "", body: body) }
 }

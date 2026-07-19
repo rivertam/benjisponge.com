@@ -219,5 +219,5 @@ async fn resume(cx: &Cx) -> Result {
             }
         </section>
     }?;
-    view! { shell(title: title.as_str(), body: body) }
+    view! { shell(title: title.as_str(), active: "resume", body: body) }
 }
