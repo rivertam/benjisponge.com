@@ -199,3 +199,60 @@ pub fn format_js_number(n: f64) -> String {
         format!("{n}")
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn grouping_matches_en_us() {
+        assert_eq!(format_grouped(1234567.0, 0), "1,234,567");
+        assert_eq!(format_grouped(8000.0, 0), "8,000");
+        assert_eq!(format_grouped(999.0, 0), "999");
+    }
+
+    #[test]
+    fn rounds_half_away_from_zero_like_intl() {
+        // Intl rounds the shortest decimal repr half away from zero: 12.35
+        // is "12.4" even though the double is 12.3499… (toFixed says 12.3).
+        assert_eq!(format_tonnes(12.35), "12.4 t");
+        assert_eq!(format_tonnes(0.05), "0.1 t");
+    }
+
+    #[test]
+    fn carry_propagates_through_the_integer_part() {
+        assert_eq!(format_tonnes(999.95), "1,000.0 t");
+        assert_eq!(round_decimal_str("999.95", 1), "1000.0");
+        assert_eq!(round_decimal_str("9.99", 1), "10.0");
+    }
+
+    #[test]
+    fn tonnes_smart_bands() {
+        assert_eq!(format_tonnes_smart(0.004), "<0.01 t");
+        assert_eq!(format_tonnes_smart(0.05), "0.05 t");
+        assert_eq!(format_tonnes_smart(0.5), "0.5 t");
+        assert_eq!(format_tonnes_smart(3.456), "3.5 t");
+    }
+
+    #[test]
+    fn round_count_prefers_friendly_but_honest() {
+        assert_eq!(round_count(7600.0), 8000.0); // within 12% of 1 sig fig
+        assert_eq!(round_count(14.0), 14.0); // 10 would be off by 28%
+        assert_eq!(round_count(0.3), 1.0); // never rounds to zero
+    }
+
+    #[test]
+    fn rate_counts_allow_fractions() {
+        assert_eq!(round_rate_count(0.63), 0.6);
+        assert_eq!(round_rate_count(0.04), 0.04);
+        assert_eq!(round_rate_count(0.0), 0.0);
+        assert_eq!(round_rate_count(f64::NAN), 0.0);
+    }
+
+    #[test]
+    fn years_span_bands() {
+        assert_eq!(format_years_span(150.0), "100+");
+        assert_eq!(format_years_span(15.4), "15");
+        assert_eq!(format_years_span(2.34), "2.3");
+    }
+}

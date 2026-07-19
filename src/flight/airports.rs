@@ -410,3 +410,23 @@ pub fn search_airports(query: &str, limit: usize) -> Vec<&'static Airport> {
     scored.truncate(limit);
     scored.into_iter().map(|(i, _)| &db.airports[i]).collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn find_airport_is_case_insensitive() {
+        assert!(find_airport("JFK").is_some());
+        assert!(find_airport("jfk").is_some());
+        assert!(find_airport("ZZZ").is_none());
+        assert!(find_airport("").is_none());
+    }
+
+    #[test]
+    fn search_finds_by_city_and_code() {
+        assert!(!search_airports("new york", 5).is_empty());
+        assert!(!search_airports("LHR", 5).is_empty());
+        assert!(search_airports("zzzzzzzz", 5).is_empty());
+    }
+}

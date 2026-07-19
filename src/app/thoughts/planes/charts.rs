@@ -1623,3 +1623,117 @@ pub async fn budget_chart(
         </section>
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::collections::HashSet;
+
+    /// The stylesheet hardcodes generated class names; these tests are the
+    /// tripwire for the reference_data ↔ charts ↔ CSS coupling triangle.
+    const CSS: &str = include_str!("../../../../styles/planes-charts.css");
+    /// This file's own source: the `:data-pick-*` attributes declared in
+    /// charts_section are the Rust side of the CSS attribute selectors.
+    const SELF: &str = include_str!("charts.rs");
+
+    /// Every `<stem><ident-chars>` token following an occurrence of
+    /// `prefix` (whose leading punctuation is not part of the token). Bare
+    /// stems (comments like "data-pick-*") are dropped.
+    fn tokens_after(text: &str, prefix: &str) -> HashSet<String> {
+        let stem = prefix.trim_start_matches(|c: char| !(c.is_ascii_alphanumeric() || c == '-'));
+        text.match_indices(prefix)
+            .map(|(idx, m)| {
+                let rest: String = text[idx + m.len()..]
+                    .chars()
+                    .take_while(|c| c.is_ascii_alphanumeric() || *c == '-')
+                    .collect();
+                format!("{stem}{rest}")
+            })
+            .filter(|token| token.len() > stem.len())
+            .collect()
+    }
+
+    #[test]
+    fn css_seg_classes_all_exist_in_reference_data() {
+        let valid: HashSet<String> = all_bars()
+            .flat_map(|bar| {
+                bar.slices
+                    .iter()
+                    .map(move |slice| format!("seg-{}-{}", bar.id, slice.id))
+            })
+            .collect();
+        let used = tokens_after(CSS, ".seg-");
+        assert!(!used.is_empty(), "extraction found no .seg-* selectors");
+        for class in used {
+            assert!(
+                valid.contains(&class),
+                "planes-charts.css selects .{class}, but no bar/slice in \
+                 reference_data.rs generates it — renamed id?"
+            );
+        }
+    }
+
+    #[test]
+    fn css_data_pick_attrs_all_declared_in_charts() {
+        let declared = tokens_after(SELF, ":data-pick-");
+        let used = tokens_after(CSS, "data-pick-");
+        assert!(!used.is_empty(), "extraction found no data-pick selectors");
+        for token in used {
+            assert!(
+                declared.contains(&token),
+                "planes-charts.css keys on [{token}] but charts_section \
+                 declares no :{token} attribute"
+            );
+        }
+    }
+}
+
+#[cfg(test)]
+mod price_tests {
+    use super::*;
+
+    /// Chip labels hand-type their price ("go vegan −1.0 t") while the bar
+    /// math computes the same saving from slice kg via `option_kg`. The two
+    /// have drifted before; assert the displayed price rounds from the
+    /// computed one (tolerance: half the label's last displayed digit).
+    /// On short flights a habit bar outweighs the zoom track; widths must
+    /// truncate at 100%, never rescale (the flex-shrink lie this replaced).
+    #[test]
+    fn clamped_widths_truncate_overflow() {
+        let w = clamped_widths([60.0, 60.0, 60.0].into_iter(), 100.0);
+        assert_eq!(w, vec![60.0, 40.0, 0.0]);
+        let w = clamped_widths([25.0, 25.0].into_iter(), 100.0);
+        assert_eq!(w, vec![25.0, 25.0]);
+    }
+
+    #[test]
+    fn chip_price_labels_match_computed_savings() {
+        for bar in all_bars() {
+            for opt in bar.options {
+                let Some((_, price)) = opt.label.rsplit_once(" \u{2212}") else {
+                    panic!("{}:{} label has no \u{2212}price suffix", bar.id, opt.id);
+                };
+                let (num, unit) = price
+                    .rsplit_once(' ')
+                    .unwrap_or_else(|| panic!("{}:{} price {price:?}", bar.id, opt.id));
+                let shown: f64 = num
+                    .parse()
+                    .unwrap_or_else(|_| panic!("{}:{} price number {num:?}", bar.id, opt.id));
+                let actual_kg = option_kg(bar, opt.id);
+                let actual = match unit {
+                    "t" => actual_kg / 1000.0,
+                    "kg" => actual_kg,
+                    other => panic!("{}:{} price unit {other:?}", bar.id, opt.id),
+                };
+                let decimals = num.split('.').nth(1).map_or(0, str::len) as i32;
+                let tol = 0.5 * 10f64.powi(-decimals) + 1e-9;
+                assert!(
+                    (shown - actual).abs() <= tol,
+                    "{}:{} label says \u{2212}{num} {unit} but slices sum to {actual:.3} {unit}",
+                    bar.id,
+                    opt.id
+                );
+            }
+        }
+    }
+}

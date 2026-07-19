@@ -648,3 +648,25 @@ pub fn pick_makeup_row(
         source_ids: chip.source_ids.clone(),
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn domains_initialize_and_produce_rows() {
+        // DOMAINS resolves activity ids from reference_data lazily; a
+        // renamed Activity id would panic here rather than on first render.
+        for mode in [ComparisonMode::Absolute, ComparisonMode::Rate] {
+            let rows = comparison_rows(1000.0, mode);
+            assert!(!rows.is_empty());
+        }
+        assert!(!list_makeup_chips().is_empty());
+    }
+
+    #[test]
+    fn pick_unit_handles_degenerate_scales() {
+        assert!(!comparison_rows(0.0, ComparisonMode::Absolute).is_empty());
+        assert!(!comparison_rows(f64::NAN, ComparisonMode::Absolute).is_empty());
+    }
+}

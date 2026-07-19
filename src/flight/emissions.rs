@@ -379,3 +379,113 @@ pub fn flight_impact(input: &FlightInput) -> FlightImpact {
         travel_budget_years: tonnes_co2e / TRAVEL_BUDGET_TONNES_PER_YEAR,
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    const JFK: Coordinates = Coordinates {
+        lat: 40.6413,
+        lon: -73.7781,
+    };
+    const LHR: Coordinates = Coordinates {
+        lat: 51.47,
+        lon: -0.4543,
+    };
+
+    #[test]
+    fn great_circle_jfk_lhr_is_about_5540_km() {
+        let d = great_circle_km(JFK.lat, JFK.lon, LHR.lat, LHR.lon);
+        assert!((d - 5540.0).abs() < 60.0, "got {d}");
+        let back = great_circle_km(LHR.lat, LHR.lon, JFK.lat, JFK.lon);
+        assert!((d - back).abs() < 1e-9);
+    }
+
+    #[test]
+    fn fuel_curve_is_continuous_across_haul_boundaries() {
+        for boundary in [SHORT_HAUL_KM, LONG_HAUL_KM] {
+            let below = per_leg_fuel_kg(boundary - 1e-6, Cabin::Economy);
+            let above = per_leg_fuel_kg(boundary + 1e-6, Cabin::Economy);
+            assert!(
+                (below - above).abs() < 0.1,
+                "discontinuity at {boundary}: {below} vs {above}"
+            );
+        }
+    }
+
+    #[test]
+    fn staycation_distance_is_exactly_zero() {
+        // The receipt's staycation branch compares distance_km == 0.0; the
+        // sub-half-km short circuit must keep returning an exact 0.0.
+        let impact = flight_impact(&FlightInput {
+            from: JFK,
+            to: JFK,
+            cabin: Cabin::Economy,
+            round_trip: false,
+        });
+        assert_eq!(impact.distance_km, 0.0);
+        assert_eq!(impact.tonnes_co2e, 0.0);
+        assert_eq!(impact.seat_share_of_aircraft, 1.0);
+    }
+
+    #[test]
+    fn round_trip_doubles_fuel() {
+        let one = flight_impact(&FlightInput {
+            from: JFK,
+            to: LHR,
+            cabin: Cabin::Economy,
+            round_trip: false,
+        });
+        let two = flight_impact(&FlightInput {
+            from: JFK,
+            to: LHR,
+            cabin: Cabin::Economy,
+            round_trip: true,
+        });
+        assert!((two.fuel_kg - 2.0 * one.fuel_kg).abs() < 1e-9);
+        assert!((two.tonnes_co2e - 2.0 * one.tonnes_co2e).abs() < 1e-9);
+    }
+
+    #[test]
+    fn impact_lines_sum_to_the_total() {
+        let i = flight_impact(&FlightInput {
+            from: JFK,
+            to: LHR,
+            cabin: Cabin::Business,
+            round_trip: false,
+        });
+        let sum = i.co2_tonnes + i.wtt_tonnes + i.contrail_tonnes + i.nox_other_tonnes;
+        assert!((i.tonnes_co2e - sum).abs() < 1e-12);
+        assert!((i.ice_m2 - i.co2_tonnes * ICE_M2_PER_TONNE).abs() < 1e-12);
+        assert!((i.aircraft_tonnes_co2e - i.tonnes_co2e / i.seat_share_of_aircraft).abs() < 1e-12);
+    }
+
+    #[test]
+    fn sky_factor_regions() {
+        // Mid North Atlantic: the corridor premium.
+        assert!((point_sky_factor(50.0, -30.0) - 0.39 / GLOBAL_EF_PER_KM).abs() < 1e-12);
+        // North Pacific box wraps the antimeridian: both sides of ±180 hit it.
+        assert!((point_sky_factor(45.0, 175.0) - 0.146 / GLOBAL_EF_PER_KM).abs() < 1e-12);
+        assert!((point_sky_factor(55.0, -150.0) - 0.146 / GLOBAL_EF_PER_KM).abs() < 1e-12);
+        // Open ocean south of every box: global mean.
+        assert!((point_sky_factor(-50.0, -150.0) - 1.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn antipodal_route_bills_the_global_mean() {
+        let a = Coordinates { lat: 0.0, lon: 0.0 };
+        let b = Coordinates {
+            lat: 0.0,
+            lon: 180.0,
+        };
+        assert_eq!(contrail_sky_factor(a, b), 1.0);
+    }
+
+    #[test]
+    fn jfk_lhr_flies_expensive_skies() {
+        // The route crosses the North Atlantic corridor; its average must
+        // land above the global mean but below the corridor peak.
+        let f = contrail_sky_factor(JFK, LHR);
+        assert!(f > 1.2 && f < 2.4, "got {f}");
+    }
+}

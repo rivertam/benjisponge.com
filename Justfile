@@ -15,10 +15,15 @@ release:
     cargo build --release
     topcoat asset bundle --release
 
-# Run formatting and lint checks
+# Run formatting, lint, and test checks
 check:
     cargo fmt --check
     cargo clippy --all-targets -- -D warnings
+    cargo test
+
+# Run the test suite
+test:
+    cargo test
 
 # Capture visual snapshots, optionally with a label
 snapshot label="":

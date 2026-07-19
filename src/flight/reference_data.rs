@@ -1021,3 +1021,108 @@ pub static BUDGET_TARGETS: &[BudgetTarget] = &[
         meaning: "the net-zero era — what’s left for one person, per year",
     },
 ];
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::flight::sources::source;
+
+    fn every_bar() -> impl Iterator<Item = &'static SacrificeBar> {
+        SACRIFICE_BARS.iter().chain(HABIT_BARS.iter())
+    }
+
+    #[test]
+    fn every_source_id_resolves() {
+        // cite() panics at render on an unknown id; catch it here instead.
+        let mut ids: Vec<(&str, &str)> = Vec::new();
+        for a in ACTIVITIES {
+            ids.extend(a.source_ids.iter().map(|s| (a.id, *s)));
+        }
+        for bar in every_bar() {
+            ids.extend(bar.source_ids.iter().map(|s| (bar.id, *s)));
+            for an in bar.analogies {
+                ids.extend(an.source_ids.iter().map(|s| (an.id, *s)));
+            }
+        }
+        for (owner, id) in ids {
+            assert!(source(id).is_some(), "{owner} cites unknown source {id:?}");
+        }
+    }
+
+    #[test]
+    fn options_name_real_cuttable_slices() {
+        // charts::option_kg sums the named slices; an empty or dangling
+        // slice_ids list renders a zero-priced or panicking chip.
+        for bar in every_bar() {
+            for opt in bar.options {
+                assert!(
+                    !opt.slice_ids.is_empty(),
+                    "{}:{} has no slices",
+                    bar.id,
+                    opt.id
+                );
+                for sid in opt.slice_ids {
+                    let slice = bar.slices.iter().find(|s| s.id == *sid);
+                    let slice = slice.unwrap_or_else(|| {
+                        panic!("{}:{} names unknown slice {sid:?}", bar.id, opt.id)
+                    });
+                    assert!(
+                        slice.cut.is_some(),
+                        "{}:{} names uncuttable slice {sid:?}",
+                        bar.id,
+                        opt.id
+                    );
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn every_bar_has_analogies_and_positive_slices() {
+        // pick_analogy indexes [0]; slices divide by kg in width math.
+        for bar in every_bar() {
+            assert!(!bar.analogies.is_empty(), "{} has no analogies", bar.id);
+            for an in bar.analogies {
+                assert!(an.kg_per_unit > 0.0, "{}:{} kg_per_unit", bar.id, an.id);
+            }
+            for slice in bar.slices {
+                assert!(slice.kg > 0.0, "{}:{} kg", bar.id, slice.id);
+            }
+        }
+    }
+
+    #[test]
+    fn wardrobe_slice_matches_its_own_label_and_analogy() {
+        // "≈53 garments at ≈10 kg each" = 530; the wardrobe-years analogy
+        // quotes the same year. These drifted once (500 vs 530).
+        let fashion = every_bar().find(|b| b.id == "fashion").unwrap();
+        let slice = fashion
+            .slices
+            .iter()
+            .find(|s| s.id == "average-wardrobe")
+            .unwrap();
+        let analogy = fashion
+            .analogies
+            .iter()
+            .find(|a| a.id == "wardrobe-years")
+            .unwrap();
+        assert_eq!(slice.kg, analogy.kg_per_unit);
+    }
+
+    #[test]
+    fn bar_and_slice_ids_are_unique() {
+        let mut seen = std::collections::HashSet::new();
+        for bar in every_bar() {
+            assert!(seen.insert(bar.id), "duplicate bar id {:?}", bar.id);
+            let mut slice_ids = std::collections::HashSet::new();
+            for s in bar.slices {
+                assert!(
+                    slice_ids.insert(s.id),
+                    "{}: duplicate slice {:?}",
+                    bar.id,
+                    s.id
+                );
+            }
+        }
+    }
+}
