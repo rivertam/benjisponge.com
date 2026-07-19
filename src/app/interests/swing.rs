@@ -22,7 +22,7 @@ async fn swing() -> Result {
     }?;
     let body = view! {
         page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
-        rail_prose(mt: "mt-10", stamp: "", body: prose)
+        rail_prose(stamp: "", body: prose)
         back_link(href: "/interests", label: "← all interests")
     }?;
     view! { shell(title: meta.title, active: "interests", body: body) }

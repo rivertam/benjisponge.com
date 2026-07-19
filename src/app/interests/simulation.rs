@@ -147,11 +147,11 @@ async fn simulation() -> Result {
     }?;
     let body = view! {
         page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
-        rail_prose(mt: "mt-10", stamp: "backstory", body: backstory)
-        rail_section(mt: "mt-10", stamp: "footage", body: footage)
-        rail_section(mt: "mt-6", stamp: "links", body: links)
-        rail_section(mt: "mt-6", stamp: "What's the state?", body: state)
-        rail_section(mt: "mt-6", stamp: "What did I learn?", body: learned)
+        rail_prose(stamp: "backstory", body: backstory)
+        rail_section(stamp: "footage", body: footage)
+        rail_section(class: "mt-6", stamp: "links", body: links)
+        rail_section(class: "mt-6", stamp: "What's the state?", body: state)
+        rail_section(class: "mt-6", stamp: "What did I learn?", body: learned)
         back_link(href: "/interests", label: "← all interests")
     }?;
     view! { shell(title: meta.title, active: "interests", body: body) }

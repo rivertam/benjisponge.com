@@ -27,8 +27,8 @@ async fn spire() -> Result {
     }?;
     let body = view! {
         page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
-        rail_prose(mt: "mt-10", stamp: "", body: prose)
-        rail_section(mt: "mt-6", stamp: "links", body: links)
+        rail_prose(stamp: "", body: prose)
+        rail_section(class: "mt-6", stamp: "links", body: links)
         back_link(href: "/interests", label: "← all interests")
     }?;
     view! { shell(title: meta.title, active: "interests", body: body) }
