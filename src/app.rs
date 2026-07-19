@@ -157,7 +157,7 @@ async fn home(cx: &Cx) -> Result {
         });
     }
 
-    let body = view! {
+    view! { shell(title: "", active: "log",
         // Hero: "I like {word}", the word cycling through the log's whole
         // range of enthusiasms. Pure CSS — see .log-hero-* in logbook.css.
         <section class="mt-16">
@@ -267,6 +267,5 @@ async fn home(cx: &Cx) -> Result {
                 }
             }
         </section>
-    }?;
-    view! { shell(title: "", active: "log", body: body) }
+    ) }
 }

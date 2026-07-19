@@ -8,36 +8,32 @@ use crate::{
 #[page("/interests/keys")]
 async fn keys() -> Result {
     let meta = interest("keys");
-    let prose = view! {
-        <p>
-            "The keyboard is a Dactyl Manuform from ohkeycaps — marble case, lubed 67g \
-             Zilents, SA keycaps. I made a showcase video in 2021 and ten thousand \
-             switch-curious strangers have watched it since, which makes it my most \
-             successful publication in any medium."
-        </p>
-        <p>
-            "The typing speed is real and independently auditable: 117wpm average, 165 peak."
-        </p>
-    }?;
-    let footage = view! {
-        <div class="flex flex-wrap gap-5">
-            video_card(youtube_id: "yZl30vWuERs", label: "the keyboard →")
-        </div>
-    }?;
-    let links = view! {
-        <p class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">
-            <a
-                class="oxlink"
-                href="https://data.typeracer.com/pit/profile?user=rivertam"
-            >"TypeRacer →"</a>
-        </p>
-    }?;
-    let body = view! {
+    view! { shell(title: meta.title, active: "interests",
         page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
-        rail_prose(stamp: "", body: prose)
-        rail_section(stamp: "footage", body: footage)
-        rail_section(class: "mt-6", stamp: "links", body: links)
+        rail_prose(stamp: "",
+            <p>
+                "The keyboard is a Dactyl Manuform from ohkeycaps — marble case, lubed 67g \
+                 Zilents, SA keycaps. I made a showcase video in 2021 and ten thousand \
+                 switch-curious strangers have watched it since, which makes it my most \
+                 successful publication in any medium."
+            </p>
+            <p>
+                "The typing speed is real and independently auditable: 117wpm average, 165 peak."
+            </p>
+        )
+        rail_section(stamp: "footage",
+            <div class="flex flex-wrap gap-5">
+                video_card(youtube_id: "yZl30vWuERs", label: "the keyboard →")
+            </div>
+        )
+        rail_section(class: "mt-6", stamp: "links",
+            <p class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">
+                <a
+                    class="oxlink"
+                    href="https://data.typeracer.com/pit/profile?user=rivertam"
+                >"TypeRacer →"</a>
+            </p>
+        )
         back_link(href: "/interests", label: "← all interests")
-    }?;
-    view! { shell(title: meta.title, active: "interests", body: body) }
+    ) }
 }

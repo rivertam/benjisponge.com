@@ -57,7 +57,7 @@ async fn not_found(cx: &Cx) -> Result {
     let suggestion_tail =
         format!(" is {edits} away; redirecting there would have been presumptuous.");
 
-    let body = view! {
+    view! { shell(title: "404", active: "",
         (StatusCode::NOT_FOUND)
         <section class="mt-16 sm:mt-24">
             <header class="rail-row">
@@ -80,6 +80,5 @@ async fn not_found(cx: &Cx) -> Result {
                 </div>
             </header>
         </section>
-    }?;
-    view! { shell(title: "404", active: "", body: body) }
+    ) }
 }

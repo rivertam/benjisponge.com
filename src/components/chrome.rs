@@ -14,8 +14,8 @@ pub const FIRA_SANS: Font = fontsource_font!(FIRA_SANS, host: Asset);
 pub const FIRA_MONO: Font = fontsource_font!(FIRA_MONO, host: Asset);
 
 /// The full document: every page renders through this, so every page owns its
-/// title. Pages invoke it as markup with the body as a prop:
-/// `view! { shell(title: "…", active: "…", body: body) }`.
+/// title. Pages invoke it as markup with the page content as trailing children:
+/// `view! { shell(title: "…", active: "…", <p>"…"</p>) }`.
 ///
 /// `title` is the bare page title — the shell appends "— Ben Berman" itself;
 /// pass `""` for the homepage, whose title is just the name.
@@ -23,7 +23,7 @@ pub const FIRA_MONO: Font = fontsource_font!(FIRA_MONO, host: Asset);
 /// `active` names the nav item the page lives under — `"log"`, `"resume"`,
 /// `"interests"`, or `""` for none — and gets the oxide underline.
 #[component]
-pub async fn shell(title: &str, active: &str, body: View) -> Result {
+pub async fn shell(title: &str, active: &str, child: View) -> Result {
     let title = if title.is_empty() {
         "Ben Berman".to_string()
     } else {
@@ -80,7 +80,7 @@ pub async fn shell(title: &str, active: &str, body: View) -> Result {
                         </details>
                     </nav>
                 </header>
-                <main class="mx-auto w-full max-w-4xl flex-1 px-5 pb-20">(body)</main>
+                <main class="mx-auto w-full max-w-4xl flex-1 px-5 pb-20">(child)</main>
                 <footer class="mx-auto w-full max-w-4xl px-5 pb-8">
                     <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-t border-hairline pt-4 font-meta text-xs text-muted">
                         <span class="flex flex-wrap gap-x-5 gap-y-2">

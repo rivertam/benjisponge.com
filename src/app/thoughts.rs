@@ -10,7 +10,7 @@ use crate::{
 
 #[page("/thoughts")]
 async fn thoughts() -> Result {
-    let body = view! {
+    view! { shell(title: "Thoughts", active: "",
         page_head(
             stamp: "log",
             title: "Thoughts",
@@ -26,6 +26,5 @@ async fn thoughts() -> Result {
                 )
             }
         </section>
-    }?;
-    view! { shell(title: "Thoughts", active: "", body: body) }
+    ) }
 }

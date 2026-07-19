@@ -128,7 +128,7 @@ async fn planes(cx: &Cx) -> Result {
         }
     };
 
-    let body = view! {
+    view! { shell(title: title.as_str(), active: "",
         <article class="mt-16 sm:mt-24">
             <header class="rail-row">
                 <p class="rail-stamp">"2026-07-12"</p>
@@ -156,6 +156,5 @@ async fn planes(cx: &Cx) -> Result {
                 }
             </div>
         </article>
-    }?;
-    view! { shell(title: title.as_str(), active: "", body: body) }
+    ) }
 }

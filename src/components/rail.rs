@@ -26,9 +26,10 @@ pub async fn page_head(stamp: &str, title: &str, lede: &str) -> Result {
 /// content column. `stamp: ""` renders the empty spacer cell instead (prose
 /// continuation rows). `class` is optional extra classes on the row — it
 /// defaults to `"mt-10"`, so pass e.g. `class: "mt-6"` to tighten the top
-/// margin or `class: ""` inside an already-spaced parent.
+/// margin or `class: ""` inside an already-spaced parent. Child markup follows
+/// the named properties, e.g. `rail_section(stamp: "links", <p>"…"</p>)`.
 #[component]
-pub async fn rail_section(#[default("mt-10")] class: &str, stamp: &str, body: View) -> Result {
+pub async fn rail_section(#[default("mt-10")] class: &str, stamp: &str, child: View) -> Result {
     let row_class = if class.is_empty() {
         "rail-row".to_string()
     } else {
@@ -41,7 +42,7 @@ pub async fn rail_section(#[default("mt-10")] class: &str, stamp: &str, body: Vi
             } else {
                 <p class="rail-stamp rail-stamp-label">(stamp)</p>
             }
-            <div class="min-w-0">(body)</div>
+            <div class="min-w-0">(child)</div>
         </div>
     }
 }
@@ -49,9 +50,9 @@ pub async fn rail_section(#[default("mt-10")] class: &str, stamp: &str, body: Vi
 /// A rail row whose body is running prose: paragraphs at reading measure in
 /// the secondary ink. `class` works as on [`rail_section`].
 #[component]
-pub async fn rail_prose(#[default("mt-10")] class: &str, stamp: &str, body: View) -> Result {
-    let prose = view! { <div class="max-w-prose space-y-4 text-ink2">(body)</div> }?;
-    view! { rail_section(class: class, stamp: stamp, body: prose) }
+pub async fn rail_prose(#[default("mt-10")] class: &str, stamp: &str, child: View) -> Result {
+    let prose = view! { <div class="max-w-prose space-y-4 text-ink2">(child)</div> }?;
+    view! { rail_section(class: class, stamp: stamp, (prose)) }
 }
 
 /// A page's closing rail row: a quiet link back up to the section index.

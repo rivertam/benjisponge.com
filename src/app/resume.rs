@@ -100,7 +100,7 @@ async fn resume(cx: &Cx) -> Result {
         None => "Résumé".to_string(),
     };
 
-    let body = view! {
+    view! { shell(title: title.as_str(), active: "resume",
         page_head(stamp: "timeline", title: "Résumé", lede: "")
         if let Some(line) = filter_line {
             <div class="rail-row mt-8">
@@ -209,6 +209,5 @@ async fn resume(cx: &Cx) -> Result {
                 </div>
             }
         </section>
-    }?;
-    view! { shell(title: title.as_str(), active: "resume", body: body) }
+    ) }
 }

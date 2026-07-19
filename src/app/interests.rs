@@ -19,7 +19,7 @@ use crate::{
 
 #[page("/interests")]
 async fn interests() -> Result {
-    let body = view! {
+    view! { shell(title: "Interests", active: "interests",
         page_head(
             stamp: "index",
             title: "Interests",
@@ -35,6 +35,5 @@ async fn interests() -> Result {
                 )
             }
         </section>
-    }?;
-    view! { shell(title: "Interests", active: "interests", body: body) }
+    ) }
 }

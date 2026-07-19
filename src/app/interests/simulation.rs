@@ -62,97 +62,88 @@ async fn react_three_fiber_citation() -> Result {
 #[page("/interests/simulation")]
 async fn simulation() -> Result {
     let meta = interest("simulation");
-    let chaos_citation = view! {
-        <p>
-            <cite>
-                "Gleick, James. "
-                <em>"Chaos: Making a New Science"</em>
-                ". Viking, 1987."
-            </cite>
-        </p>
-        ext_link(
-            class: "quiet-link",
-            href: "https://www.penguinrandomhouse.com/books/321477/chaos-by-james-gleick/",
-            label: "publisher →"
-        )
-    }?;
-    let backstory = view! {
-        <p>
-            "In 2023, I got into a little debate with my brother. I had said something \
-             like \"The existence and legality of renting property (i.e. landlords) \
-             raises property values\". He said something like \"You're way too sure, \
-             given the potential second- and third-order effects.\""
-        </p>
-        <p>
-            "I had this thought of \"this would be easy to simulate\", which I have \
-             learned is a dumb, untrue thought on both a literal and philosophical \
-             level."
-        </p>
-        <p>
-            "I explored many possibilities, forked from "
-            inline_popover(
-                id: "map-generator-cite",
-                label: "ProbablyTrain/MapGenerator",
-                map_generator_citation()
-            )
-            ", and played around with agentic LLMs for development for the first time."
-        </p>
-        <p>
-            "One of the biggest through-lines here was to create an "
-            inline_popover(
-                id: "ecs-cite",
-                label: "ECS",
-                ecs_citation()
-            )
-            "-style state management system for React (and therefore "
-            inline_popover(
-                id: "react-three-fiber-cite",
-                label: "react-three-fiber",
-                react_three_fiber_citation()
-            )
-            ") with co-located memory supporting a many-entity simulation. One of the \
-             cool ideas behind making it ECS-style would be the potential to use \
-             workers to do (" <em>"gasp"</em> ") multi-threaded simulations/gaming in \
-             JavaScript."
-        </p>
-    }?;
-    let footage = view! {
-        <div class="flex flex-wrap gap-5">
-            video_card(youtube_id: "Bcd_9LvUr-8", label: "the video →")
-        </div>
-    }?;
-    let links = view! {
-        <p class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">
-            <a class="oxlink" href="https://github.com/rivertam/City">"the repo →"</a>
-        </p>
-    }?;
-    let state = view! {
-        <p class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">
-            "Abandoned, in part due to finding a job."
-        </p>
-    }?;
-    let learned = view! {
-        <ul class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">
-            <li>"Memory-oriented performance improvements in the JavaScript runtime are quite counter-intuitive."</li>
-            <li>
-                "Chaotic systems aren't well-represented by discrete data and decisions such as actors. Shout out to "
-                inline_popover(
-                    id: "chaos-book-cite",
-                    label: "Chaos by James Gleick",
-                    (chaos_citation)
-                )
-                "."
-            </li>
-        </ul>
-    }?;
-    let body = view! {
+    view! { shell(title: meta.title, active: "interests",
         page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
-        rail_prose(stamp: "backstory", body: backstory)
-        rail_section(stamp: "footage", body: footage)
-        rail_section(class: "mt-6", stamp: "links", body: links)
-        rail_section(class: "mt-6", stamp: "What's the state?", body: state)
-        rail_section(class: "mt-6", stamp: "What did I learn?", body: learned)
+        rail_prose(stamp: "backstory",
+            <p>
+                "In 2023, I got into a little debate with my brother. I had said something \
+                 like \"The existence and legality of renting property (i.e. landlords) \
+                 raises property values\". He said something like \"You're way too sure, \
+                 given the potential second- and third-order effects.\""
+            </p>
+            <p>
+                "I had this thought of \"this would be easy to simulate\", which I have \
+                 learned is a dumb, untrue thought on both a literal and philosophical \
+                 level."
+            </p>
+            <p>
+                "I explored many possibilities, forked from "
+                inline_popover(
+                    id: "map-generator-cite",
+                    label: "ProbablyTrain/MapGenerator",
+                    map_generator_citation()
+                )
+                ", and played around with agentic LLMs for development for the first time."
+            </p>
+            <p>
+                "One of the biggest through-lines here was to create an "
+                inline_popover(
+                    id: "ecs-cite",
+                    label: "ECS",
+                    ecs_citation()
+                )
+                "-style state management system for React (and therefore "
+                inline_popover(
+                    id: "react-three-fiber-cite",
+                    label: "react-three-fiber",
+                    react_three_fiber_citation()
+                )
+                ") with co-located memory supporting a many-entity simulation. One of the \
+                 cool ideas behind making it ECS-style would be the potential to use \
+                 workers to do (" <em>"gasp"</em> ") multi-threaded simulations/gaming in \
+                 JavaScript."
+            </p>
+        )
+        rail_section(stamp: "footage",
+            <div class="flex flex-wrap gap-5">
+                video_card(youtube_id: "Bcd_9LvUr-8", label: "the video →")
+            </div>
+        )
+        rail_section(class: "mt-6", stamp: "links",
+            <p class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">
+                <a class="oxlink" href="https://github.com/rivertam/City">"the repo →"</a>
+            </p>
+        )
+        rail_section(class: "mt-6", stamp: "What's the state?",
+            <p class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">
+                "Abandoned, in part due to finding a job."
+            </p>
+        )
+        rail_section(class: "mt-6", stamp: "What did I learn?",
+            <ul class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">
+                <li>"Memory-oriented performance improvements in the JavaScript runtime are quite counter-intuitive."</li>
+                <li>
+                    "Chaotic systems aren't well-represented by discrete data and decisions such as actors. Shout out to "
+                    inline_popover(
+                        id: "chaos-book-cite",
+                        label: "Chaos by James Gleick",
+                        <p>
+                            <cite>
+                                "Gleick, James. "
+                                <em>"Chaos: Making a New Science"</em>
+                                ". Viking, 1987."
+                            </cite>
+                        </p>
+                        ext_link(
+                            class: "quiet-link",
+                            href: "https://www.penguinrandomhouse.com/books/321477/chaos-by-james-gleick/",
+                            label: "publisher →"
+                        )
+                    )
+                    "."
+                </li>
+            </ul>
+        )
         back_link(href: "/interests", label: "← all interests")
-    }?;
-    view! { shell(title: meta.title, active: "interests", body: body) }
+    ) }
 }

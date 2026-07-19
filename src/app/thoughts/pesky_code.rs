@@ -5,7 +5,7 @@ use crate::components::shell;
 #[page("/thoughts/pesky-code")]
 async fn pesky_code() -> Result {
     // The body is Ben's own LinkedIn post, quoted verbatim.
-    let body = view! {
+    view! { shell(title: "Pesky code", active: "",
         <article class="rail-row mt-16 sm:mt-24">
             <p class="rail-stamp">"2025-08-14"</p>
             <div class="min-w-0">
@@ -21,6 +21,5 @@ async fn pesky_code() -> Result {
                 </p>
             </div>
         </article>
-    }?;
-    view! { shell(title: "Pesky code", active: "", body: body) }
+    ) }
 }

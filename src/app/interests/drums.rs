@@ -8,16 +8,16 @@ use crate::{
 #[page("/interests/drums")]
 async fn drums() -> Result {
     let meta = interest("drums");
-    let footage = view! {
-        <div class="flex flex-wrap gap-5">
-            video_card(youtube_id: "VaKI7J2M2Ms", label: "Taylor Swift cover →")
-            video_card(youtube_id: "8lrjsP1KWrY", label: "Manchester Orchestra cover →")
-        </div>
-    }?;
-    let body = view! {
+    view! {
+        shell(title: meta.title, active: "interests",
         page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
-        rail_section(class: "mt-4", stamp: "footage", body: footage)
-        rail_section(class: "mt-4", stamp: "2006", body: view! {
+        rail_section(class: "mt-4", stamp: "footage",
+            <div class="flex flex-wrap gap-5">
+                video_card(youtube_id: "VaKI7J2M2Ms", label: "Taylor Swift cover →")
+                video_card(youtube_id: "8lrjsP1KWrY", label: "Manchester Orchestra cover →")
+            </div>
+        )
+        rail_section(class: "mt-4", stamp: "2006",
             <div>
                 "Took my first drum lesson at "
                 inline_popover(
@@ -35,8 +35,8 @@ async fn drums() -> Result {
                     )
                 )
             </div>
-        }?)
-        rail_section(class: "mt-4", stamp: "2007", body: view! {
+        )
+        rail_section(class: "mt-4", stamp: "2007",
             <div>
                 "Ignored a drum instructor who patiently tried to teach me "
                 inline_popover(
@@ -53,8 +53,8 @@ async fn drums() -> Result {
                 )
                 " for several months"
             </div>
-        }?)
-        rail_section(class: "mt-4", stamp: "2007-2010", body: view! {
+        )
+        rail_section(class: "mt-4", stamp: "2007-2010",
             <div>
                 "Played "
                 inline_popover(
@@ -71,8 +71,8 @@ async fn drums() -> Result {
                 )
                 " almost every day"
             </div>
-        }?)
-        rail_section(class: "mt-4", stamp: "2010", body: view! {
+        )
+        rail_section(class: "mt-4", stamp: "2010",
             <div>
                 "Parents got me a "
                 inline_popover(
@@ -92,18 +92,18 @@ async fn drums() -> Result {
                 )
                 " which I practiced with sometimes"
             </div>
-        }?)
-        rail_section(class: "mt-4", stamp: "2011", body: view! {
+        )
+        rail_section(class: "mt-4", stamp: "2011",
             <div>
                 "Parents got me a used acoustic kit which I still have!"
             </div>
-        }?)
-        rail_section(class: "mt-4", stamp: "2016", body: view! {
+        )
+        rail_section(class: "mt-4", stamp: "2016",
             <div>
                 "Started playing with some folks in Sunnyside"
             </div>
-        }?)
-        rail_section(class: "mt-4", stamp: "2016", body: view! {
+        )
+        rail_section(class: "mt-4", stamp: "2016",
             <div>
                 "Bought myself an "
                 inline_popover(
@@ -119,14 +119,14 @@ async fn drums() -> Result {
                     )
                 )
             </div>
-        }?)
-        rail_section(class: "mt-4", stamp: "2017", body: view! {
+        )
+        rail_section(class: "mt-4", stamp: "2017",
             <div>
                 "Sold my Alesis DM10X to Guitar Center"
             </div>
-        }?)
+        )
 
-        rail_section(class: "mt-4", stamp: "2018-2019", body: view! {
+        rail_section(class: "mt-4", stamp: "2018-2019",
             <div>
                 "Got weirdly into custom electronic drums and converted my acoustic
                  kit to electronic using "
@@ -208,23 +208,23 @@ async fn drums() -> Result {
                     )
                 )
                 ".
-                 Nothing really has come out of any of this (yet)."
+                 Nothing really has come out of any of this yet."
             </div>
-        }?)
+        )
 
-        rail_section(class: "mt-4", stamp: "2020", body: view! {
+        rail_section(class: "mt-4", stamp: "2020",
             <div>
                 "Bought myself an EFNote 5 (excellent decision)."
             </div>
-        }?)
+        )
 
-        rail_section(class: "mt-4", stamp: "2021", body: view! {
+        rail_section(class: "mt-4", stamp: "2021",
             <div>
                 "Met a few folks I still play with (Justin and Sanket, mostly)."
             </div>
-        }?)
+        )
 
-        rail_section(class: "mt-4", stamp: "What I play", body: view! {
+        rail_section(class: "mt-4", stamp: "What I play",
             <ul>
                 <li>
                     inline_popover(
@@ -270,8 +270,7 @@ async fn drums() -> Result {
                     )
                 </li>
             </ul>
-        }?)
+        )
         back_link(href: "/interests", label: "← all interests")
-    }?;
-    view! { shell(title: meta.title, active: "interests", body: body) }
+    ) }
 }
