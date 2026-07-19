@@ -1,11 +1,15 @@
-use topcoat::{Result, router::page, view::view};
+use topcoat::{
+    Result,
+    router::{page, redirect_permanent, route},
+    view::view,
+};
 
 use crate::{
-    components::{back_link, page_head, rail_prose, rail_section, shell, video_card},
+    components::{back_link, link_label, page_head, rail_prose, rail_section, shell, video_card},
     content::interests::interest,
 };
 
-#[page("/interests/keys")]
+#[page("/keys")]
 async fn keys() -> Result {
     let meta = interest("keys");
     view! { shell(title: meta.title, active: "interests",
@@ -31,9 +35,14 @@ async fn keys() -> Result {
                 <a
                     class="oxlink"
                     href="https://data.typeracer.com/pit/profile?user=rivertam"
-                >"TypeRacer →"</a>
+                >link_label(label: "TypeRacer →")</a>
             </p>
         )
-        back_link(href: "/interests", label: "← all interests")
+        back_link(href: "/interests", label: "all interests")
     ) }
+}
+
+#[route(GET "/interests/keys")]
+async fn legacy_keys() -> Result {
+    Err(redirect_permanent("/keys").into())
 }

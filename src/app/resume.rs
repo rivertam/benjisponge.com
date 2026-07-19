@@ -6,7 +6,7 @@ use topcoat::{
 };
 
 use crate::{
-    components::{page_head, shell},
+    components::{link_label, page_head, shell},
     content::{
         experience::{EDUCATION, ROLES, Role, SKILLS, Tech, TechKind},
         patches::PATCHES,
@@ -109,7 +109,9 @@ async fn resume(cx: &Cx) -> Result {
                     <p class="text-ink2">(line)</p>
                     if let Some(active) = filter {
                         if let Some(href) = active.href {
-                            <a class="oxlink font-meta text-sm" href=(href)>"project page →"</a>
+                            <a class="oxlink font-meta text-sm" href=(href)>
+                                link_label(label: "project page →")
+                            </a>
                         }
                     }
                     <a class="oxlink font-meta text-sm" href="/resume">"clear ×"</a>

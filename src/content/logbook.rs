@@ -90,8 +90,8 @@ pub static LOG: [Entry; 7] = [
         stamp: "pr",
         label: "keys",
         body: "TypeRacer now has me at 117wpm.",
-        href: "/interests/keys",
-        link_label: "interests/keys →",
+        href: "/keys",
+        link_label: "keys →",
         tags: &["keyboards"],
     },
     Entry::Update {
@@ -117,8 +117,8 @@ pub static LOG: [Entry; 7] = [
         stamp: "win",
         label: "spire",
         body: "Ascension 20, with an annotated run synopsis.",
-        href: "/interests/spire",
-        link_label: "interests/spire →",
+        href: "/spire",
+        link_label: "spire →",
         tags: &["games"],
     },
     Entry::Update {
@@ -126,8 +126,8 @@ pub static LOG: [Entry; 7] = [
         stamp: "shipped",
         label: "puzzles",
         body: "A Rust crossword engine — .puz files open in the terminal now.",
-        href: "/interests/puzzles",
-        link_label: "interests/puzzles →",
+        href: "/puzzles",
+        link_label: "puzzles →",
         tags: &["rust", "games"],
     },
     Entry::Update {
@@ -135,8 +135,8 @@ pub static LOG: [Entry; 7] = [
         stamp: "shipped",
         label: "simulation",
         body: "Procedural cities with opinionated residents, running Schelling-style agents.",
-        href: "/interests/simulation",
-        link_label: "interests/simulation →",
+        href: "/simulation",
+        link_label: "simulation →",
         tags: &["toys"],
     },
 ];

@@ -227,7 +227,7 @@ mod tests {
             "<atom:link href=\"{ORIGIN}/feed.xml\" rel=\"self\" type=\"application/rss+xml\"/>"
         )));
         // Internal update hrefs got the origin prefix; externals kept theirs.
-        assert!(xml.contains(&format!("<link>{ORIGIN}/interests/keys</link>")));
+        assert!(xml.contains(&format!("<link>{ORIGIN}/keys</link>")));
         assert!(xml.contains("<link>https://www.youtube.com/watch?v=8lrjsP1KWrY</link>"));
         // Serial-derived guids span 0001..=count.
         assert!(xml.contains(&format!(

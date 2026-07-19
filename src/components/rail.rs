@@ -58,11 +58,15 @@ pub async fn rail_prose(#[default("mt-10")] class: &str, stamp: &str, child: Vie
 /// A page's closing rail row: a quiet link back up to the section index.
 #[component]
 pub async fn back_link(href: &str, label: &str) -> Result {
+    let label = label.strip_prefix("← ").unwrap_or(label);
     view! {
         <div class="rail-row mt-14">
             <div></div>
             <p class="min-w-0 font-meta text-sm">
-                <a class="quiet-link" href=(href)>(label)</a>
+                <a class="quiet-link" href=(href)>
+                    <span class="link-arrow link-arrow-before" aria-hidden="true">"<-"</span>
+                    (label)
+                </a>
             </p>
         </div>
     }

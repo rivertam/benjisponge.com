@@ -1,4 +1,4 @@
-//! The interests index. Each linked interest is a standalone page and route
+//! The interests index. Each linked interest is a standalone top-level page
 //! in its own module below `app/interests/`.
 
 mod drums;
@@ -29,7 +29,7 @@ async fn interests() -> Result {
             for interest in INTERESTS.iter() {
                 index_card(
                     stamp: interest.slug,
-                    href: format!("/interests/{}", interest.slug),
+                    href: format!("/{}", interest.slug),
                     title: interest.title,
                     teaser: interest.teaser,
                 )

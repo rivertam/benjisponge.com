@@ -7,6 +7,7 @@ use topcoat::{
     view::{View, component, view},
 };
 
+use crate::components::link_label;
 use crate::content::{interests::INTERESTS, logbook::LOG};
 
 pub const ZILLA_SLAB: Font = fontsource_font!(ZILLA_SLAB, host: Asset);
@@ -22,8 +23,15 @@ pub const FIRA_MONO: Font = fontsource_font!(FIRA_MONO, host: Asset);
 ///
 /// `active` names the nav item the page lives under — `"log"`, `"resume"`,
 /// `"interests"`, or `""` for none — and gets the oxide underline.
+///
+/// `hide_nav` removes the header for an immersive, self-contained page.
 #[component]
-pub async fn shell(title: &str, active: &str, child: View) -> Result {
+pub async fn shell(
+    title: &str,
+    active: &str,
+    #[default(false)] hide_nav: bool,
+    child: View,
+) -> Result {
     let title = if title.is_empty() {
         "Ben Berman".to_string()
     } else {
@@ -37,6 +45,7 @@ pub async fn shell(title: &str, active: &str, child: View) -> Result {
             "quiet-link"
         }
     };
+    let nav_hidden = if hide_nav { "true" } else { "false" };
     view! {
         <!DOCTYPE html>
         <html lang="en">
@@ -57,29 +66,36 @@ pub async fn shell(title: &str, active: &str, child: View) -> Result {
                     href="/feed.xml"
                 >
             </head>
-            <body class="flex min-h-screen flex-col bg-page font-body text-ink">
-                <header class="mx-auto flex w-full max-w-4xl items-baseline justify-between px-5 pt-6">
-                    <a
-                        href="/"
-                        class="font-display text-lg font-semibold text-ink no-underline hover:text-oxide"
-                    >"Ben Berman"</a>
-                    <nav class="flex gap-6 font-meta text-sm">
-                        <a href="/" class=(nav("log"))>"log"</a>
-                        <a href="/resume" class=(nav("resume"))>"résumé"</a>
-                        <details class="nav-dd">
-                            <summary class=(nav("interests"))>"interests"</summary>
-                            <div class="nav-dd-menu">
-                                <a class="quiet-link" href="/interests">"all interests →"</a>
-                                for interest in INTERESTS.iter() {
-                                    <a
-                                        class="quiet-link"
-                                        href=(format!("/interests/{}", interest.slug))
-                                    >(interest.slug)</a>
-                                }
-                            </div>
-                        </details>
-                    </nav>
-                </header>
+            <body
+                class="flex min-h-screen flex-col bg-page font-body text-ink"
+                data-nav-hidden=(nav_hidden)
+            >
+                if !hide_nav {
+                    <header class="mx-auto flex w-full max-w-4xl items-baseline justify-between px-5 pt-6">
+                        <a
+                            href="/"
+                            class="font-display text-lg font-semibold text-ink no-underline hover:text-oxide"
+                        >"Ben Berman"</a>
+                        <nav class="flex gap-6 font-meta text-sm">
+                            <a href="/" class=(nav("log"))>"log"</a>
+                            <a href="/resume" class=(nav("resume"))>"résumé"</a>
+                            <details class="nav-dd">
+                                <summary class=(nav("interests"))>"interests"</summary>
+                                <div class="nav-dd-menu">
+                                    <a class="quiet-link" href="/interests">
+                                        link_label(label: "all interests →")
+                                    </a>
+                                    for interest in INTERESTS.iter() {
+                                        <a
+                                            class="quiet-link"
+                                            href=(format!("/{}", interest.slug))
+                                        >(interest.slug)</a>
+                                    }
+                                </div>
+                            </details>
+                        </nav>
+                    </header>
+                }
                 <main class="mx-auto w-full max-w-4xl flex-1 px-5 pb-20">(child)</main>
                 <footer class="mx-auto w-full max-w-4xl px-5 pb-8">
                     <div class="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2 border-t border-hairline pt-4 font-meta text-xs text-muted">

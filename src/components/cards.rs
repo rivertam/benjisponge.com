@@ -5,6 +5,8 @@ use topcoat::{
     view::{component, view},
 };
 
+use super::links::{link_label, split_link_label};
+
 /// One entry on an index page (thoughts, interests): stamp in the margin,
 /// oxlinked display title, one-line teaser.
 #[component]
@@ -28,10 +30,13 @@ pub async fn index_card(stamp: &str, href: String, title: &str, teaser: &str) ->
 pub async fn video_card(youtube_id: &str, label: &str) -> Result {
     let href = format!("https://www.youtube.com/watch?v={youtube_id}");
     let thumb = format!("https://img.youtube.com/vi/{youtube_id}/mqdefault.jpg");
+    let (alt, _) = split_link_label(label);
     view! {
         <a class="video-card" href=(href.as_str())>
-            <img src=(thumb.as_str()) alt=(label) loading="lazy">
-            <span class="video-card-label font-meta text-sm text-ink2">(label)</span>
+            <img src=(thumb.as_str()) alt=(alt) loading="lazy">
+            <span class="video-card-label font-meta text-sm text-ink2">
+                link_label(label: label)
+            </span>
         </a>
     }
 }

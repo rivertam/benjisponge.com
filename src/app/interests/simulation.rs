@@ -1,12 +1,13 @@
 use topcoat::{
     Result,
-    router::page,
+    router::{page, redirect_permanent, route},
     view::{component, view},
 };
 
 use crate::{
     components::{
-        back_link, ext_link, inline_popover, page_head, rail_prose, rail_section, shell, video_card,
+        back_link, ext_link, inline_popover, link_label, page_head, rail_prose, rail_section,
+        shell, video_card,
     },
     content::interests::interest,
 };
@@ -59,7 +60,7 @@ async fn react_three_fiber_citation() -> Result {
     }
 }
 
-#[page("/interests/simulation")]
+#[page("/simulation")]
 async fn simulation() -> Result {
     let meta = interest("simulation");
     view! { shell(title: meta.title, active: "interests",
@@ -111,7 +112,9 @@ async fn simulation() -> Result {
         )
         rail_section(class: "mt-6", stamp: "links",
             <p class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">
-                <a class="oxlink" href="https://github.com/rivertam/City">"the repo →"</a>
+                <a class="oxlink" href="https://github.com/rivertam/City">
+                    link_label(label: "the repo →")
+                </a>
             </p>
         )
         rail_section(class: "mt-6", stamp: "What's the state?",
@@ -144,6 +147,11 @@ async fn simulation() -> Result {
                 </li>
             </ul>
         )
-        back_link(href: "/interests", label: "← all interests")
+        back_link(href: "/interests", label: "all interests")
     ) }
+}
+
+#[route(GET "/interests/simulation")]
+async fn legacy_simulation() -> Result {
+    Err(redirect_permanent("/simulation").into())
 }

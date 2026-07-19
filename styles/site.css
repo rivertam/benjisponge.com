@@ -69,6 +69,23 @@
   text-decoration-thickness: 0.14em;
 }
 
+/* The mono and sans arrow glyphs sit low on their text baseline. Keep them
+   in a span so link copy stays readable while the glyph is optically centered. */
+.link-arrow {
+  display: inline-block;
+  font-weight: 400;
+  letter-spacing: -0.04em;
+  transform: translateY(-0.08em);
+}
+
+.link-arrow-after {
+  margin-left: 0.28em;
+}
+
+.link-arrow-before {
+  margin-right: 0.28em;
+}
+
 /* Resume bullets: en-dash markers in the rail's mono voice, tipped oxide. */
 .role-bullets li {
   position: relative;

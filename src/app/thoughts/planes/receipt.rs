@@ -12,15 +12,18 @@ use topcoat::{
 };
 
 use super::ice::{ICE_SHOW_FLOOR_M2, ice_figure};
-use crate::flight::{
-    airports::Airport,
-    comparison_scale::{PickDomainRowsOptions, pick_domain_rows},
-    emissions::{Cabin, FlightImpact, JET_FUEL_KG_PER_LITRE},
-    format::{
-        format_bar_value, format_ice, format_km, format_litres, format_tonnes, format_tonnes_smart,
-        format_whole, format_years,
+use crate::{
+    components::link_label,
+    flight::{
+        airports::Airport,
+        comparison_scale::{PickDomainRowsOptions, pick_domain_rows},
+        emissions::{Cabin, FlightImpact, JET_FUEL_KG_PER_LITRE},
+        format::{
+            format_bar_value, format_ice, format_km, format_litres, format_tonnes,
+            format_tonnes_smart, format_whole, format_years,
+        },
+        sources::cite,
     },
-    sources::cite,
 };
 
 const DOT_LEADER: &str =
@@ -114,7 +117,7 @@ async fn receipt_comparisons(scale_kg: f64, compare_href: String) -> Result {
                 }
             </div>
             <p class="receipt-coupon-foot">
-                <a href=(compare_href)>"see interactive scale →"</a>
+                <a href=(compare_href)>link_label(label: "see interactive scale →")</a>
             </p>
         </div>
     }

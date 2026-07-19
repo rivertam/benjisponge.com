@@ -15,7 +15,7 @@ use topcoat::{
 };
 
 use crate::{
-    components::shell,
+    components::{link_label, shell},
     content::logbook::{Entry, FILTER_TAGS, Kind, LOG, serial},
     util::urlencode,
 };
@@ -197,7 +197,9 @@ async fn home(cx: &Cx) -> Result {
                     href=(chip.href.as_str())
                 >(chip.label.as_str())</a>
             }
-            <a class="ml-auto text-muted hover:text-oxide" href="/feed.xml">"rss ↗"</a>
+            <a class="ml-auto text-muted hover:text-oxide" href="/feed.xml">
+                link_label(label: "rss ↗")
+            </a>
         </div>
 
         // The timeline: one vertical hairline, a marker per entry, a year
@@ -229,7 +231,7 @@ async fn home(cx: &Cx) -> Result {
                                 <a
                                     class="ml-auto text-ink2 no-underline hover:text-oxide"
                                     href=(format!("/thoughts/{slug}"))
-                                >"read →"</a>
+                                >link_label(label: "read →")</a>
                             </div>
                         </div>
                     </article>
@@ -252,7 +254,7 @@ async fn home(cx: &Cx) -> Result {
                         </div>
                     </article>
                 }
-                if let Entry::Update { stamp, label, body, href, link_label, .. } = row.entry {
+                if let Entry::Update { stamp, label, body, href, link_label: update_link_label, .. } = row.entry {
                     <article class="log-row items-baseline">
                         <span class="log-mark log-mark-update"></span>
                         <p class="log-date">(row.entry.date())</p>
@@ -263,7 +265,9 @@ async fn home(cx: &Cx) -> Result {
                             " "
                             (body)
                             " "
-                            <a class="log-update-link" href=(href)>(link_label)</a>
+                            <a class="log-update-link" href=(href)>
+                                link_label(label: update_link_label)
+                            </a>
                         </p>
                     </article>
                 }

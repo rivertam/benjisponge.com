@@ -1,11 +1,15 @@
-use topcoat::{Result, router::page, view::view};
+use topcoat::{
+    Result,
+    router::{page, redirect_permanent, route},
+    view::view,
+};
 
 use crate::{
     components::{back_link, ext_link, inline_popover, page_head, rail_section, shell, video_card},
     content::interests::interest,
 };
 
-#[page("/interests/drums")]
+#[page("/drums")]
 async fn drums() -> Result {
     let meta = interest("drums");
     view! {
@@ -271,6 +275,11 @@ async fn drums() -> Result {
                 </li>
             </ul>
         )
-        back_link(href: "/interests", label: "← all interests")
+        back_link(href: "/interests", label: "all interests")
     ) }
+}
+
+#[route(GET "/interests/drums")]
+async fn legacy_drums() -> Result {
+    Err(redirect_permanent("/drums").into())
 }

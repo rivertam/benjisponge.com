@@ -1,11 +1,15 @@
-use topcoat::{Result, router::page, view::view};
+use topcoat::{
+    Result,
+    router::{page, redirect_permanent, route},
+    view::view,
+};
 
 use crate::{
-    components::{back_link, page_head, rail_prose, rail_section, shell},
+    components::{back_link, link_label, page_head, rail_prose, rail_section, shell},
     content::interests::interest,
 };
 
-#[page("/interests/puzzles")]
+#[page("/puzzles")]
 async fn puzzles() -> Result {
     let meta = interest("puzzles");
     view! { shell(title: meta.title, active: "interests",
@@ -19,9 +23,16 @@ async fn puzzles() -> Result {
         )
         rail_section(class: "mt-6", stamp: "links",
             <p class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">
-                <a class="oxlink" href="https://github.com/rivertam/puzuzu">"puzuzu →"</a>
+                <a class="oxlink" href="https://github.com/rivertam/puzuzu">
+                    link_label(label: "puzuzu →")
+                </a>
             </p>
         )
-        back_link(href: "/interests", label: "← all interests")
+        back_link(href: "/interests", label: "all interests")
     ) }
+}
+
+#[route(GET "/interests/puzzles")]
+async fn legacy_puzzles() -> Result {
+    Err(redirect_permanent("/puzzles").into())
 }

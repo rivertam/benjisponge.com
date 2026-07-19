@@ -1,6 +1,6 @@
 //! Interest registry, mirroring `posts.rs`. Each interest is a standalone
 //! page module under `app/interests/`; this list is the single source of
-//! truth for its slug (route `/interests/{slug}`, nav label, rail stamp),
+//! truth for its slug (top-level route `/{slug}`, nav label, rail stamp),
 //! display title, and teaser (the index card copy, doubling as the page's
 //! lede). The nav dropdown, the interests index, and the 404's route list
 //! all derive from here — adding an interest means one entry here plus the

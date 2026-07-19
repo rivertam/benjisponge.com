@@ -1,11 +1,15 @@
-use topcoat::{Result, router::page, view::view};
+use topcoat::{
+    Result,
+    router::{page, redirect_permanent, route},
+    view::view,
+};
 
 use crate::{
-    components::{back_link, page_head, rail_prose, rail_section, shell},
+    components::{back_link, link_label, page_head, rail_prose, rail_section, shell},
     content::interests::interest,
 };
 
-#[page("/interests/spire")]
+#[page("/spire")]
 async fn spire() -> Result {
     let meta = interest("spire");
     view! { shell(title: meta.title, active: "interests",
@@ -24,9 +28,14 @@ async fn spire() -> Result {
                 <a
                     class="oxlink"
                     href="https://reddit.com/r/slaythespire/comments/jkqx35/annotated_run_synopsis_my_second_a20_win_only_a/"
-                >"the synopsis →"</a>
+                >link_label(label: "the synopsis →")</a>
             </p>
         )
-        back_link(href: "/interests", label: "← all interests")
+        back_link(href: "/interests", label: "all interests")
     ) }
+}
+
+#[route(GET "/interests/spire")]
+async fn legacy_spire() -> Result {
+    Err(redirect_permanent("/spire").into())
 }
