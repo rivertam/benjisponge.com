@@ -47,8 +47,8 @@ async fn drums() -> Result {
                     </span>
                     ext_link(
                         class: "quiet-link",
-                        href: "https://en.wikipedia.org/wiki/Drum_rudiment",
-                        label: "Wikipedia →"
+                        href: "https://pas.org/rudiments/",
+                        label: "Percussive Arts Society →"
                     )
                 )
                 " for several months"
@@ -105,7 +105,19 @@ async fn drums() -> Result {
         }?)
         rail_section(class: "mt-4", stamp: "2016", body: view! {
             <div>
-                "Bought myself an Alesis DM10X"
+                "Bought myself an "
+                inline_popover(
+                    id: "dm10x-cite",
+                    label: "Alesis DM10X",
+                    <span class="inline-popover-preview">
+                        "A discontinued six-piece electronic drum kit with large pads and the DM10 module."
+                    </span>
+                    ext_link(
+                        class: "quiet-link",
+                        href: "https://www.alesis.com/products/view/dm10-x-kit.html",
+                        label: "Alesis →"
+                    )
+                )
             </div>
         }?)
         rail_section(class: "mt-4", stamp: "2017", body: view! {
@@ -117,10 +129,85 @@ async fn drums() -> Result {
         rail_section(class: "mt-4", stamp: "2018-2019", body: view! {
             <div>
                 "Got weirdly into custom electronic drums and converted my acoustic
-                 kit to electronic using UFO Drums heads, Jobeky cymbals and sensors,
-                 and a hodgepodge of modules including a MegaDrum module. Start playing
-                 with some embedded software to analyze piezo sensors. Also became
-                 fascinated by Sunhouse, the company behind Sensory Percussion.
+                 kit to electronic using "
+                inline_popover(
+                    id: "ufo-drums-cite",
+                    label: "UFO Drums heads and sensors",
+                    <span class="inline-popover-preview">
+                        "Mesh heads and trigger assemblies for converting acoustic drums to electronic."
+                    </span>
+                    ext_link(
+                        class: "quiet-link",
+                        href: "https://www.ufodrums.com/",
+                        label: "ufodrums.com →"
+                    )
+                )
+                ", "
+                inline_popover(
+                    id: "jobeky-cite",
+                    label: "Jobeky cymbals",
+                    <span class="inline-popover-preview">
+                        "Custom electronic drums, cymbals, and conversion hardware."
+                    </span>
+                    ext_link(
+                        class: "quiet-link",
+                        href: "https://jobekydrums.co.uk/",
+                        label: "jobekydrums.co.uk →"
+                    )
+                )
+                ", and a hodgepodge of modules including a "
+                inline_popover(
+                    id: "megadrum-cite",
+                    label: "MegaDrum module",
+                    <span class="inline-popover-preview">
+                        "A DIY-friendly MIDI drum trigger module."
+                    </span>
+                    ext_link(
+                        class: "quiet-link",
+                        href: "https://www.megadrum.uk/",
+                        label: "megadrum.uk →"
+                    )
+                )
+                ". Started playing with some embedded software to analyze "
+                inline_popover(
+                    id: "piezo-sensors-cite",
+                    label: "piezo sensors",
+                    <span class="inline-popover-preview">
+                        "Vibration-sensitive elements commonly used to detect drum hits and send trigger signals."
+                    </span>
+                    ext_link(
+                        class: "quiet-link",
+                        href: "https://www.daddario.com/blogs/percussion/everything-you-need-to-know-about-drum-triggers-sensors",
+                        label: "how drum triggers work →"
+                    )
+                )
+                ". Also became fascinated by "
+                inline_popover(
+                    id: "sunhouse-cite",
+                    label: "Sunhouse",
+                    <span class="inline-popover-preview">
+                        "A music-technology company making tools for expressive electronic drumming."
+                    </span>
+                    ext_link(
+                        class: "quiet-link",
+                        href: "https://sunhou.se/about",
+                        label: "sunhou.se →"
+                    )
+                )
+                ", the company behind "
+                inline_popover(
+                    id: "sensory-percussion-cite",
+                    label: "Sensory Percussion",
+                    <span class="inline-popover-preview">
+                        "A system that turns an acoustic drum into a controller for digital music."
+                    </span>
+                    ext_link(
+                        class: "quiet-link",
+                        href: "https://sunhou.se/",
+                        label: "Sensory Percussion →"
+                    )
+                )
+                ".
                  Nothing really has come out of any of this (yet)."
             </div>
         }?)
