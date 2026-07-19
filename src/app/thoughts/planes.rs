@@ -16,7 +16,7 @@ use topcoat::{
 };
 
 use crate::{
-    components::shell,
+    components::{ext_link, inline_popover, shell},
     flight::{
         airports::{Airport, find_airport},
         emissions::{Cabin, FlightInput, flight_impact},
@@ -135,11 +135,124 @@ async fn planes(cx: &Cx) -> Result {
                 <div class="min-w-0">
                     <h1 class="font-display text-4xl font-bold tracking-tight">"How bad are planes?"</h1>
                     <p class="mt-4 max-w-prose text-ink2">
-                        "This piece started life as a standalone site — "
-                        <a class="oxlink" href="https://howbad.org">"howbad.org"</a>
-                        ", a revival of Shame Plane — and now lives here as a post. \
-                         The form below prices one seat's share of a flight's real \
-                         climate bill, computed on this very server."
+                        "In 2019, I read "
+                        inline_popover(
+                            id: "planet-b-cite",
+                            label: "There Is No Planet B",
+                            <span class="inline-popover-preview">
+                                "Mike Berners-Lee’s 2019 handbook on climate priorities — where flying \
+                                 lands among the high-impact personal choices."
+                            </span>
+                            ext_link(
+                                class: "quiet-link",
+                                href: "https://theresnoplanetb.net/",
+                                label: "theresnoplanetb.net →"
+                            )
+                        )
+                        " by Mike Berners-Lee a couple days before a trip I took to Asheville, \
+                         North Carolina to visit my mom. I learned not just that planes were bad \
+                         for the environment, but the magnitude."
+                    </p>
+                    <p class="mt-4 max-w-prose text-ink2">
+                        "One of my favorite philosophies in life is the "
+                        inline_popover(
+                            id: "pareto-cite",
+                            label: "Pareto Principle",
+                            <span class="inline-popover-preview">
+                                "Also called the 80/20 rule: a small share of causes often drives \
+                                 most of the effect. Named for Vilfredo Pareto’s observation about \
+                                 wealth concentration."
+                            </span>
+                            ext_link(
+                                class: "quiet-link",
+                                href: "https://en.wikipedia.org/wiki/Pareto_principle",
+                                label: "Wikipedia →"
+                            )
+                        )
+                        ": don't waste all your time and effort on the minutiae. Find the points \
+                         of highest impact. What I discovered is that, among the people I know and \
+                         myself historically, flying planes eclipses almost all of our other habits. \
+                         I would say for most people I know, four domestic flights (round trip) \
+                         each year is quite typical, with international trips at least once every \
+                         2-3 years. I strongly encourage you to play with the calculator below to \
+                         see why I think most flights are simply not worth it."
+                    </p>
+
+                    <p class="mt-4 max-w-prose text-ink2">
+                        "I also know people who have essentially never been on planes. Most of them \
+                         simply can't afford it, often to the extent that they haven't even considered \
+                         traveling for leisure."
+                    </p>
+
+                    <p class="mt-4 max-w-prose text-ink2">
+                        "Commercial consumer flying accounts for "
+                        inline_popover(
+                            id: "aviation-share-cite",
+                            label: "about 2% of the world's CO₂",
+                            <span class="inline-popover-preview">
+                                "All aviation is ~2.5% of global CO₂ (fossil + land use). With \
+                                 non-CO₂ effects — mainly contrail cirrus — it’s ~3.5% of warming \
+                                 to date. Of that CO₂, ~88% is commercial, ~8% military, and ~4% \
+                                 private; within commercial, ~81% is passengers and ~19% freight. \
+                                 Passenger flying alone is therefore ~2% of global CO₂."
+                            </span>
+                            ext_link(
+                                class: "quiet-link",
+                                href: "https://ourworldindata.org/global-aviation-emissions",
+                                label: "Our World in Data →"
+                            )
+                            ext_link(
+                                class: "quiet-link",
+                                href: "https://doi.org/10.1016/j.gloenvcha.2020.102194",
+                                label: "Gössling & Humpe 2020 →"
+                            )
+                        )
+                        " despite benefiting a "
+                        inline_popover(
+                            id: "who-flies-cite",
+                            label: "sliver of the population",
+                            <span class="inline-popover-preview">
+                                "Gössling & Humpe (2020): about 11% of the world flew in 2018, at \
+                                 most 4% internationally. The most frequent 1% of people account \
+                                 for more than half of passenger-aviation CO₂."
+                            </span>
+                            ext_link(
+                                class: "quiet-link",
+                                href: "https://doi.org/10.1016/j.gloenvcha.2020.102194",
+                                label: "Gössling & Humpe 2020 →"
+                            )
+                        )
+                        ". A huge portion of the global south have either never flown on a plane \
+                         or it's a very rare, very expensive privilege used for special circumstances \
+                         such as migrating between countries. Flying and travel to this extent has \
+                         only been in human lives for the last "
+                        inline_popover(
+                            id: "jet-age-cite",
+                            label: "~80 years",
+                            <span class="inline-popover-preview">
+                                "Mass commercial jet travel starts in the 1950s (Comet, then the \
+                                 Boeing 707). Aviation CO₂ has roughly quadrupled since the \
+                                 mid-1960s, and its share of global emissions is still rising."
+                            </span>
+                            ext_link(
+                                class: "quiet-link",
+                                href: "https://ourworldindata.org/global-aviation-emissions",
+                                label: "Our World in Data →"
+                            )
+                        )
+                        ", and it's ramped up significantly and isn't stopping. Our \
+                         great-great-grandparents had to take ships to get across the Atlantic Ocean."
+                    </p>
+
+                    <p class="mt-4 max-w-prose text-ink2">
+                        "Despite the negative impacts, I've been told that the positives are enormous. \
+                         Cultural diffusion, global collaboration, world peace. These are each true to \
+                         quite a good extent. My purpose in this page isn't to argue against this, it's \
+                         just to point out that if you want to show "
+                        <pre>"Pros(commercial travel) > Cons(commercial travel)"</pre>
+                        ", let's at least start by having a good perception of "
+                        <pre>"Cons(commercial travel)"</pre>
+                        "."
                     </p>
                 </div>
             </header>
