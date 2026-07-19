@@ -102,7 +102,10 @@ async fn simulation() -> Result {
                         label: "ProbablyTrain/MapGenerator",
                         map_generator_citation()
                     )
-                    ", and played around with agentic LLMs for development for the first time."
+                    ", and played around with agentic LLMs for development for the first time.
+                    I learned a bit about NetLogo and other \"state of the art\" agent-based
+                    simulation systems. I did some unfinished philosophy on a good authoring
+                    surface. Basically the idea was \"NetLogo but modern and on the web\""
                 </p>
                 <p>
                     "One of the biggest through-lines here was to create an "
