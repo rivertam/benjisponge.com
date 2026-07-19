@@ -4,7 +4,7 @@
 //!   typicalKg = typicalAmount × kgPerUnit
 //!
 //! Bases: EPA (typical passenger vehicle: 400 g CO₂/mi, 11,500 mi/yr),
-//! US DOE/AFDC (EV ≈110 g/mi on the average US grid), Scarborough et al.
+//! US DOE/AFDC (EV ≈100 g/mi on the average US grid), Scarborough et al.
 //! 2014 (diet footprints per day, taken as 3 meals/day, 1,095 meals/yr),
 //! Berners-Lee (plastics), US grid-average electricity (A/C).
 
@@ -569,7 +569,7 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 id: "average-wardrobe",
                 cut: Some("thrifting nearly everything"),
                 label: "The average shopper’s year: ≈53 new garments (US PIRG) at ≈10 kg each (our assumed average — between a ≈7 kg tee and ≈33 kg jeans; sector totals imply more) — going almost all-secondhand erases this",
-                kg: 500.0,
+                kg: 530.0,
                 color: "#008ba3",
             },
             CutSlice {
