@@ -5,7 +5,9 @@
 # dir, or changed size). Eyeball-driven — no threshold config.
 set -uo pipefail
 
-COMPARE=/usr/sbin/compare
+COMPARE="${COMPARE:-$(command -v compare || true)}"
+[ -n "$COMPARE" ] || { echo "imagemagick (compare) is required" >&2; exit 2; }
+command -v magick >/dev/null || { echo "imagemagick (magick) is required" >&2; exit 2; }
 
 [ $# -eq 2 ] || { echo "usage: $(basename "$0") <dirA> <dirB>" >&2; exit 2; }
 A="${1%/}"

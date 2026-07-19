@@ -16,10 +16,14 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 cd "$ROOT"
 export PATH="$HOME/.cargo/bin:$HOME/.proto/shims:$PATH"
 
-CHROME=/usr/sbin/google-chrome-stable
+CHROME="${CHROME:-$(command -v google-chrome-stable || command -v google-chrome || command -v chromium || true)}"
+[ -n "$CHROME" ] && [ -x "$CHROME" ] || { echo "google chrome / chromium not found (set CHROME=/path/to/chrome)" >&2; exit 1; }
+# Directory names embed the label; keep it to safe filename characters.
 LABEL="${1:-}"
+LABEL="${LABEL//[^A-Za-z0-9._-]/-}"
 
 command -v bun >/dev/null || { echo "bun is required (CDP client)" >&2; exit 1; }
+command -v magick >/dev/null || { echo "imagemagick (magick) is required" >&2; exit 1; }
 
 # Route manifest: "url-path<TAB>name". Extend here.
 ROUTES=$'/\thome
@@ -151,6 +155,12 @@ EOF
 
 # --- output dir -------------------------------------------------------------
 SHA="$(git rev-parse --short HEAD)"
+# A snapshot stamped with a clean SHA but captured from uncommitted edits
+# lies to anyone diffing against that commit later — mark it.
+if [ -n "$(git status --porcelain)" ]; then
+    SHA="${SHA}-dirty"
+    echo "warning: working tree has uncommitted changes; stamping ${SHA}" >&2
+fi
 STAMP="$(date -u +%Y-%m-%dT%H%M)"
 DIR="snapshots/${STAMP}__${SHA}"
 [ -n "$LABEL" ] && DIR="${DIR}__${LABEL}"
