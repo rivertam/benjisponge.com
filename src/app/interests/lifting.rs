@@ -5,7 +5,7 @@ use topcoat::{
 };
 
 use crate::{
-    components::{back_link, page_head, rail_prose, shell},
+    components::{back_link, page_head, shell},
     content::interests::interest,
 };
 
