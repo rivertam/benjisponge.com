@@ -5,8 +5,8 @@ mod drums;
 mod felix;
 mod keys;
 mod lifting;
-mod models;
 mod puzzles;
+mod simulation;
 mod spire;
 mod swing;
 
@@ -23,7 +23,7 @@ async fn interests() -> Result {
         page_head(
             stamp: "index",
             title: "Interests",
-            lede: "Skills of no professional value whatsoever. Everything here is, regrettably, public record.",
+            lede: "I contain multitudes.",
         )
         <section class="mt-14 space-y-10">
             for interest in INTERESTS.iter() {

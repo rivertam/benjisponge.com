@@ -31,7 +31,7 @@ pub static INTERESTS: [Interest; 8] = [
     Interest {
         slug: "keys",
         title: "Keyboards",
-        teaser: "Split-columnar keyboard person. Ten thousand strangers have watched my Dactyl Manuform video; TypeRacer has me at 117wpm.",
+        teaser: "Big fan of dactyls, dactyl manuform, and split-columnar keyboards. Currently on a glove80.",
     },
     Interest {
         slug: "spire",
@@ -39,8 +39,8 @@ pub static INTERESTS: [Interest; 8] = [
         teaser: "Slay the Spire at Ascension 20, with an annotated run synopsis, because a win nobody can audit barely counts.",
     },
     Interest {
-        slug: "models",
-        title: "Toy models",
+        slug: "simulation",
+        title: "Housing Market Simulation",
         teaser: "Procedural cities with opinionated residents — a react-three-fiber toy running Schelling-style agents.",
     },
     Interest {

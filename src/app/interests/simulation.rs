@@ -5,9 +5,9 @@ use crate::{
     design::{page_head, shell},
 };
 
-#[page("/interests/models")]
-async fn models() -> Result {
-    let meta = interest("models");
+#[page("/interests/simulation")]
+async fn simulation() -> Result {
+    let meta = interest("simulation");
     let title = format!("{} — Ben Berman", meta.title);
     let body = view! {
         page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)

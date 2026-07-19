@@ -133,10 +133,10 @@ pub static LOG: [Entry; 7] = [
     Entry::Update {
         date: "2024-11-08",
         stamp: "shipped",
-        label: "models",
+        label: "simulation",
         body: "Procedural cities with opinionated residents, running Schelling-style agents.",
-        href: "/interests/models",
-        link_label: "interests/models →",
+        href: "/interests/simulation",
+        link_label: "interests/simulation →",
         tags: &["toys"],
     },
 ];
