@@ -145,7 +145,7 @@ Router needs `.assets(AssetBundle::load().unwrap())`.
 export PATH="$HOME/.cargo/bin:$PATH"   # topcoat CLI lives here
 cargo build                            # also runs tailwind via build.rs
 topcoat asset bundle                   # extracts embedded assets → target/assets/
-PORT=4610 ./target/debug/bens-site     # serve (defaults 127.0.0.1:3000)
+PORT=4610 ./target/debug/benjisponge     # serve (defaults 127.0.0.1:3000)
 ```
 
 `AssetBundle::load()` panics without the `topcoat asset bundle` step (it

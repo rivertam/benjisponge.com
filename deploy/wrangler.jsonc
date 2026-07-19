@@ -1,0 +1,40 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "benjisponge",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-07-01",
+
+  // Synced from the container image by `just deploy` / CI (only _headers is
+  // committed). Asset hits are served before the Worker runs; misses fall
+  // through to the Worker and ultimately the container, which also has the
+  // full asset dir on disk — so a stale sync degrades, never breaks.
+  "assets": {
+    "directory": "./assets",
+    "binding": "ASSETS"
+  },
+
+  "containers": [
+    {
+      "class_name": "BenjispongeContainer",
+      "image": "./Dockerfile",
+      "image_build_context": "../",
+      "instance_type": "lite",
+      "max_instances": 2
+    }
+  ],
+  "durable_objects": {
+    "bindings": [{ "name": "SITE_CONTAINER", "class_name": "BenjispongeContainer" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BenjispongeContainer"] }],
+
+  "vars": {
+    "SITE_ORIGIN": "https://benjisponge.com",
+    // Overridden per-deploy: wrangler deploy --var RELEASE_ID:<git sha>
+    "RELEASE_ID": "dev"
+  },
+
+  "routes": [
+    { "pattern": "benjisponge.com", "custom_domain": true },
+    { "pattern": "www.benjisponge.com", "custom_domain": true }
+  ]
+}

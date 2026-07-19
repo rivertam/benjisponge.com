@@ -1,4 +1,4 @@
-# bens-site
+# benjisponge.com
 
 Rust SSR personal site on topcoat 0.1.3 — a niche framework; read
 `docs/topcoat-notes.md` before writing any topcoat code, don't guess APIs.
@@ -8,6 +8,7 @@ Rust SSR personal site on topcoat 0.1.3 — a niche framework; read
 - `just dev [port]` — live-reload server (default 3000)
 - `just build` — cargo build + `topcoat asset bundle`; serving without the bundle step panics
 - `just check` — fmt + clippy -D warnings + tests; must pass before claiming done
+- `just deploy` — Cloudflare deploy (Worker + container); CI also deploys on push to main. Touching `deploy/` or caching? Read `docs/cloudflare-deploy.md` first
 
 ## Adding a page
 
