@@ -11,6 +11,8 @@ use topcoat::{
     view::{View, component, view},
 };
 
+use crate::content::interests::INTERESTS;
+
 pub const ZILLA_SLAB: Font = fontsource_font!(ZILLA_SLAB, host: Asset);
 pub const FIRA_SANS: Font = fontsource_font!(FIRA_SANS, host: Asset);
 pub const FIRA_MONO: Font = fontsource_font!(FIRA_MONO, host: Asset);
@@ -47,14 +49,12 @@ pub async fn shell(title: &str, body: View) -> Result {
                             <summary class="quiet-link">"interests"</summary>
                             <div class="nav-dd-menu">
                                 <a class="quiet-link" href="/interests">"all interests →"</a>
-                                <a class="quiet-link" href="/interests/drums">"drums"</a>
-                                <a class="quiet-link" href="/interests/swing">"swing"</a>
-                                <a class="quiet-link" href="/interests/lifting">"lifting"</a>
-                                <a class="quiet-link" href="/interests/keys">"keys"</a>
-                                <a class="quiet-link" href="/interests/spire">"spire"</a>
-                                <a class="quiet-link" href="/interests/models">"models"</a>
-                                <a class="quiet-link" href="/interests/puzzles">"puzzles"</a>
-                                <a class="quiet-link" href="/interests/felix">"felix"</a>
+                                for interest in INTERESTS.iter() {
+                                    <a
+                                        class="quiet-link"
+                                        href=(format!("/interests/{}", interest.slug))
+                                    >(interest.slug)</a>
+                                }
                             </div>
                         </details>
                     </nav>

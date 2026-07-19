@@ -10,28 +10,7 @@ use topcoat::{
     view::view,
 };
 
-use crate::{content::posts::POSTS, design::shell};
-
-/// Every real route on the site. Posts come from their index; standalone
-/// interest pages are listed explicitly alongside the other fixed routes.
-fn routes() -> Vec<String> {
-    let mut routes = vec![
-        "/".to_string(),
-        "/thoughts".to_string(),
-        "/resume".to_string(),
-        "/interests".to_string(),
-        "/interests/drums".to_string(),
-        "/interests/swing".to_string(),
-        "/interests/lifting".to_string(),
-        "/interests/keys".to_string(),
-        "/interests/spire".to_string(),
-        "/interests/models".to_string(),
-        "/interests/puzzles".to_string(),
-        "/interests/felix".to_string(),
-    ];
-    routes.extend(POSTS.iter().map(|post| format!("/thoughts/{}", post.slug)));
-    routes
-}
+use crate::{content::routes::site_routes, design::shell};
 
 /// Plain Levenshtein, two rolling rows. The route inventory is small enough
 /// that this is not the expensive part of the request.
@@ -54,7 +33,7 @@ fn edit_distance(a: &str, b: &str) -> usize {
 #[page("/{*rest}")]
 async fn not_found(cx: &Cx) -> Result {
     let requested = uri(cx).path().to_owned();
-    let routes = routes();
+    let routes = site_routes();
 
     let (distance, nearest) = routes
         .iter()

@@ -1,15 +1,16 @@
 use topcoat::{Result, router::page, view::view};
 
-use crate::design::{page_head, shell};
+use crate::{
+    content::interests::interest,
+    design::{page_head, shell},
+};
 
 #[page("/interests/felix")]
 async fn felix() -> Result {
+    let meta = interest("felix");
+    let title = format!("{} — Ben Berman", meta.title);
     let body = view! {
-        page_head(
-            stamp: "felix",
-            title: "Felix",
-            lede: "There is a dog. There is, accordingly, a website computing when we are the same age.",
-        )
+        page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
         <section class="rail-row mt-10">
             <div></div>
             <div class="min-w-0 max-w-prose space-y-4 text-ink2">
@@ -36,5 +37,5 @@ async fn felix() -> Result {
             </p>
         </div>
     }?;
-    view! { shell(title: "Felix — Ben Berman", body: body) }
+    view! { shell(title: title.as_str(), body: body) }
 }

@@ -25,32 +25,22 @@ LABEL="${LABEL//[^A-Za-z0-9._-]/-}"
 command -v bun >/dev/null || { echo "bun is required (CDP client)" >&2; exit 1; }
 command -v magick >/dev/null || { echo "imagemagick (magick) is required" >&2; exit 1; }
 
-# Route manifest: "url-path<TAB>name". Extend here.
-ROUTES=$'/\thome
-/thoughts\tthoughts
-/thoughts/pesky-code\tpesky-code
-/thoughts/how-bad-are-planes\tplanes-empty
-/thoughts/how-bad-are-planes?from=JFK&to=LHR\tplanes-jfk-lhr
-/thoughts/how-bad-are-planes?from=JFK&to=LHR&view=compare\tplanes-compare
-/resume\tresume
-/resume?tech=Rust\tresume-filtered-rust
-/interests\tinterests
-/interests/drums\tinterest-drums
-/interests/swing\tinterest-swing
-/interests/lifting\tinterest-lifting
-/interests/keys\tinterest-keys
-/interests/spire\tinterest-spire
-/interests/models\tinterest-models
-/interests/puzzles\tinterest-puzzles
-/interests/felix\tinterest-felix
-/thouhgts\tnot-found'
-
 WIDTHS=(1440 390)
 VIEW_H=900 # viewport height; full-page capture extends beyond it
 
 # --- build ------------------------------------------------------------------
 cargo build --release
 topcoat asset bundle --release
+
+# Route manifest: "url-path<TAB>name". The canonical page list comes from the
+# binary itself (`--routes`, derived from the same registries the site
+# renders from), so it cannot drift; only capture-specific variants (query
+# params, the intentional 404 probe) are listed here.
+ROUTES="$(./target/release/bens-site --routes)"
+ROUTES+=$'\n/thoughts/how-bad-are-planes?from=JFK&to=LHR\tplanes-jfk-lhr
+/thoughts/how-bad-are-planes?from=JFK&to=LHR&view=compare\tplanes-compare
+/resume?tech=Rust\tresume-filtered-rust
+/thouhgts\tnot-found'
 
 # --- start server on a free port -------------------------------------------
 PORT=""

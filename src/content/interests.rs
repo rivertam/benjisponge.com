@@ -1,0 +1,66 @@
+//! Interest registry, mirroring `posts.rs`. Each interest is a standalone
+//! page module under `app/interests/`; this list is the single source of
+//! truth for its slug (route `/interests/{slug}`, nav label, rail stamp),
+//! display title, and teaser (the index card copy, doubling as the page's
+//! lede). The nav dropdown, the interests index, the 404's route list, and
+//! the snapshot manifest all derive from here — adding an interest means one
+//! entry here plus the page module.
+
+pub struct Interest {
+    pub slug: &'static str,
+    pub title: &'static str,
+    pub teaser: &'static str,
+}
+
+pub static INTERESTS: [Interest; 8] = [
+    Interest {
+        slug: "drums",
+        title: "Drums",
+        teaser: "Mediocre drummer. Recording turns out to be much harder than playing.",
+    },
+    Interest {
+        slug: "swing",
+        title: "Swing dancing",
+        teaser: "Swing dancing (lead and follow but mostly lead)",
+    },
+    Interest {
+        slug: "lifting",
+        title: "Lifting",
+        teaser: "Deadlift PR 345 lbs, Squat PR 235 lbs, Bench PR like 165 but I never 1RM it",
+    },
+    Interest {
+        slug: "keys",
+        title: "Keyboards",
+        teaser: "Split-columnar keyboard person. Ten thousand strangers have watched my Dactyl Manuform video; TypeRacer has me at 117wpm.",
+    },
+    Interest {
+        slug: "spire",
+        title: "Slay the Spire",
+        teaser: "Slay the Spire at Ascension 20, with an annotated run synopsis, because a win nobody can audit barely counts.",
+    },
+    Interest {
+        slug: "models",
+        title: "Toy models",
+        teaser: "Procedural cities with opinionated residents — a react-three-fiber toy running Schelling-style agents.",
+    },
+    Interest {
+        slug: "puzzles",
+        title: "Crosswords",
+        teaser: "A Rust crossword engine, so .puz files open in the terminal. Nobody had asked for this.",
+    },
+    Interest {
+        slug: "felix",
+        title: "Felix",
+        teaser: "There is a dog. There is, accordingly, a website computing when we are the same age.",
+    },
+];
+
+/// An interest page's own registry entry. Panics on a slug not in the
+/// registry — pages pass literals, and every page renders in the snapshot
+/// run, so a typo surfaces on the first capture.
+pub fn interest(slug: &str) -> &'static Interest {
+    INTERESTS
+        .iter()
+        .find(|i| i.slug == slug)
+        .unwrap_or_else(|| panic!("unknown interest slug: {slug}"))
+}
