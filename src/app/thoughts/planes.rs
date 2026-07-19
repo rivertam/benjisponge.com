@@ -5,6 +5,7 @@
 
 mod charts;
 mod form;
+mod ice;
 mod receipt;
 
 use topcoat::{

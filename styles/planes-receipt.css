@@ -7,26 +7,6 @@
 /* The original page's warm palette (~/how-bad src/index.css :root), scoped
    to the article. Duplicate-safe: each planes-*.css file declares the block
    it needs first; values are identical everywhere. */
-.paper-warm {
-  --page: #f2ead9;
-  --card: #fdf9ef;
-  --ink: #2b2620;
-  --ink-2: #5d5648;
-  --muted: #8f8676;
-  --hairline: #e7dfcc;
-  --baseline: #cdc2a9;
-  --cost: #eb6834;
-  --save: #2a78d6;
-  --save-soft: #86b6ef;
-  --focus: #2a78d6;
-  --domain-transport: #2a78d6;
-  --domain-food: #5a7a4a;
-  --domain-home: #b07900;
-  --domain-habits: #a63d2f;
-  --sans: Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif;
-  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
-  color-scheme: light;
-}
 
 .paper-warm .receipt sup.cite a {
   color: var(--muted);

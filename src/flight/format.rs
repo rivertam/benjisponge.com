@@ -189,3 +189,13 @@ pub fn format_bar_value(kg: f64) -> String {
     }
     format_tonnes_smart(kg / 1000.0)
 }
+
+/// `${n}` as JavaScript prints it: integers bare ("8000"), fractions as-is
+/// ("0.6"). Shared by the comparison rows and the chart tooltips.
+pub fn format_js_number(n: f64) -> String {
+    if n == n.trunc() {
+        format!("{}", n as i64)
+    } else {
+        format!("{n}")
+    }
+}

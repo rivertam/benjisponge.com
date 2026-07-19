@@ -13,6 +13,7 @@
 //! Tooltips are CSS-only `.tip` spans on :hover/:focus-visible — no JS
 //! positioning, unlike the original's tooltip layer.
 
+use super::ice::{ICE_SHOW_FLOOR_M2, ice_figure};
 use topcoat::{
     Result,
     runtime::shard,
@@ -25,8 +26,8 @@ use crate::flight::{
     },
     emissions::FlightImpact,
     format::{
-        format_bar_value, format_count, format_ice, format_tonnes, format_tonnes_smart,
-        format_whole, format_years_span,
+        format_bar_value, format_count, format_ice, format_js_number, format_tonnes,
+        format_tonnes_smart, format_whole, format_years_span,
     },
     reference_data::{
         ACTIVITIES, BUDGET_TARGETS, CutOption, FlightAnalogy, HABIT_BARS, SACRIFICE_BARS,
@@ -34,9 +35,6 @@ use crate::flight::{
     },
     sources::cite,
 };
-
-/// Match the ice graphic's own floor so the callout and figure agree.
-const ICE_SHOW_FLOOR_M2: f64 = 0.05;
 
 fn all_bars() -> impl Iterator<Item = &'static SacrificeBar> {
     SACRIFICE_BARS.iter().chain(HABIT_BARS.iter())
@@ -78,30 +76,9 @@ fn monk_tonnes() -> f64 {
     all_bars().map(cuttable_kg).sum::<f64>() / 1000.0
 }
 
-/// Kilograms for the zoom panel, tonnes once they'd stop rounding to zero.
-fn format_kg(kg: f64) -> String {
-    if kg >= 100.0 {
-        return format_tonnes_smart(kg / 1000.0);
-    }
-    if kg < 10.0 {
-        format!("{kg:.1} kg")
-    } else {
-        format!("{} kg", kg.round() as i64)
-    }
-}
-
 /// A chip label without its price tag: "go vegan −1.0 t" → "go vegan".
 fn strip_price(label: &str) -> &str {
     label.split(" −").next().unwrap_or(label)
-}
-
-/// `${n}` as JavaScript prints it: integers bare, fractions as-is.
-fn fmt_count(n: f64) -> String {
-    if n == n.trunc() {
-        format!("{}", n as i64)
-    } else {
-        format!("{n}")
-    }
 }
 
 /// Slice widths for a track, clamped so they never sum past 100%. Without
@@ -364,7 +341,7 @@ async fn combined_swaps(
                     "{} — {}: −{}",
                     bar.noun,
                     strip_price(option.label),
-                    format_kg(kg)
+                    format_bar_value(kg)
                 ),
             });
         }
@@ -468,7 +445,7 @@ async fn compare_domain_rows(
                             <span class="tip">(format!(
                                 "{} — {} {}",
                                 format_bar_value(row.bar_fill_kg),
-                                fmt_count(row.count),
+                                format_js_number(row.count),
                                 row.unit_label
                             ))</span>
                         </div>
@@ -479,215 +456,6 @@ async fn compare_domain_rows(
                 </span>
             </div>
         }
-    }
-}
-
-struct IceRef {
-    id: &'static str,
-    w: f64,
-    h: f64,
-    area: f64,
-    label: &'static str,
-}
-
-const ICE_MARGIN: f64 = 0.5;
-const ICE_GAP: f64 = 0.7;
-const ICE_LABEL_GAP: f64 = 0.62;
-
-const MAT: IceRef = IceRef {
-    id: "mat",
-    w: 1.73,
-    h: 0.61,
-    area: 1.0,
-    label: "yoga mat · 1 m²",
-};
-const BED: IceRef = IceRef {
-    id: "bed",
-    w: 2.03,
-    h: 1.52,
-    area: 3.0,
-    label: "queen bed · 3 m²",
-};
-const SPOT: IceRef = IceRef {
-    id: "spot",
-    w: 4.8,
-    h: 2.4,
-    area: 12.0,
-    label: "parking spot · 12 m²",
-};
-const ICE_REFERENCES: [IceRef; 3] = [MAT, BED, SPOT];
-
-/// The melted patch of September sea ice drawn to scale beside an everyday
-/// object. Same figure as the receipt's; duplicated here because the
-/// receipt's copy is private to its module.
-#[component]
-async fn ice_figure(ice_m2: f64) -> Result {
-    if ice_m2 < ICE_SHOW_FLOOR_M2 {
-        return view! { "" };
-    }
-
-    // The one everyday object nearest the ice patch in area — nearest as a
-    // ratio, not a difference, since this is a comparison of scale.
-    let obj = ICE_REFERENCES
-        .iter()
-        .reduce(|best, r| {
-            if (ice_m2 / r.area).ln().abs() < (ice_m2 / best.area).ln().abs() {
-                r
-            } else {
-                best
-            }
-        })
-        .expect("at least one reference object");
-
-    let side = ice_m2.sqrt();
-    let obj_x = ICE_MARGIN + side + ICE_GAP;
-    let obj_y = ICE_MARGIN + ((side - obj.h) / 2.0).max(0.0);
-
-    let plot_h = side.max(obj_y - ICE_MARGIN + obj.h + ICE_LABEL_GAP);
-    let vb_w = obj_x + obj.w + ICE_MARGIN;
-    let vb_h = ICE_MARGIN + plot_h + 0.9;
-    let fs = (vb_w * 0.031).max(0.26);
-    let label_inside = side > fs * 4.2;
-
-    let grid_x: Vec<i64> = (0..=vb_w.ceil() as i64).collect();
-    let grid_y: Vec<i64> = (0..=vb_h.ceil() as i64).collect();
-    let obj_short = obj.label.split(" ·").next().unwrap_or(obj.label);
-
-    view! {
-        <div class="ice-figure">
-            <svg
-                viewBox=(format!("0 0 {vb_w} {vb_h}"))
-                role="img"
-                aria-label=(format!(
-                    "{} of Arctic sea ice drawn to scale beside a {}",
-                    format_ice(ice_m2),
-                    obj_short
-                ))
-            >
-                <defs>
-                    <pattern
-                        id="callout-ice-dots-pat"
-                        patternUnits="userSpaceOnUse"
-                        width="0.24"
-                        height="0.24"
-                    >
-                        <circle cx="0.12" cy="0.12" r="0.055" fill="var(--save-soft)" />
-                    </pattern>
-                </defs>
-                <g stroke="var(--hairline)" stroke-width="0.012">
-                    for x in grid_x {
-                        <line x1=(x) y1="0" x2=(x) y2=(vb_h) />
-                    }
-                    for y in grid_y {
-                        <line x1="0" y1=(y) x2=(vb_w) y2=(y) />
-                    }
-                </g>
-
-                <rect
-                    class="ice-dots"
-                    x=(ICE_MARGIN)
-                    y=(ICE_MARGIN)
-                    width=(side)
-                    height=(side)
-                    rx="0.06"
-                    fill="url(#callout-ice-dots-pat)"
-                />
-                <rect
-                    x=(ICE_MARGIN)
-                    y=(ICE_MARGIN)
-                    width=(side)
-                    height=(side)
-                    rx="0.06"
-                    fill="none"
-                    stroke="var(--save)"
-                    stroke-width="0.04"
-                    stroke-dasharray="0.16 0.11"
-                />
-                <text
-                    x=(ICE_MARGIN + side / 2.0)
-                    y=(if label_inside {
-                        ICE_MARGIN + side / 2.0 + fs * 0.36
-                    } else {
-                        ICE_MARGIN - 0.14
-                    })
-                    text-anchor="middle"
-                    font-size=(fs)
-                    font-weight="700"
-                    fill="var(--ink)"
-                    stroke="var(--card)"
-                    stroke-width=(fs * 0.34)
-                    paint-order="stroke"
-                >
-                    (format_ice(ice_m2))
-                </text>
-
-                <g>
-                    <rect
-                        x=(obj_x)
-                        y=(obj_y)
-                        width=(obj.w)
-                        height=(obj.h)
-                        rx="0.1"
-                        fill="none"
-                        stroke="var(--muted)"
-                        stroke-width="0.045"
-                    />
-                    <text
-                        x=(obj_x + obj.w / 2.0)
-                        y=(obj_y + obj.h + fs * 1.1)
-                        text-anchor="middle"
-                        font-size=(fs * 0.85)
-                        fill="var(--muted)"
-                    >
-                        (obj.label)
-                    </text>
-                </g>
-                if obj.id == "bed" {
-                    <line
-                        x1=(obj_x + BED.w * 0.12)
-                        y1=(obj_y + 0.42)
-                        x2=(obj_x + BED.w * 0.88)
-                        y2=(obj_y + 0.42)
-                        stroke="var(--muted)"
-                        stroke-width="0.03"
-                    />
-                }
-                if obj.id == "spot" {
-                    <text
-                        x=(obj_x + SPOT.w / 2.0)
-                        y=(obj_y + SPOT.h / 2.0 + fs * 0.4)
-                        text-anchor="middle"
-                        font-size=(fs * 1.15)
-                        font-weight="700"
-                        fill="var(--hairline)"
-                    >
-                        "P"
-                    </text>
-                }
-
-                <g stroke="var(--ink-2)" stroke-width="0.028">
-                    <line x1=(ICE_MARGIN) y1=(vb_h - 0.3) x2=(ICE_MARGIN + 1.0) y2=(vb_h - 0.3) />
-                    <line x1=(ICE_MARGIN) y1=(vb_h - 0.39) x2=(ICE_MARGIN) y2=(vb_h - 0.21) />
-                    <line
-                        x1=(ICE_MARGIN + 1.0)
-                        y1=(vb_h - 0.39)
-                        x2=(ICE_MARGIN + 1.0)
-                        y2=(vb_h - 0.21)
-                    />
-                </g>
-                <text
-                    x=(ICE_MARGIN + 1.14)
-                    y=(vb_h - 0.24)
-                    font-size=(fs * 0.85)
-                    fill="var(--ink-2)"
-                >
-                    "1 m"
-                </text>
-            </svg>
-            <div class="ice-note">
-                "september sea ice, drawn to scale — every tonne melts ≈ 3 m² — about one queen bed"
-            </div>
-        </div>
     }
 }
 
@@ -702,7 +470,7 @@ async fn ice_callout(ice_m2: f64) -> Result {
                 " "
                 cite(id: "seaice")
             </p>
-            ice_figure(ice_m2: ice_m2)
+            ice_figure(ice_m2: ice_m2, pattern_id: "callout-ice-dots-pat")
         </aside>
     }
 }
@@ -1282,7 +1050,7 @@ pub async fn charts_section(
                                             </div>
                                         </div>
                                         <span class="row-equals">
-                                            <strong>(format_kg(total_kg(b_coffee)))</strong>
+                                            <strong>(format_bar_value(total_kg(b_coffee)))</strong>
                                         </span>
                                     </div>
 
@@ -1316,7 +1084,7 @@ pub async fn charts_section(
                                             </div>
                                         </div>
                                         <span class="row-equals">
-                                            <strong>(format_kg(total_kg(b_phone)))</strong>
+                                            <strong>(format_bar_value(total_kg(b_phone)))</strong>
                                         </span>
                                     </div>
 
@@ -1350,7 +1118,7 @@ pub async fn charts_section(
                                             </div>
                                         </div>
                                         <span class="row-equals">
-                                            <strong>(format_kg(total_kg(b_soda)))</strong>
+                                            <strong>(format_bar_value(total_kg(b_soda)))</strong>
                                         </span>
                                     </div>
 
@@ -1384,7 +1152,7 @@ pub async fn charts_section(
                                             </div>
                                         </div>
                                         <span class="row-equals">
-                                            <strong>(format_kg(total_kg(b_bottle)))</strong>
+                                            <strong>(format_bar_value(total_kg(b_bottle)))</strong>
                                         </span>
                                     </div>
 
@@ -1418,7 +1186,7 @@ pub async fn charts_section(
                                             </div>
                                         </div>
                                         <span class="row-equals">
-                                            <strong>(format_kg(total_kg(b_stream)))</strong>
+                                            <strong>(format_bar_value(total_kg(b_stream)))</strong>
                                         </span>
                                     </div>
 
@@ -1452,7 +1220,7 @@ pub async fn charts_section(
                                             </div>
                                         </div>
                                         <span class="row-equals">
-                                            <strong>(format_kg(total_kg(b_gpt)))</strong>
+                                            <strong>(format_bar_value(total_kg(b_gpt)))</strong>
                                         </span>
                                     </div>
 
@@ -1486,7 +1254,7 @@ pub async fn charts_section(
                                             </div>
                                         </div>
                                         <span class="row-equals">
-                                            <strong>(format_kg(total_kg(b_straw)))</strong>
+                                            <strong>(format_bar_value(total_kg(b_straw)))</strong>
                                         </span>
                                     </div>
                                 </div>

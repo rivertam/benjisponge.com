@@ -3,7 +3,7 @@
 
 use std::sync::LazyLock;
 
-use crate::flight::format::{round_count, round_rate_count};
+use crate::flight::format::{format_js_number, round_count, round_rate_count};
 use crate::flight::reference_data::{ACTIVITIES, Activity};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
@@ -91,22 +91,12 @@ fn activity_unit(
     }
 }
 
-/// `${n}` for the counts that appear in labels: integers print bare ("8000"),
-/// one-decimal rates print as JS does ("0.6").
-fn js_num(n: f64) -> String {
-    if n == n.trunc() {
-        format!("{}", n as i64)
-    } else {
-        format!("{n}")
-    }
-}
-
 /// ≈1 week / ≈3 weeks — keep the ≈, pluralize the unit noun.
 fn approx_units(n: f64, singular: &str, plural: &str) -> String {
     if n == 1.0 {
         format!("≈1 {singular}")
     } else {
-        format!("≈{} {plural}", js_num(n))
+        format!("≈{} {plural}", format_js_number(n))
     }
 }
 
@@ -114,9 +104,9 @@ fn approx_units(n: f64, singular: &str, plural: &str) -> String {
 fn format_rate_count(n: f64, singular: &str, plural: &str) -> String {
     let count = round_rate_count(n);
     let formatted = if count >= 10.0 {
-        js_num(round_count(count))
+        format_js_number(round_count(count))
     } else if count == count.trunc() {
-        js_num(count)
+        format_js_number(count)
     } else {
         format!("{count:.1}")
     };
