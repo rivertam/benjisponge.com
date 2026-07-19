@@ -30,17 +30,20 @@ fn sky_note(factor: f64) -> String {
     let f = format!("×{factor:.1}");
     let skies = if factor >= 1.25 {
         format!(
-            "heat-trapping cloud trails, priced to contrail-prone skies ({f} the global average, per km flown)"
+            "heat-trapping cloud trails, priced to contrail-prone skies ({f} the global average, \
+             per km flown)"
         )
     } else if factor <= 0.75 {
         format!(
-            "heat-trapping cloud trails, priced to contrail-lean skies ({f} the global average, per km flown)"
+            "heat-trapping cloud trails, priced to contrail-lean skies ({f} the global average, \
+             per km flown)"
         )
     } else {
         format!("heat-trapping cloud trails, priced to about-average skies ({f})")
     };
     format!(
-        "{skies}. Weather decides the day — ≈2.7% of flights cause 80% of contrail warming; science’s range on this line runs ⅓× to 1.7×"
+        "{skies}. Weather decides the day — ≈2.7% of flights cause 80% of contrail warming; \
+         science’s range on this line runs ⅓× to 1.7×"
     )
 }
 

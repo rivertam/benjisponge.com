@@ -79,8 +79,9 @@ pub static ROLES: [Role; 6] = [
         bullets: &[
             "Co-founded a chemical synthesis startup with two chemists",
             "Raised a seed round with MVP",
-            "Lead and mentored a team of three engineers building a custom ERP/MRP for \
-             novel chemical synthesis and optimization from zero to one, along with a handful of domain-oriented pivots",
+            "Lead and mentored a team of three engineers building a custom ERP/MRP for novel \
+             chemical synthesis and optimization from zero to one, along with a handful of \
+             domain-oriented pivots",
             "Product powered by LLM-powered durable workflows",
         ],
         stack: &[
@@ -102,12 +103,12 @@ pub static ROLES: [Role; 6] = [
         place: "New York / hybrid",
         dates: "Sep 2017 – Mar 2023",
         bullets: &[
-            "First dedicated software engineer; left a post-Series A company \
-             of ten-plus engineers and twenty employees",
-            "Built and maintained the robotics engine — kinematics, dynamics, control \
-             systems, motion planning, vision",
-            "Built the platform that runs the robots: a React remote control, \
-             a real-time server, WebRTC, ThreeJS, WebAssembly",
+            "First dedicated software engineer; left a post-Series A company of ten-plus \
+             engineers and twenty employees",
+            "Built and maintained the robotics engine — kinematics, dynamics, control systems, \
+             motion planning, vision",
+            "Built the platform that runs the robots: a React remote control, a real-time server, \
+             WebRTC, ThreeJS, WebAssembly",
         ],
         stack: &[
             language("C++"),
@@ -129,7 +130,8 @@ pub static ROLES: [Role; 6] = [
         dates: "Jun 2015 – Dec 2016",
         bullets: &[
             "Joined a team of 6",
-            "As the company dwindled, became lead and only engineer, running the entire site's engineering",
+            "As the company dwindled, became lead and only engineer, running the entire site's \
+             engineering",
         ],
         stack: &[
             language("Ruby"),
@@ -148,7 +150,8 @@ pub static ROLES: [Role; 6] = [
         bullets: &[
             "Fun summer during which I learned how to drink",
             "Good environment but low-impact and not intellectually stimulating",
-            "While I already knew a good amount about finance, they did have us take an options trading course in which I learned a lot",
+            "While I already knew a good amount about finance, they did have us take an options \
+             trading course in which I learned a lot",
         ],
         stack: &[],
     },

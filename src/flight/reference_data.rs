@@ -96,7 +96,8 @@ pub static ACTIVITIES: &[Activity] = &[
         typical_amount: 1095.0,
         unit_label: "meals’ worth of food waste",
         unit_short: "meals’ waste",
-        basis: "≈0.34 kg wasted per meal — the consumer-stage share of North America’s ≈0.8 t/person-yr food-wastage footprint (FAO)",
+        basis: "≈0.34 kg wasted per meal — the consumer-stage share of North America’s ≈0.8 \
+                t/person-yr food-wastage footprint (FAO)",
         source_ids: &["foodwaste"],
     },
     Activity {
@@ -140,7 +141,8 @@ pub static ACTIVITIES: &[Activity] = &[
         typical_amount: 10950.0,
         unit_label: "ChatGPT queries",
         unit_short: "queries",
-        basis: "OpenAI’s own figure (2025): ≈0.34 Wh ≈0.13 g CO₂e/query — the higher of two company numbers",
+        basis: "OpenAI’s own figure (2025): ≈0.34 Wh ≈0.13 g CO₂e/query — the higher of two \
+                company numbers",
         source_ids: &["ai-openai", "ai-google"],
     },
     Activity {
@@ -232,14 +234,16 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
             CutSlice {
                 id: "ev-share",
                 cut: Some("going car-free"),
-                label: "What an EV would still emit over the same 11,500 miles (≈100 g/mi on the 2024 U.S. grid) — only going car-free clears this inner slice",
+                label: "What an EV would still emit over the same 11,500 miles (≈100 g/mi on the \
+                        2024 U.S. grid) — only going car-free clears this inner slice",
                 kg: 11500.0 * 0.1,
                 color: "#2a78d6",
             },
             CutSlice {
                 id: "gas-premium",
                 cut: Some("swapping to an EV"),
-                label: "The gas premium: ≈300 g/mi × 11,500 mi — gone the day you drive electric (EPA ≈400 g/mi vs. US DOE ≈100 g/mi)",
+                label: "The gas premium: ≈300 g/mi × 11,500 mi — gone the day you drive electric \
+                        (EPA ≈400 g/mi vs. US DOE ≈100 g/mi)",
                 kg: 11500.0 * (0.4 - 0.1),
                 color: "#86b6ef",
             },
@@ -315,28 +319,32 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
             CutSlice {
                 id: "heat-pump-floor",
                 cut: None,
-                label: "What a modern heat pump would emit delivering the same warmth on today’s U.S. grid (seasonal COP ≈3) — the floor until the grid cleans up",
+                label: "What a modern heat pump would emit delivering the same warmth on today’s \
+                        U.S. grid (seasonal COP ≈3) — the floor until the grid cleans up",
                 kg: 1300.0,
                 color: FLOOR_COLOR,
             },
             CutSlice {
                 id: "gas-premium",
                 cut: Some("switching to a heat pump"),
-                label: "The gas premium: what the furnace burns beyond a heat pump’s share of the same warmth — gone with the electric swap",
+                label: "The gas premium: what the furnace burns beyond a heat pump’s share of the \
+                        same warmth — gone with the electric swap",
                 kg: 840.0,
                 color: "#a63d2f",
             },
             CutSlice {
                 id: "thermostat",
                 cut: Some("turning it down 3 °F"),
-                label: "The top few degrees: nudging the thermostat down ≈3 °F trims roughly a tenth of the season’s gas (DOE’s rule of thumb: ≈1% per °F)",
+                label: "The top few degrees: nudging the thermostat down ≈3 °F trims roughly a \
+                        tenth of the season’s gas (DOE’s rule of thumb: ≈1% per °F)",
                 kg: 240.0,
                 color: "#d08e74",
             },
             CutSlice {
                 id: "ac-all",
                 cut: Some("sweating out the summer"),
-                label: "The summer half: ≈800 A/C hours × ≈1.1 kg/hour (≈3 kWh at the ≈0.37 kg/kWh U.S. grid average). All or nothing: sweat, or emit",
+                label: "The summer half: ≈800 A/C hours × ≈1.1 kg/hour (≈3 kWh at the ≈0.37 \
+                        kg/kWh U.S. grid average). All or nothing: sweat, or emit",
                 kg: 800.0 * 1.1,
                 color: "#b07900",
             },
@@ -377,7 +385,8 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 tick: "heating your home for ≈{n} winters",
                 unit_label: "gas-furnace winters",
                 max_count: None,
-                basis: "a ≈450-therm season ≈ 2.4 t CO₂e (US EIA RECS 2020 average for gas-heated homes)",
+                basis: "a ≈450-therm season ≈ 2.4 t CO₂e (US EIA RECS 2020 average for gas-heated \
+                        homes)",
                 source_ids: &["heating"],
             },
             FlightAnalogy {
@@ -436,35 +445,40 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
             CutSlice {
                 id: "vegan-floor",
                 cut: None,
-                label: "The vegan floor: 1,095 meals × ≈1 kg (Scarborough et al. 2014). No diet gets below this — you have to eat",
+                label: "The vegan floor: 1,095 meals × ≈1 kg (Scarborough et al. 2014). No diet \
+                        gets below this — you have to eat",
                 kg: 1095.0 * 0.96,
                 color: FLOOR_COLOR,
             },
             CutSlice {
                 id: "veg-to-vegan",
                 cut: Some("going vegan"),
-                label: "Vegetarian → vegan buys this middle slice: ≈0.3 kg × 1,095 meals (Scarborough et al. 2014)",
+                label: "Vegetarian → vegan buys this middle slice: ≈0.3 kg × 1,095 meals \
+                        (Scarborough et al. 2014)",
                 kg: 1095.0 * (1.27 - 0.96),
                 color: "#2e8b57",
             },
             CutSlice {
                 id: "avg-to-veg",
                 cut: Some("going vegetarian"),
-                label: "Average → vegetarian shaves this slice: ≈0.6 kg × 1,095 meals (Scarborough et al. 2014)",
+                label: "Average → vegetarian shaves this slice: ≈0.6 kg × 1,095 meals \
+                        (Scarborough et al. 2014)",
                 kg: 1095.0 * (1.88 - 1.27),
                 color: "#7fbf98",
             },
             CutSlice {
                 id: "farming",
                 cut: Some("wasting nothing"),
-                label: "The farming that grew the food you toss — ≈¾ of wasted food’s footprint. Composting can’t touch it; only wasting less can",
+                label: "The farming that grew the food you toss — ≈¾ of wasted food’s footprint. \
+                        Composting can’t touch it; only wasting less can",
                 kg: 1095.0 * 0.34 * 0.75,
                 color: "#7454b8",
             },
             CutSlice {
                 id: "methane",
                 cut: Some("composting"),
-                label: "Landfill methane — ≈¼ of wasted food’s footprint (EPA). Composting alone kills this end slice, farming emissions and all still spent",
+                label: "Landfill methane — ≈¼ of wasted food’s footprint (EPA). Composting alone \
+                        kills this end slice, farming emissions and all still spent",
                 kg: 1095.0 * 0.34 * 0.25,
                 color: "#a58fd6",
             },
@@ -511,7 +525,9 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 tick: "eating ≈{n} hamburgers",
                 unit_label: "quarter-pound hamburgers",
                 max_count: None,
-                basis: "≈3.6 kg CO₂e each — a 113 g patty at ≈33 kg/kg, the U.S.-typical (feedlot + dairy-herd) beef intensity; Poore & Nemecek’s global beef-herd mean would read ≈11 kg",
+                basis: "≈3.6 kg CO₂e each — a 113 g patty at ≈33 kg/kg, the U.S.-typical (feedlot \
+                        + dairy-herd) beef intensity; Poore & Nemecek’s global beef-herd mean \
+                        would read ≈11 kg",
                 source_ids: &["meat"],
             },
             FlightAnalogy {
@@ -520,7 +536,8 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 tick: "eating ≈{n} rotisserie chickens",
                 unit_label: "whole rotisserie chickens",
                 max_count: None,
-                basis: "≈6 kg CO₂e per bird — ≈0.65 kg of meat at poultry’s ≈10 kg/kg (Poore & Nemecek 2018, per-kg data via Our World in Data)",
+                basis: "≈6 kg CO₂e per bird — ≈0.65 kg of meat at poultry’s ≈10 kg/kg (Poore & \
+                        Nemecek 2018, per-kg data via Our World in Data)",
                 source_ids: &["meat"],
             },
             FlightAnalogy {
@@ -529,7 +546,8 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 tick: "a hamburger a day for ≈{n} years",
                 unit_label: "years of a hamburger-a-day habit",
                 max_count: Some(20.0),
-                basis: "365 quarter-pounders a year at ≈3.6 kg CO₂e each (U.S.-typical beef intensity, Poore & Nemecek 2018)",
+                basis: "365 quarter-pounders a year at ≈3.6 kg CO₂e each (U.S.-typical beef \
+                        intensity, Poore & Nemecek 2018)",
                 source_ids: &["meat"],
             },
             FlightAnalogy {
@@ -538,7 +556,8 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 tick: "scraping ≈{n} meals into the bin",
                 unit_label: "meals’ worth of typical food waste",
                 max_count: None,
-                basis: "≈0.34 kg CO₂e wasted per meal — the consumer-stage share of North America’s FAO food-wastage footprint",
+                basis: "≈0.34 kg CO₂e wasted per meal — the consumer-stage share of North \
+                        America’s FAO food-wastage footprint",
                 source_ids: &["foodwaste"],
             },
             FlightAnalogy {
@@ -547,7 +566,8 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 tick: "a year of typical food waste, ≈{n} times over",
                 unit_label: "years of one person’s typical food waste",
                 max_count: None,
-                basis: "1,095 meals a year at ≈0.34 kg CO₂e wasted each (consumer stage, FAO-based)",
+                basis: "1,095 meals a year at ≈0.34 kg CO₂e wasted each (consumer stage, \
+                        FAO-based)",
                 source_ids: &["foodwaste"],
             },
         ],
@@ -561,21 +581,26 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
             CutSlice {
                 id: "basics",
                 cut: None,
-                label: "New socks and underwear: call it ≈30 kg a year — a few unavoidable new basics at the assumed ≈10 kg each — even a full-thrift wardrobe buys these new",
+                label: "New socks and underwear: call it ≈30 kg a year — a few unavoidable new \
+                        basics at the assumed ≈10 kg each — even a full-thrift wardrobe buys \
+                        these new",
                 kg: 30.0,
                 color: FLOOR_COLOR,
             },
             CutSlice {
                 id: "average-wardrobe",
                 cut: Some("thrifting nearly everything"),
-                label: "The average shopper’s year: ≈53 new garments (US PIRG) at ≈10 kg each (our assumed average — between a ≈7 kg tee and ≈33 kg jeans; sector totals imply more) — going almost all-secondhand erases this",
+                label: "The average shopper’s year: ≈53 new garments (US PIRG) at ≈10 kg each \
+                        (our assumed average — between a ≈7 kg tee and ≈33 kg jeans; sector \
+                        totals imply more) — going almost all-secondhand erases this",
                 kg: 530.0,
                 color: "#008ba3",
             },
             CutSlice {
                 id: "fast-premium",
                 cut: Some("dropping to the average pace"),
-                label: "The fast-fashion premium: the second new garment every week — ≈51 more pieces at ≈10 kg each",
+                label: "The fast-fashion premium: the second new garment every week — ≈51 more \
+                        pieces at ≈10 kg each",
                 kg: 510.0,
                 color: "#6cbccf",
             },
@@ -639,14 +664,16 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
             CutSlice {
                 id: "beans",
                 cut: Some("quitting coffee outright"),
-                label: "The coffee itself: 365 black coffees ≈ 8 kg (Berners-Lee: ≈21 g each) — only quitting clears it",
+                label: "The coffee itself: 365 black coffees ≈ 8 kg (Berners-Lee: ≈21 g each) — \
+                        only quitting clears it",
                 kg: 365.0 * 0.021,
                 color: "#c65b8a",
             },
             CutSlice {
                 id: "milk",
                 cut: Some("taking it black"),
-                label: "The milk: a large latte runs ≈340 g against black coffee’s ≈21 g (Berners-Lee) — switch to black and this slice is gone",
+                label: "The milk: a large latte runs ≈340 g against black coffee’s ≈21 g \
+                        (Berners-Lee) — switch to black and this slice is gone",
                 kg: 365.0 * (0.34 - 0.021),
                 color: "#d795b1",
             },
@@ -703,7 +730,8 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
         slices: &[CutSlice {
             id: "handset",
             cut: Some("keeping the old phone"),
-            label: "One flagship phone ≈70 kg CO₂e, ≈80% of it manufacturing (Apple’s own lifecycle reports)",
+            label: "One flagship phone ≈70 kg CO₂e, ≈80% of it manufacturing (Apple’s own \
+                    lifecycle reports)",
             kg: 70.0,
             color: "#c65b8a",
         }],
@@ -820,7 +848,8 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
         slices: &[CutSlice {
             id: "hours",
             cut: Some("reading a book instead"),
-            label: "730 hours × ≈55 g CO₂e per streaming hour (Carbon Trust, European grid average)",
+            label: "730 hours × ≈55 g CO₂e per streaming hour (Carbon Trust, European grid \
+                    average)",
             kg: 730.0 * 0.055,
             color: "#c65b8a",
         }],
@@ -859,7 +888,8 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
         slices: &[CutSlice {
             id: "queries",
             cut: Some("logging off"),
-            label: "10,950 queries × ≈0.13 g (OpenAI’s own figure: ≈0.34 Wh per query at the U.S. grid average)",
+            label: "10,950 queries × ≈0.13 g (OpenAI’s own figure: ≈0.34 Wh per query at the U.S. \
+                    grid average)",
             kg: 10950.0 * 0.00013,
             color: "#c65b8a",
         }],
@@ -876,7 +906,9 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
                 tick: "vibe coding this site ≈{n} times",
                 unit_label: "vibe-codings of this site",
                 max_count: None,
-                basis: "one build ≈15 h of Claude (Fable 5, max effort): ≈1.5M tokens generated + ≈80M re-read, nearly all prompt-cache hits ≈6 kWh ≈2.2 kg CO₂e at the U.S. grid average",
+                basis: "one build ≈15 h of Claude (Fable 5, max effort): ≈1.5M tokens generated + \
+                        ≈80M re-read, nearly all prompt-cache hits ≈6 kWh ≈2.2 kg CO₂e at the \
+                        U.S. grid average",
                 source_ids: &["ai-agent", "grid"],
             },
             FlightAnalogy {
@@ -1006,7 +1038,10 @@ pub static BUDGET_TARGETS: &[BudgetTarget] = &[
         year: 2030,
         total: 2.5,
         travel: 0.425,
-        meaning: "the first milestone on the 1.5 °C path — for scale, the study’s case countries averaged (2017 data): Finland ≈10.4 t, Japan ≈7.6 t, China ≈4.2 t, Brazil ≈2.8 t, India ≈2 t; the U.S. wasn’t studied, and its average runs higher than any of these",
+        meaning: "the first milestone on the 1.5 °C path — for scale, the study’s case countries \
+                  averaged (2017 data): Finland ≈10.4 t, Japan ≈7.6 t, China ≈4.2 t, Brazil ≈2.8 \
+                  t, India ≈2 t; the U.S. wasn’t studied, and its average runs higher than any of \
+                  these",
     },
     BudgetTarget {
         year: 2040,

@@ -31,27 +31,33 @@ pub static INTERESTS: [Interest; 8] = [
     Interest {
         slug: "keys",
         title: "Keyboards",
-        teaser: "Big fan of dactyls, dactyl manuform, and split-columnar keyboards. Currently on a glove80.",
+        teaser: "Big fan of dactyls, dactyl manuform, and split-columnar keyboards. Currently on \
+                 a glove80.",
     },
     Interest {
         slug: "spire",
         title: "Slay the Spire",
-        teaser: "Slay the Spire at Ascension 20, with an annotated run synopsis, because a win nobody can audit barely counts.",
+        teaser: "Slay the Spire at Ascension 20, with an annotated run synopsis, because a win \
+                 nobody can audit barely counts.",
     },
     Interest {
         slug: "simulation",
         title: "Housing Market Simulation",
-        teaser: "Procedural cities with opinionated residents — a react-three-fiber toy running Schelling-style agents.",
+        teaser: "I once spent a bunch of time working on an ECS/actor framework for \
+                 react-three-fiber with the intention of creating some interesting visuals about \
+                 the housing market.",
     },
     Interest {
         slug: "puzzles",
         title: "Crosswords",
-        teaser: "A Rust crossword engine, so .puz files open in the terminal. Nobody had asked for this.",
+        teaser: "A Rust crossword engine, so .puz files open in the terminal. Nobody had asked \
+                 for this.",
     },
     Interest {
         slug: "felix",
         title: "Felix",
-        teaser: "There is a dog. There is, accordingly, a website computing when we are the same age.",
+        teaser: "There is a dog. There is, accordingly, a website computing when we are the same \
+                 age.",
     },
 ];
 

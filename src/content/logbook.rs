@@ -80,8 +80,8 @@ pub static LOG: [Entry; 7] = [
     Entry::Essay {
         date: "2026-07-12",
         title: "How bad are planes?",
-        teaser: "The part of the fare you don't pay. An emissions receipt for any route you \
-                 can name, itemized like the fare should be.",
+        teaser: "The part of the fare you don't pay. An emissions receipt for any route you can \
+                 name, itemized like the fare should be.",
         slug: "how-bad-are-planes",
         tags: &["climate", "planes"],
     },
@@ -105,9 +105,9 @@ pub static LOG: [Entry; 7] = [
     },
     Entry::Note {
         date: "2025-08-14",
-        body: "I'm so glad AI can handle all that pesky code for me so I can focus on what \
-               I truly love: navigating endless chains of SSO sign-ins followed by \
-               dashboards to manage settings and secrets in different environments ❤️",
+        body: "I'm so glad AI can handle all that pesky code for me so I can focus on what I \
+               truly love: navigating endless chains of SSO sign-ins followed by dashboards to \
+               manage settings and secrets in different environments ❤️",
         source: "originally a LinkedIn post",
         slug: "pesky-code",
         tags: &["ai"],

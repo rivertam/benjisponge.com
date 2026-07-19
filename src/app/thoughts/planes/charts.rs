@@ -644,8 +644,8 @@ pub async fn charts_section(
             if beaten == 1 { "one" } else { "two" }
         )
     } else {
-        "on a short hop the whole-year bars still win — but a single long-haul trip would lay \
-         its dashed line past almost every one of them, floors included."
+        "on a short hop the whole-year bars still win — but a single long-haul trip would lay its \
+         dashed line past almost every one of them, floors included."
             .to_string()
     };
     let vegan_years = flight_kg / option_kg(b_eating, "vegan");
@@ -663,9 +663,9 @@ pub async fn charts_section(
         String::new()
     };
     let chart_note = format!(
-        "Here’s the quiet point of this whole page: {quiet_point}{monk_sentence} The habits \
-         still count — but if you’re budgeting willpower, spend it where the tonnes are: the \
-         flights, then the car, then the plate. The straws will round themselves."
+        "Here’s the quiet point of this whole page: {quiet_point}{monk_sentence} The habits still \
+         count — but if you’re budgeting willpower, spend it where the tonnes are: the flights, \
+         then the car, then the plate. The straws will round themselves."
     );
 
     let soda_activity = ACTIVITIES
@@ -1667,8 +1667,8 @@ mod tests {
         for class in used {
             assert!(
                 valid.contains(&class),
-                "planes-charts.css selects .{class}, but no bar/slice in \
-                 reference_data.rs generates it — renamed id?"
+                "planes-charts.css selects .{class}, but no bar/slice in reference_data.rs \
+                 generates it — renamed id?"
             );
         }
     }
@@ -1681,8 +1681,8 @@ mod tests {
         for token in used {
             assert!(
                 declared.contains(&token),
-                "planes-charts.css keys on [{token}] but charts_section \
-                 declares no :{token} attribute"
+                "planes-charts.css keys on [{token}] but charts_section declares no :{token} \
+                 attribute"
             );
         }
     }
