@@ -10,32 +10,31 @@ use topcoat::{
     view::view,
 };
 
-use crate::{
-    content::{interests::INTERESTS, posts::POSTS},
-    design::shell,
-};
+use crate::{content::posts::POSTS, design::shell};
 
-/// Every real route on the site. `/`, `/resume`, and `/off-the-clock` by
-/// hand; posts and interests from their registries, so new entries join the
-/// suggestion pool automatically.
+/// Every real route on the site. Posts come from their index; standalone
+/// interest pages are listed explicitly alongside the other fixed routes.
 fn routes() -> Vec<String> {
     let mut routes = vec![
         "/".to_string(),
         "/thoughts".to_string(),
         "/resume".to_string(),
-        "/off-the-clock".to_string(),
+        "/interests".to_string(),
+        "/interests/drums".to_string(),
+        "/interests/swing".to_string(),
+        "/interests/lifting".to_string(),
+        "/interests/keys".to_string(),
+        "/interests/spire".to_string(),
+        "/interests/models".to_string(),
+        "/interests/puzzles".to_string(),
+        "/interests/felix".to_string(),
     ];
     routes.extend(POSTS.iter().map(|post| format!("/thoughts/{}", post.slug)));
-    routes.extend(
-        INTERESTS
-            .iter()
-            .map(|interest| format!("/off-the-clock/{}", interest.stamp)),
-    );
     routes
 }
 
-/// Plain Levenshtein, two rolling rows. The site has six routes; this is
-/// not the expensive part of the request.
+/// Plain Levenshtein, two rolling rows. The route inventory is small enough
+/// that this is not the expensive part of the request.
 fn edit_distance(a: &str, b: &str) -> usize {
     let a: Vec<char> = a.chars().collect();
     let b: Vec<char> = b.chars().collect();

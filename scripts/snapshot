@@ -30,8 +30,15 @@ ROUTES=$'/\thome
 /thoughts/how-bad-are-planes?from=JFK&to=LHR&view=compare\tplanes-compare
 /resume\tresume
 /resume?tech=Rust\tresume-filtered-rust
-/off-the-clock\toff-the-clock
-/off-the-clock/drums\tinterest-drums
+/interests\tinterests
+/interests/drums\tinterest-drums
+/interests/swing\tinterest-swing
+/interests/lifting\tinterest-lifting
+/interests/keys\tinterest-keys
+/interests/spire\tinterest-spire
+/interests/models\tinterest-models
+/interests/puzzles\tinterest-puzzles
+/interests/felix\tinterest-felix
 /thouhgts\tnot-found'
 
 WIDTHS=(1440 390)
