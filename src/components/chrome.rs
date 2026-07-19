@@ -1,9 +1,5 @@
-//! Shared chrome: fonts, the document shell, the margin rail, and page heads.
-//!
-//! The shell is "mill and oxide": cool steel paper, iron ink, one accent — the
-//! color literally named rust. The signature is the margin rail (`.rail-row` /
-//! `.rail-stamp` in `styles/site.css`): a narrow left column of Fira Mono
-//! metadata, like the stamped margin of an engineering logbook.
+//! The document shell: fonts, head, nav, footer. Every page renders through
+//! this.
 
 use topcoat::{
     Result,
@@ -21,10 +17,19 @@ pub const FIRA_MONO: Font = fontsource_font!(FIRA_MONO, host: Asset);
 /// title. Pages invoke it as markup with the body as a prop:
 /// `view! { shell(title: "…", active: "…", body: body) }`.
 ///
+/// `title` is the bare page title — the shell appends "— Ben Berman" itself;
+/// pass `""` for the homepage, whose title is just the name.
+///
 /// `active` names the nav item the page lives under — `"log"`, `"resume"`,
 /// `"interests"`, or `""` for none — and gets the oxide underline.
 #[component]
 pub async fn shell(title: &str, active: &str, body: View) -> Result {
+    let title = if title.is_empty() {
+        "Ben Berman".to_string()
+    } else {
+        format!("{title} — Ben Berman")
+    };
+    let title = title.as_str();
     let nav = |item: &str| {
         if active == item {
             "nav-active"
@@ -98,54 +103,5 @@ pub async fn shell(title: &str, active: &str, body: View) -> Result {
                 </footer>
             </body>
         </html>
-    }
-}
-
-/// A page's opening rail row: a mono stamp in the margin, a Zilla Slab title,
-/// and an optional one-line lede (pass `""` to omit).
-#[component]
-pub async fn page_head(stamp: &str, title: &str, lede: &str) -> Result {
-    view! {
-        <header class="rail-row mt-16">
-            <p class="rail-stamp uppercase tracking-[0.18em]">(stamp)</p>
-            <div class="min-w-0">
-                <h1 class="font-display text-4xl font-bold tracking-tight">(title)</h1>
-                if !lede.is_empty() {
-                    <p class="mt-3 max-w-prose text-ink2">(lede)</p>
-                }
-            </div>
-        </header>
-    }
-}
-
-/// An inline, dismissible popover for citations and other short asides.
-/// `id` must be unique on the page and a valid CSS custom-ident fragment.
-#[component]
-pub async fn inline_popover(id: &str, label: &str, child: View) -> Result {
-    let anchor_name = format!("anchor-name: --inline-popover-{};", id);
-    let position_anchor = format!("position-anchor: --inline-popover-{};", id);
-    view! {
-        <button
-            type="button"
-            class="inline-popover-trigger oxlink"
-            popovertarget=(id)
-            style=(anchor_name.as_str())
-        >(label)</button>
-        <span
-            id=(id)
-            class="inline-popover-panel"
-            popover="auto"
-            style=(position_anchor.as_str())
-        >
-            <button
-                type="button"
-                class="inline-popover-close"
-                popovertarget=(id)
-                popovertargetaction="hide"
-                aria-label="Close popover"
-            >"×"</button>
-            <span class="inline-popover-kicker">(label)</span>
-            (child)
-        </span>
     }
 }

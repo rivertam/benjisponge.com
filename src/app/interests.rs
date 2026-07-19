@@ -13,8 +13,8 @@ mod swing;
 use topcoat::{Result, router::page, view::view};
 
 use crate::{
+    components::{index_card, page_head, shell},
     content::interests::INTERESTS,
-    design::{page_head, shell},
 };
 
 #[page("/interests")]
@@ -27,20 +27,14 @@ async fn interests() -> Result {
         )
         <section class="mt-14 space-y-10">
             for interest in INTERESTS.iter() {
-                <article class="rail-row">
-                    <p class="rail-stamp">(interest.slug)</p>
-                    <div class="min-w-0">
-                        <h2 class="font-display text-2xl leading-snug font-semibold">
-                            <a
-                                class="oxlink"
-                                href=(format!("/interests/{}", interest.slug))
-                            >(interest.title)</a>
-                        </h2>
-                        <p class="mt-1.5 max-w-prose text-ink2">(interest.teaser)</p>
-                    </div>
-                </article>
+                index_card(
+                    stamp: interest.slug,
+                    href: format!("/interests/{}", interest.slug),
+                    title: interest.title,
+                    teaser: interest.teaser,
+                )
             }
         </section>
     }?;
-    view! { shell(title: "Interests — Ben Berman", active: "interests", body: body) }
+    view! { shell(title: "Interests", active: "interests", body: body) }
 }

@@ -10,7 +10,7 @@ use topcoat::{
     view::view,
 };
 
-use crate::{content::routes::site_routes, design::shell};
+use crate::{components::shell, content::routes::site_routes};
 
 /// Plain Levenshtein, two rolling rows. The route inventory is small enough
 /// that this is not the expensive part of the request.
@@ -71,7 +71,7 @@ async fn not_found(cx: &Cx) -> Result {
                             (suggestion_tail.as_str())
                         </p>
                     }
-                    <p class="mt-8 rail-stamp uppercase tracking-[0.18em]">"the index"</p>
+                    <p class="mt-8 rail-stamp rail-stamp-label">"the index"</p>
                     <ul class="mt-2 space-y-1 font-meta text-sm">
                         for route in routes.iter() {
                             <li><a class="quiet-link" href=(route.as_str())>(route.as_str())</a></li>
@@ -81,5 +81,5 @@ async fn not_found(cx: &Cx) -> Result {
             </header>
         </section>
     }?;
-    view! { shell(title: "404 — Ben Berman", active: "", body: body) }
+    view! { shell(title: "404", active: "", body: body) }
 }

@@ -4,8 +4,8 @@ pub mod planes;
 use topcoat::{Result, router::page, view::view};
 
 use crate::{
+    components::{index_card, page_head, shell},
     content::posts::POSTS,
-    design::{page_head, shell},
 };
 
 #[page("/thoughts")]
@@ -18,17 +18,14 @@ async fn thoughts() -> Result {
         )
         <section class="mt-14 space-y-10">
             for post in POSTS.iter() {
-                <article class="rail-row">
-                    <p class="rail-stamp">(post.date)</p>
-                    <div class="min-w-0">
-                        <h2 class="font-display text-2xl leading-snug font-semibold">
-                            <a class="oxlink" href=(format!("/thoughts/{}", post.slug))>(post.title)</a>
-                        </h2>
-                        <p class="mt-1.5 max-w-prose text-ink2">(post.teaser)</p>
-                    </div>
-                </article>
+                index_card(
+                    stamp: post.date,
+                    href: format!("/thoughts/{}", post.slug),
+                    title: post.title,
+                    teaser: post.teaser,
+                )
             }
         </section>
     }?;
-    view! { shell(title: "Thoughts — Ben Berman", active: "", body: body) }
+    view! { shell(title: "Thoughts", active: "", body: body) }
 }

@@ -164,7 +164,7 @@ CAVEAT: the watcher covers each package's `src/` ONLY — edits under
   `topcoat::font::link(…)`) only work inside `view!` **within a
   `#[page]`/`#[component]`/`#[layout]`/`#[shard]` fn** — the expansion needs a
   hidden `__cx`. A plain `async fn` containing `view!` cannot call components.
-- Page-shell pattern used in this repo (`src/design.rs`): `#[component] shell(title: &str, body: View)`;
+- Page-shell pattern used in this repo (`src/components/chrome.rs`): `#[component] shell(title: &str, body: View)`;
   pages do `let body = view! { … }?;` then `view! { shell(title: "…", body: body) }`.
 - Unquoted text in `view!` is a compile error — every literal string is quoted.
 - `#[component]`/`#[shard]` functions are `async` and return `topcoat::Result`.

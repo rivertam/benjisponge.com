@@ -13,8 +13,9 @@ use topcoat::{
 };
 
 use crate::{
+    components::shell,
     content::logbook::{Entry, FILTER_TAGS, Kind, LOG, serial},
-    design::shell,
+    util::urlencode,
 };
 
 pub fn router() -> Router {
@@ -70,21 +71,6 @@ fn home_url(kind: Option<&str>, tag: Option<&str>) -> String {
     } else {
         format!("/?{}", params.join("&"))
     }
-}
-
-/// Percent-encode a query value (tags come back from the URL, so round-trip
-/// anything beyond the unreserved set).
-fn urlencode(raw: &str) -> String {
-    let mut encoded = String::new();
-    for byte in raw.bytes() {
-        match byte {
-            b'a'..=b'z' | b'A'..=b'Z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
-                encoded.push(byte as char)
-            }
-            _ => encoded.push_str(&format!("%{byte:02X}")),
-        }
-    }
-    encoded
 }
 
 #[page("/")]
@@ -282,5 +268,5 @@ async fn home(cx: &Cx) -> Result {
             }
         </section>
     }?;
-    view! { shell(title: "Ben Berman", active: "log", body: body) }
+    view! { shell(title: "", active: "log", body: body) }
 }

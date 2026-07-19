@@ -6,11 +6,11 @@ use topcoat::{
 };
 
 use crate::{
+    components::{page_head, shell},
     content::{
         experience::{EDUCATION, ROLES, Role, SKILLS, Tech, TechKind},
         patches::PATCHES,
     },
-    design::{page_head, shell},
 };
 
 fn org_line(role: &Role) -> String {
@@ -68,16 +68,7 @@ fn touches(role: &Role, name: &str) -> bool {
 
 /// Filter link for a chip: the résumé queried by one technology.
 fn filter_href(name: &str) -> String {
-    let mut encoded = String::new();
-    for byte in name.bytes() {
-        match byte {
-            b'A'..=b'Z' | b'a'..=b'z' | b'0'..=b'9' | b'-' | b'_' | b'.' | b'~' => {
-                encoded.push(byte as char)
-            }
-            _ => encoded.push_str(&format!("%{byte:02X}")),
-        }
-    }
-    format!("/resume?tech={encoded}")
+    format!("/resume?tech={}", crate::util::urlencode(name))
 }
 
 #[query_params(error = redirect("?"))]
@@ -105,15 +96,15 @@ async fn resume(cx: &Cx) -> Result {
     });
 
     let title = match filter {
-        Some(active) => format!("Résumé · {} — Ben Berman", active.name),
-        None => "Résumé — Ben Berman".to_string(),
+        Some(active) => format!("Résumé · {}", active.name),
+        None => "Résumé".to_string(),
     };
 
     let body = view! {
         page_head(stamp: "timeline", title: "Résumé", lede: "")
         if let Some(line) = filter_line {
             <div class="rail-row mt-8">
-                <p class="rail-stamp uppercase tracking-[0.18em]">"filter"</p>
+                <p class="rail-stamp rail-stamp-label">"filter"</p>
                 <div class="flex min-w-0 flex-wrap items-baseline gap-x-4 gap-y-1">
                     <p class="text-ink2">(line)</p>
                     if let Some(active) = filter {
@@ -170,7 +161,7 @@ async fn resume(cx: &Cx) -> Result {
                 </div>
             </article>
             <div class="rail-row">
-                <p class="rail-stamp uppercase tracking-[0.18em]">"Skills"</p>
+                <p class="rail-stamp rail-stamp-label">"Skills"</p>
                 <div class="flex min-w-0 flex-wrap gap-1.5">
                     for skill in SKILLS.iter() {
                         // Skills that appear in a role's stack filter the
@@ -199,7 +190,7 @@ async fn resume(cx: &Cx) -> Result {
         // on purpose — the timeline above is the résumé; this is a hobby.
         <section class="mt-16 space-y-3 border-t border-hairline pt-10">
             <div class="rail-row">
-                <p class="rail-stamp uppercase tracking-[0.18em]">"patches"</p>
+                <p class="rail-stamp rail-stamp-label">"patches"</p>
                 <p class="min-w-0 max-w-prose text-ink2">
                     "I technically made these contributions to these projects."
                     <br />

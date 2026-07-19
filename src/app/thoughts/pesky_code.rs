@@ -1,6 +1,6 @@
 use topcoat::{Result, router::page, view::view};
 
-use crate::design::shell;
+use crate::components::shell;
 
 #[page("/thoughts/pesky-code")]
 async fn pesky_code() -> Result {
@@ -22,5 +22,5 @@ async fn pesky_code() -> Result {
             </div>
         </article>
     }?;
-    view! { shell(title: "Pesky code — Ben Berman", active: "", body: body) }
+    view! { shell(title: "Pesky code", active: "", body: body) }
 }

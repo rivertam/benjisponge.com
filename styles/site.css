@@ -25,6 +25,13 @@
   white-space: nowrap;
 }
 
+/* Label stamps ("footage", "links", "patches") shout quietly; data stamps
+   (dates, year spans, slugs) keep their case. */
+.rail-stamp-label {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+}
+
 @media (min-width: 40rem) {
   .rail-row {
     grid-template-columns: 8.5rem minmax(0, 1fr);

@@ -1,7 +1,8 @@
 mod app;
+mod components;
 mod content;
-mod design;
 mod flight;
+mod util;
 
 #[tokio::main]
 async fn main() {

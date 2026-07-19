@@ -16,7 +16,7 @@ use topcoat::{
 };
 
 use crate::{
-    design::shell,
+    components::shell,
     flight::{
         airports::{Airport, find_airport},
         emissions::{Cabin, FlightInput, flight_impact},
@@ -123,7 +123,7 @@ async fn planes(cx: &Cx) -> Result {
             }?)
         }
         _ => {
-            title = "How bad are planes? — Ben Berman".to_string();
+            title = "How bad are planes?".to_string();
             None
         }
     };

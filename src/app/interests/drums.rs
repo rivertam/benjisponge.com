@@ -1,58 +1,32 @@
 use topcoat::{Result, router::page, view::view};
 
 use crate::{
+    components::{back_link, page_head, rail_prose, rail_section, shell, video_card},
     content::interests::interest,
-    design::{page_head, shell},
 };
 
 #[page("/interests/drums")]
 async fn drums() -> Result {
     let meta = interest("drums");
-    let title = format!("{} — Ben Berman", meta.title);
-    let body = view! {
-        page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
-        <section class="rail-row mt-10">
-            <div></div>
-            <div class="min-w-0 max-w-prose space-y-4 text-ink2">
-                <p>
-                    "I had my first lesson at summer camp, which is to say I've been playing long \
-                     enough that I should be better. These days it's a Tama pancake kit — quiet \
-                     enough for an apartment, portable enough that I have set it up in a park."
-                </p>
-                <p>"Two covers survive public scrutiny."</p>
-            </div>
-        </section>
-        <div class="rail-row mt-10">
-            <p class="rail-stamp uppercase tracking-[0.18em]">"footage"</p>
-            <div class="flex min-w-0 flex-wrap gap-5">
-                <a class="video-card" href="https://www.youtube.com/watch?v=VaKI7J2M2Ms">
-                    <img
-                        src="https://img.youtube.com/vi/VaKI7J2M2Ms/mqdefault.jpg"
-                        alt="Taylor Swift cover →"
-                        loading="lazy"
-                    >
-                    <span class="video-card-label font-meta text-sm text-ink2">
-                        "Taylor Swift cover →"
-                    </span>
-                </a>
-                <a class="video-card" href="https://www.youtube.com/watch?v=8lrjsP1KWrY">
-                    <img
-                        src="https://img.youtube.com/vi/8lrjsP1KWrY/mqdefault.jpg"
-                        alt="Manchester Orchestra cover →"
-                        loading="lazy"
-                    >
-                    <span class="video-card-label font-meta text-sm text-ink2">
-                        "Manchester Orchestra cover →"
-                    </span>
-                </a>
-            </div>
-        </div>
-        <div class="rail-row mt-14">
-            <div></div>
-            <p class="min-w-0 font-meta text-sm">
-                <a class="quiet-link" href="/interests">"← all interests"</a>
-            </p>
+    let prose = view! {
+        <p>
+            "I had my first lesson at summer camp, which is to say I've been playing long \
+             enough that I should be better. These days it's a Tama pancake kit — quiet \
+             enough for an apartment, portable enough that I have set it up in a park."
+        </p>
+        <p>"Two covers survive public scrutiny."</p>
+    }?;
+    let footage = view! {
+        <div class="flex flex-wrap gap-5">
+            video_card(youtube_id: "VaKI7J2M2Ms", label: "Taylor Swift cover →")
+            video_card(youtube_id: "8lrjsP1KWrY", label: "Manchester Orchestra cover →")
         </div>
     }?;
-    view! { shell(title: title.as_str(), active: "interests", body: body) }
+    let body = view! {
+        page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
+        rail_prose(mt: "mt-10", stamp: "", body: prose)
+        rail_section(mt: "mt-10", stamp: "footage", body: footage)
+        back_link(href: "/interests", label: "← all interests")
+    }?;
+    view! { shell(title: meta.title, active: "interests", body: body) }
 }
