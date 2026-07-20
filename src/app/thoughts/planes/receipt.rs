@@ -11,20 +11,18 @@ use topcoat::{
     view::{Unescaped, View, component, view},
 };
 
-use super::ice::{ICE_SHOW_FLOOR_M2, ice_figure};
-use crate::{
-    components::link_label,
-    flight::{
-        airports::Airport,
-        comparison_scale::{PickDomainRowsOptions, pick_domain_rows},
-        emissions::{Cabin, FlightImpact, JET_FUEL_KG_PER_LITRE},
-        format::{
-            format_bar_value, format_ice, format_km, format_litres, format_tonnes,
-            format_tonnes_smart, format_whole, format_years,
-        },
-        sources::cite,
+use super::{
+    airports::Airport,
+    comparison_scale::{PickDomainRowsOptions, pick_domain_rows},
+    emissions::{Cabin, FlightImpact, JET_FUEL_KG_PER_LITRE},
+    format::{
+        format_bar_value, format_ice, format_km, format_litres, format_tonnes, format_tonnes_smart,
+        format_whole, format_years,
     },
+    ice::{ICE_SHOW_FLOOR_M2, ice_figure},
+    sources::cite,
 };
+use crate::components::link_label;
 
 const DOT_LEADER: &str =
     "................................................................................";
@@ -170,6 +168,10 @@ pub async fn receipt(
         "{share_path}{}view=compare",
         if share_path.contains('?') { "&" } else { "?" }
     );
+    let allowance_href = format!(
+        "{share_path}{}view=allowance#allowance",
+        if share_path.contains('?') { "&" } else { "?" }
+    );
 
     let route_line = format!(
         "{} ({}) {arrow} {} ({})",
@@ -250,7 +252,7 @@ pub async fn receipt(
                                 )
                                 if !staycation {
                                     <div class="co2-note">
-                                        "itemized below — CO₂ plus the flight's other warming effects, each converted to the CO₂ that would warm the planet the same over 100 years (that's the “e”; a 20-year clock would run the altitude lines ≈4× higher) "
+                                        "itemized below"
                                         cite(id: "defra2025")
                                     </div>
                                     row(
@@ -312,7 +314,7 @@ pub async fn receipt(
                                     "years of the ≈0.43 t/yr the 2030 target leaves one person for "
                                     <em>"all"</em>
                                     " travel on a 1.5 °C path — "
-                                    <a href="#allowance">"explained below ↓"</a>
+                                    <a href=(allowance_href)>"see Allowance tab →"</a>
                                 </span>
                             </div>
                             <div class="receipt-code">

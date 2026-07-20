@@ -1,25 +1,30 @@
 /*
  * The receipt: printer chrome, the itemized bill, sea-ice figure, QR code
  * and comparison coupon. Ported from ~/how-bad/src/index.css, scoped under
- * .paper-warm (the planes post's warm paper).
+ * .dispatch (the planes post's warm paper).
  */
 
 /* The original page's warm palette (~/how-bad src/index.css :root), scoped
    to the article. Duplicate-safe: each planes-*.css file declares the block
    it needs first; values are identical everywhere. */
 
-.paper-warm .receipt sup.cite a {
+.dispatch .receipt sup.cite .inline-popover-trigger {
   color: var(--muted);
 }
 
 /* ---------- receipt (the one deliberately mono corner) ---------- */
 
-.paper-warm .printer {
+.dispatch .printer {
   max-width: 440px;
   margin: 2.5rem auto 0;
 }
 
-.paper-warm .printer-slot {
+/* In the chart tab panel the section heading already provides spacing. */
+.dispatch .scale-main .printer {
+  margin-top: 0;
+}
+
+.dispatch .printer-slot {
   position: relative;
   z-index: 2;
   height: 14px;
@@ -30,10 +35,10 @@
   align-items: center;
   justify-content: flex-end;
   padding-right: 16px;
-  box-shadow: 0 3px 8px rgba(43, 38, 32, 0.28);
+  box-shadow: 0 3px 8px color-mix(in srgb, var(--ink) 28%, transparent);
 }
 
-.paper-warm .printer-led {
+.dispatch .printer-led {
   width: 5px;
   height: 5px;
   border-radius: 50%;
@@ -55,13 +60,13 @@
   100% { opacity: 0.45; }
 }
 
-.paper-warm .print-window {
+.dispatch .print-window {
   overflow: hidden;
   padding: 0 36px 52px;
   margin: 0 -36px -52px;
 }
 
-.paper-warm .print-feed {
+.dispatch .print-feed {
   animation: paper-feed 1000ms steps(18, end) both;
 }
 
@@ -74,14 +79,14 @@
   }
 }
 
-.paper-warm .receipt {
+.dispatch .receipt {
   font-family: var(--mono);
   font-size: 0.92rem;
   background: var(--card);
   padding: 1.75rem 1.5rem 2rem;
   border: 1px solid var(--hairline);
   border-radius: 3px;
-  box-shadow: 0 14px 34px rgba(72, 58, 32, 0.14);
+  box-shadow: 0 14px 34px color-mix(in srgb, var(--ink) 14%, transparent);
   clip-path: polygon(
     0 0, 100% 0, 100% calc(100% - 8px),
     97.5% 100%, 95% calc(100% - 8px), 92.5% 100%, 90% calc(100% - 8px),
@@ -97,24 +102,24 @@
   );
 }
 
-.paper-warm .receipt-head {
+.dispatch .receipt-head {
   text-align: center;
   margin-bottom: 1.1rem;
 }
 
-.paper-warm .receipt-head .receipt-title {
+.dispatch .receipt-head .receipt-title {
   font-weight: 700;
   letter-spacing: 0.3em;
   text-transform: uppercase;
   font-size: 0.85rem;
 }
 
-.paper-warm .receipt-head .receipt-tag {
+.dispatch .receipt-head .receipt-tag {
   color: var(--muted);
   font-size: 0.8rem;
 }
 
-.paper-warm .receipt-route {
+.dispatch .receipt-route {
   text-align: center;
   padding: 0.75rem 0;
   background-image:
@@ -125,17 +130,17 @@
   background-repeat: no-repeat;
 }
 
-.paper-warm .receipt-route .route-line {
+.dispatch .receipt-route .route-line {
   font-weight: 700;
   font-size: 1.02rem;
 }
 
-.paper-warm .receipt-route .route-meta {
+.dispatch .receipt-route .route-meta {
   color: var(--ink-2);
   font-size: 0.8rem;
 }
 
-.paper-warm .receipt-allocation {
+.dispatch .receipt-allocation {
   text-align: center;
   color: var(--ink-2);
   font-size: 0.76rem;
@@ -148,23 +153,23 @@
   background-repeat: no-repeat;
 }
 
-.paper-warm .receipt-items {
+.dispatch .receipt-items {
   margin: 1rem 0 0;
   padding: 0;
 }
 
-.paper-warm .receipt-row {
+.dispatch .receipt-row {
   display: flex;
   align-items: baseline;
   gap: 0.5rem;
   padding: 0.28rem 0;
 }
 
-.paper-warm .receipt-row .r-label {
+.dispatch .receipt-row .r-label {
   flex-shrink: 1;
 }
 
-.paper-warm .receipt-row .r-dots {
+.dispatch .receipt-row .r-dots {
   flex: 1;
   overflow: hidden;
   min-width: 1.5rem;
@@ -173,28 +178,28 @@
   white-space: nowrap;
 }
 
-.paper-warm .receipt-row .r-value {
+.dispatch .receipt-row .r-value {
   font-variant-numeric: tabular-nums;
   font-weight: 700;
   white-space: nowrap;
 }
 
-.paper-warm .receipt-row .r-value-sub {
+.dispatch .receipt-row .r-value-sub {
   color: var(--muted);
   font-weight: 400;
 }
 
-.paper-warm .receipt-row.hero .r-value {
+.dispatch .receipt-row.hero .r-value {
   font-size: 1.55rem;
 }
 
-.paper-warm .receipt-row.fine .r-label,
-.paper-warm .receipt-row.fine .r-value {
+.dispatch .receipt-row.fine .r-label,
+.dispatch .receipt-row.fine .r-value {
   font-weight: 400;
   color: var(--ink-2);
 }
 
-.paper-warm .co2-note {
+.dispatch .co2-note {
   text-align: right;
   color: var(--muted);
   font-size: 0.74rem;
@@ -202,25 +207,25 @@
   padding-bottom: 0.2rem;
 }
 
-.paper-warm .receipt-total {
+.dispatch .receipt-total {
   margin-top: 0.9rem;
   padding: 0.55rem 0;
   border-top: 2px solid var(--ink);
   border-bottom: 2px solid var(--ink);
 }
 
-.paper-warm .receipt-total .receipt-row {
+.dispatch .receipt-total .receipt-row {
   padding: 0;
 }
 
-.paper-warm .receipt-total .note {
+.dispatch .receipt-total .note {
   display: block;
   text-align: right;
   color: var(--muted);
   font-size: 0.76rem;
 }
 
-.paper-warm .receipt-foot {
+.dispatch .receipt-foot {
   text-align: center;
   color: var(--muted);
   font-size: 0.8rem;
@@ -228,60 +233,60 @@
   letter-spacing: 0.08em;
 }
 
-.paper-warm .ice-figure {
+.dispatch .ice-figure {
   margin: 0.9rem 0 0.5rem;
 }
 
-.paper-warm .ice-figure svg {
+.dispatch .ice-figure svg {
   display: block;
   width: 100%;
   height: auto;
 }
 
-.paper-warm .ice-figure .ice-dots {
+.dispatch .ice-figure .ice-dots {
   transition: opacity 1.5s ease;
 }
 
-.paper-warm .ice-figure:hover .ice-dots {
+.dispatch .ice-figure:hover .ice-dots {
   opacity: 0.22;
 }
 
-.paper-warm .ice-note {
+.dispatch .ice-note {
   text-align: center;
   color: var(--muted);
   font-size: 0.72rem;
   margin-top: 0.3rem;
 }
 
-.paper-warm .receipt-code {
+.dispatch .receipt-code {
   margin-top: 1.15rem;
   text-align: center;
 }
 
-.paper-warm .receipt-code .qr {
+.dispatch .receipt-code .qr {
   display: flex;
   justify-content: center;
 }
 
-.paper-warm .receipt-code .qr svg {
+.dispatch .receipt-code .qr svg {
   width: 84px;
   height: 84px;
 }
 
-.paper-warm .receipt-code .code-text {
+.dispatch .receipt-code .code-text {
   margin-top: 0.3rem;
   font-size: 0.68rem;
   letter-spacing: 0.28em;
   color: var(--ink-2);
 }
 
-.paper-warm .receipt-coupon {
+.dispatch .receipt-coupon {
   margin-top: 1.25rem;
   padding-top: 1rem;
   border-top: 2px dashed var(--baseline);
 }
 
-.paper-warm .receipt-coupon-head {
+.dispatch .receipt-coupon-head {
   text-align: center;
   font-weight: 700;
   letter-spacing: 0.14em;
@@ -289,16 +294,16 @@
   margin-bottom: 0.4rem;
 }
 
-.paper-warm .receipt-coupon .receipt-items {
+.dispatch .receipt-coupon .receipt-items {
   margin-top: 0.35rem;
 }
 
-.paper-warm .receipt-coupon-foot {
+.dispatch .receipt-coupon-foot {
   text-align: center;
   margin: 0.9rem 0 0;
   font-size: 0.8rem;
 }
 
-.paper-warm .receipt-coupon-foot a {
+.dispatch .receipt-coupon-foot a {
   color: var(--ink-2);
 }

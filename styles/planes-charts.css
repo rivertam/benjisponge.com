@@ -2,7 +2,7 @@
  * Charts for the planes post: chart tabs, the FlightScale "Cuts" view
  * (effort rows, sacrifice bars, cut chips, zoom panel), the ComparisonScale
  * "Compare" view (makeup chips), the ice callout and the budget chart.
- * Ported from ~/how-bad/src/index.css, scoped under .paper-warm.
+ * Ported from ~/how-bad/src/index.css, scoped under .dispatch.
  *
  * Two departures from the original, both CSS stand-ins for what was
  * JavaScript there:
@@ -15,59 +15,103 @@
 
 
 /* [hidden] must beat the display:grid/flex the panels below set. */
-.paper-warm [hidden] {
+.dispatch [hidden] {
   display: none !important;
 }
 
-.paper-warm .section {
+.dispatch .section {
   margin-top: 2.5rem;
 }
 
-.paper-warm .section > h2 {
-  font-size: 1.25rem;
+.dispatch .section > h2 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
   font-weight: 700;
+  letter-spacing: -0.01em;
   margin: 0 0 0.4rem;
 }
 
-.paper-warm .section > .section-sub {
+.dispatch .section > .section-sub {
   color: var(--ink-2);
   margin: 0 0 1rem;
   max-width: 62ch;
 }
 
-.paper-warm .section > .section-sub:last-of-type {
+.dispatch .section > .section-sub:last-of-type {
   margin-bottom: 1.5rem;
 }
 
-.paper-warm sup.cite {
+.dispatch sup.cite {
   line-height: 0;
   font-size: 0.72em;
 }
 
-.paper-warm sup.cite a {
+/* The number is a popover trigger now, not a fragment link — same look. */
+.dispatch sup.cite .inline-popover-trigger {
   color: var(--save);
   font-weight: 600;
   text-decoration: none;
   padding: 0 0.12em;
 }
 
-.paper-warm sup.cite a:hover {
+.dispatch sup.cite .inline-popover-trigger:hover {
   text-decoration: underline;
   text-decoration-color: var(--save);
 }
 
-.paper-warm sup.cite + sup.cite::before {
+/* "7, 8" — the comma hugs the number before it, with a breath after. The
+   markup keeps consecutive cites with no text between them, so the comma
+   (and its spacing) is this rule's alone to manage. */
+.dispatch sup.cite + sup.cite::before {
   content: ',';
   color: var(--save);
+  padding-right: 0.35em;
 }
 
-/* ---------- ice callout ---------- */
+/* The source card the trigger opens. It nests inside the sup (so adjacent
+   cites keep their comma), which would otherwise leak the superscript's
+   shrunken font and dead line-height — and a receipt cite would come out
+   mono. Restate the panel's own voice. */
+.dispatch .cite-panel {
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 400;
+  line-height: 1.5;
+  letter-spacing: normal;
+  text-transform: none;
+  text-align: left;
+}
 
-.paper-warm .ice-callout {
+/* Keep the card on screen when its trigger sits near the right edge — a
+   receipt cite on a phone. anchor() joins the clamp; where the engine
+   can't do that, the plain anchored left from site.css stands. */
+@supports (position-anchor: --inline-popover-test) {
+  .dispatch .cite-panel:popover-open {
+    left: clamp(
+      1.25rem,
+      anchor(left),
+      calc(100vw - min(22rem, 100vw - 2.5rem) - 1.25rem)
+    );
+  }
+}
+
+/* ---------- the instrument rail (fuel, seats, driving, ice) ---------- */
+
+/* Hidden until the pane is wide enough for the side column. */
+.dispatch .instrument-rail {
   display: none;
 }
 
-.paper-warm .ice-callout p {
+/* One margin instrument: a small card with a header line, a figure, and a
+   mono-voiced note. The ice callout is one of these. */
+.dispatch .instrument {
+  padding: 0.85rem 0.75rem;
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+}
+
+.dispatch .instrument p {
   margin: 0 0 0.35rem;
   font-size: 0.8rem;
   line-height: 1.35;
@@ -75,94 +119,115 @@
   text-wrap: balance;
 }
 
-.paper-warm .ice-callout .ice-figure {
+.dispatch .instrument > svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+
+.dispatch .instrument .fig-note {
+  text-align: center;
+  color: var(--ink-2); /* real content at small size — muted fails AA here */
+  font-size: 0.72rem;
+  margin-top: 0.3rem;
+}
+
+.dispatch .instrument .fig-mono {
+  font-family: var(--mono);
+  letter-spacing: 0.04em;
+}
+
+.dispatch .ice-callout .ice-figure {
   margin: 0.25rem auto 0;
   max-width: 100%;
 }
 
-.paper-warm .ice-callout .ice-figure svg {
+.dispatch .ice-callout .ice-figure svg {
   width: 100%;
   height: auto;
 }
 
-.paper-warm .ice-callout .ice-note {
+.dispatch .ice-callout .ice-note {
   display: none;
 }
 
-.paper-warm .scale-layout {
+.dispatch .scale-layout {
   display: grid;
   gap: 1rem;
 }
 
-.paper-warm .scale-main {
+.dispatch .scale-main {
   min-width: 0;
 }
 
-.paper-warm .chart-tabs {
+.dispatch .chart-tabs {
   display: flex;
   gap: 0.35rem;
   margin: 0 0 0.85rem;
 }
 
-.paper-warm .chart-tab {
+.dispatch .chart-tab {
   font: inherit;
   font-size: 0.85rem;
   padding: 0.35rem 0.75rem;
   border: 1px solid var(--hairline);
-  border-radius: 8px;
+  border-radius: 2px;
   background: transparent;
   color: var(--ink-2);
   cursor: pointer;
 }
 
-.paper-warm .chart-tab:hover {
+.dispatch .chart-tab:hover {
   border-color: var(--ink);
 }
 
-.paper-warm .chart-tab.is-active {
+.dispatch .chart-tab.is-active {
   background: var(--ink);
   border-color: var(--ink);
   color: var(--card);
 }
 
-@media (min-width: 820px) {
-  .paper-warm .scale-layout--ice {
+@container dispatch (min-width: 580px) {
+  .dispatch .scale-layout--ice {
     grid-template-columns: minmax(0, 1fr) minmax(13rem, 16.5rem);
     align-items: start;
     gap: 1.1rem;
   }
 
-  .paper-warm .ice-callout {
-    display: block;
+  .dispatch .instrument-rail {
+    display: grid;
+    gap: 0.85rem;
+    align-content: start;
     position: sticky;
-    top: 4.5rem; /* clear the docked form */
+    top: calc(var(--strip-h) + 0.5rem); /* clear the docked strip */
     margin: 0;
-    padding: 0.85rem 0.75rem;
-    background: var(--card);
-    border: 1px solid var(--hairline);
-    border-radius: 12px;
+    /* The stacked instruments can outgrow a laptop viewport while stuck;
+       scroll the rail internally rather than hiding the bottom cards. */
+    max-height: calc(100svh - var(--strip-h) - 1rem);
+    overflow-y: auto;
   }
 }
 
-.paper-warm .ice-figure {
+.dispatch .ice-figure {
   margin: 0.9rem 0 0.5rem;
 }
 
-.paper-warm .ice-figure svg {
+.dispatch .ice-figure svg {
   display: block;
   width: 100%;
   height: auto;
 }
 
-.paper-warm .ice-figure .ice-dots {
+.dispatch .ice-figure .ice-dots {
   transition: opacity 1.5s ease;
 }
 
-.paper-warm .ice-figure:hover .ice-dots {
+.dispatch .ice-figure:hover .ice-dots {
   opacity: 0.22;
 }
 
-.paper-warm .ice-note {
+.dispatch .ice-note {
   text-align: center;
   color: var(--muted);
   font-size: 0.72rem;
@@ -171,33 +236,28 @@
 
 /* ---------- charts (shared) ---------- */
 
-.paper-warm .chart-card {
+.dispatch .chart-card {
   background: var(--card);
   border: 1px solid var(--hairline);
-  border-radius: 14px;
+  border-radius: 2px;
   padding: 1.5rem;
   position: relative;
 }
 
-.paper-warm .chart-card.breakout {
-  margin-inline: calc(-1 * clamp(0rem, (100vw - var(--content-max)) / 2, var(--gutter-min)));
-  clear: both;
-}
-
-.paper-warm .aside-card {
+.dispatch .aside-card {
   float: right;
   width: min(290px, 100%);
   margin: 0.25rem 0 1rem 1.75rem;
   background: var(--card);
   border: 1px solid var(--hairline);
-  border-radius: 12px;
+  border-radius: 2px;
   padding: 1rem 1.1rem;
   font-size: 0.85rem;
   line-height: 1.55;
   color: var(--ink-2);
 }
 
-.paper-warm .aside-card h3 {
+.dispatch .aside-card h3 {
   margin: 0 0 0.55rem;
   font-size: 0.75rem;
   font-weight: 700;
@@ -206,27 +266,27 @@
   color: var(--ink);
 }
 
-.paper-warm .aside-card p {
+.dispatch .aside-card p {
   margin: 0 0 0.6rem;
 }
 
-.paper-warm .aside-card p:last-child {
+.dispatch .aside-card p:last-child {
   margin-bottom: 0;
 }
 
-.paper-warm .aside-card strong {
+.dispatch .aside-card strong {
   color: var(--ink);
 }
 
-@media (max-width: 700px) {
-  .paper-warm .aside-card {
+@container dispatch (max-width: 700px) {
+  .dispatch .aside-card {
     float: none;
     width: 100%;
     margin: 0 0 1.25rem;
   }
 }
 
-.paper-warm .bar-h-track {
+.dispatch .bar-h-track {
   height: 15px;
   display: flex;
   align-items: stretch;
@@ -234,29 +294,29 @@
   position: relative;
 }
 
-.paper-warm .bar-h,
-.paper-warm .bar-seg {
+.dispatch .bar-h,
+.dispatch .bar-seg {
   border-radius: 0 4px 4px 0;
   min-width: 2px;
   transition: width 480ms cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
 /* interior slices are square; only the bar's free end is rounded */
-.paper-warm .bar-seg {
+.dispatch .bar-seg {
   min-width: 1px;
   border-radius: 0;
   position: relative; /* anchors the CSS tooltip */
 }
 
-.paper-warm .bar-seg:last-of-type {
+.dispatch .bar-seg:last-of-type {
   border-radius: 0 4px 4px 0;
 }
 
-.paper-warm .bar-cell {
+.dispatch .bar-cell {
   min-width: 0;
 }
 
-.paper-warm .row-cuts {
+.dispatch .row-cuts {
   margin: 0.3rem 0 0;
   font-size: 0.72rem;
   line-height: 1.35;
@@ -267,97 +327,94 @@
    The data-pick-* attributes mirror the cut-chip signals (see charts.rs);
    within a ladder 1 = the mild cut, 2 = the deep cut, and a deeper cut also
    erases every slice outside it. */
-.paper-warm .bar-seg.erased,
-.paper-warm .effort-rows[data-pick-driving='2'] .seg-driving-ev-share,
-.paper-warm .effort-rows[data-pick-driving='1'] .seg-driving-gas-premium,
-.paper-warm .effort-rows[data-pick-driving='2'] .seg-driving-gas-premium,
-.paper-warm .effort-rows[data-pick-heat='2'] .seg-climate-gas-premium,
-.paper-warm .effort-rows[data-pick-heat='1'] .seg-climate-thermostat,
-.paper-warm .effort-rows[data-pick-heat='2'] .seg-climate-thermostat,
-.paper-warm .effort-rows[data-pick-cool='1'] .seg-climate-ac-all,
-.paper-warm .effort-rows[data-pick-diet='2'] .seg-eating-veg-to-vegan,
-.paper-warm .effort-rows[data-pick-diet='1'] .seg-eating-avg-to-veg,
-.paper-warm .effort-rows[data-pick-diet='2'] .seg-eating-avg-to-veg,
-.paper-warm .effort-rows[data-pick-waste='2'] .seg-eating-farming,
-.paper-warm .effort-rows[data-pick-waste='1'] .seg-eating-methane,
-.paper-warm .effort-rows[data-pick-waste='2'] .seg-eating-methane,
-.paper-warm .effort-rows[data-pick-fashion='2'] .seg-fashion-average-wardrobe,
-.paper-warm .effort-rows[data-pick-fashion='1'] .seg-fashion-fast-premium,
-.paper-warm .effort-rows[data-pick-fashion='2'] .seg-fashion-fast-premium,
-.paper-warm .effort-rows[data-pick-coffee='2'] .seg-coffee-beans,
-.paper-warm .effort-rows[data-pick-coffee='1'] .seg-coffee-milk,
-.paper-warm .effort-rows[data-pick-coffee='2'] .seg-coffee-milk,
-.paper-warm .effort-rows[data-pick-phone='1'] .seg-phone-handset,
-.paper-warm .effort-rows[data-pick-soda='1'] .seg-soda-cans,
-.paper-warm .effort-rows[data-pick-bottle='1'] .seg-bottled-water-bottles,
-.paper-warm .effort-rows[data-pick-stream='1'] .seg-streaming-hours,
-.paper-warm .effort-rows[data-pick-gpt='1'] .seg-chatgpt-queries,
-.paper-warm .effort-rows[data-pick-straw='1'] .seg-straws-straws {
+.dispatch .bar-seg.erased,
+.dispatch .effort-rows[data-pick-heat='2'] .seg-climate-gas-premium,
+.dispatch .effort-rows[data-pick-heat='1'] .seg-climate-thermostat,
+.dispatch .effort-rows[data-pick-heat='2'] .seg-climate-thermostat,
+.dispatch .effort-rows[data-pick-cool='1'] .seg-climate-ac-all,
+.dispatch .effort-rows[data-pick-diet='2'] .seg-eating-veg-to-vegan,
+.dispatch .effort-rows[data-pick-diet='1'] .seg-eating-avg-to-veg,
+.dispatch .effort-rows[data-pick-diet='2'] .seg-eating-avg-to-veg,
+.dispatch .effort-rows[data-pick-waste='2'] .seg-eating-farming,
+.dispatch .effort-rows[data-pick-waste='1'] .seg-eating-methane,
+.dispatch .effort-rows[data-pick-waste='2'] .seg-eating-methane,
+.dispatch .effort-rows[data-pick-fashion='2'] .seg-fashion-average-wardrobe,
+.dispatch .effort-rows[data-pick-fashion='1'] .seg-fashion-fast-premium,
+.dispatch .effort-rows[data-pick-fashion='2'] .seg-fashion-fast-premium,
+.dispatch .effort-rows[data-pick-coffee='2'] .seg-coffee-beans,
+.dispatch .effort-rows[data-pick-coffee='1'] .seg-coffee-milk,
+.dispatch .effort-rows[data-pick-coffee='2'] .seg-coffee-milk,
+.dispatch .effort-rows[data-pick-phone='1'] .seg-phone-handset,
+.dispatch .effort-rows[data-pick-soda='1'] .seg-soda-cans,
+.dispatch .effort-rows[data-pick-bottle='1'] .seg-bottled-water-bottles,
+.dispatch .effort-rows[data-pick-stream='1'] .seg-streaming-hours,
+.dispatch .effort-rows[data-pick-gpt='1'] .seg-chatgpt-queries,
+.dispatch .effort-rows[data-pick-straw='1'] .seg-straws-straws {
   opacity: 0.22;
   transition:
     opacity 320ms ease,
     width 480ms cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
-.paper-warm .cut-chips {
+.dispatch .cut-chips {
   display: flex;
   flex-wrap: wrap;
   gap: 0.3rem;
   margin-top: 0.4rem;
 }
 
-.paper-warm .cut-chip {
+.dispatch .cut-chip {
   font: inherit;
   font-size: 0.7rem;
   line-height: 1.2;
   color: var(--ink-2);
   background: transparent;
   border: 1px solid var(--baseline);
-  border-radius: 999px;
+  border-radius: 0.3rem;
   padding: 0.12rem 0.55rem;
   cursor: pointer;
 }
 
-.paper-warm .cut-chip:hover {
+.dispatch .cut-chip:hover {
   border-color: var(--ink-2);
 }
 
-.paper-warm .cut-chip[aria-pressed='true'] {
+.dispatch .cut-chip[aria-pressed='true'] {
   background: var(--ink);
   border-color: var(--ink);
   color: var(--card);
 }
 
 /* the rounding errors, redrawn at their own scale */
-.paper-warm .zoom-panel {
+.dispatch .zoom-panel {
   display: grid;
   gap: 0.7rem;
   border: 1px dashed var(--baseline);
-  border-radius: 10px;
+  border-radius: 2px;
   padding: 0.85rem 0.9rem;
   margin: 0.1rem 0;
 }
 
-.paper-warm .zoom-panel .zoom-head {
+.dispatch .zoom-panel .zoom-head {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
   gap: 1rem;
 }
 
-.paper-warm .zoom-panel .zoom-note {
+.dispatch .zoom-panel .zoom-note {
   margin: 0;
   font-size: 0.74rem;
   color: var(--muted);
 }
 
-.paper-warm .zoom-panel .zoom-close {
+.dispatch .zoom-panel .zoom-close {
   font-size: 0.74rem;
   color: var(--muted);
   white-space: nowrap;
 }
 
-.paper-warm .link-btn {
+.dispatch .link-btn {
   font: inherit;
   color: inherit;
   background: none;
@@ -367,7 +424,7 @@
   cursor: pointer;
 }
 
-.paper-warm .flight-tick {
+.dispatch .flight-tick {
   position: absolute;
   top: -5px;
   bottom: -5px;
@@ -378,7 +435,7 @@
 }
 
 /* the flight, quoted in the row's own currency, riding the dashed line */
-.paper-warm .flight-tick .tick-label {
+.dispatch .flight-tick .tick-label {
   position: absolute;
   bottom: calc(100% + 1px);
   left: 5px;
@@ -392,18 +449,18 @@
 }
 
 /* near the right edge, hang the label off the line's left side instead */
-.paper-warm .flight-tick .tick-label.flip {
+.dispatch .flight-tick .tick-label.flip {
   left: auto;
   right: 5px;
 }
 
 /* rows with a quoted line need headroom above the bar for the label */
-.paper-warm .bar-cell.labeled .bar-h-track {
+.dispatch .bar-cell.labeled .bar-h-track {
   margin-top: 1.35rem;
 }
 
 /* CSS-only stand-in for the original's JS-positioned .viz-tooltip */
-.paper-warm .tip {
+.dispatch .tip {
   display: none;
   position: absolute;
   bottom: calc(100% + 8px);
@@ -417,7 +474,7 @@
   letter-spacing: normal;
   text-transform: none;
   padding: 0.4rem 0.6rem;
-  border-radius: 8px;
+  border-radius: 2px;
   width: max-content;
   max-width: 270px;
   white-space: normal;
@@ -425,35 +482,35 @@
   pointer-events: none;
 }
 
-.paper-warm .bar-seg:hover > .tip,
-.paper-warm .bar-seg:focus-visible > .tip,
-.paper-warm .tick-label:hover > .tip,
-.paper-warm .tick-label:focus-visible > .tip,
-.paper-warm .budget-col .seg:hover > .tip,
-.paper-warm .budget-col .seg:focus-visible > .tip {
+.dispatch .bar-seg:hover > .tip,
+.dispatch .bar-seg:focus-visible > .tip,
+.dispatch .tick-label:hover > .tip,
+.dispatch .tick-label:focus-visible > .tip,
+.dispatch .budget-col .seg:hover > .tip,
+.dispatch .budget-col .seg:focus-visible > .tip {
   display: block;
 }
 
-.paper-warm .flight-tick .tick-label .tip {
+.dispatch .flight-tick .tick-label .tip {
   bottom: calc(100% + 4px);
 }
 
-.paper-warm .flight-tick .tick-label.flip .tip {
+.dispatch .flight-tick .tick-label.flip .tip {
   left: auto;
   right: 0;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .paper-warm .bar-h,
-  .paper-warm .bar-seg {
+  .dispatch .bar-h,
+  .dispatch .bar-seg {
     transition: none;
   }
-  .paper-warm .ice-figure .ice-dots {
+  .dispatch .ice-figure .ice-dots {
     transition: none;
   }
 }
 
-.paper-warm .pull-quote {
+.dispatch .pull-quote {
   margin: 2rem auto 0;
   max-width: 32ch;
   text-align: center;
@@ -464,29 +521,32 @@
   text-wrap: balance;
 }
 
-.paper-warm .pull-quote .mark {
-  background: linear-gradient(transparent 55%, rgba(235, 104, 52, 0.28) 55%);
+.dispatch .pull-quote .mark {
+  background: linear-gradient(
+    transparent 55%,
+    color-mix(in srgb, var(--cost) 28%, transparent) 55%
+  );
   padding: 0 0.1em;
   white-space: nowrap;
 }
 
-.paper-warm .chart-note {
+.dispatch .chart-note {
   color: var(--ink-2);
   font-size: 0.9rem;
   margin: 1.1rem 0 0;
 }
 
-.paper-warm .chart-note strong {
+.dispatch .chart-note strong {
   color: var(--ink);
 }
 
-.paper-warm .chart-note.caveat {
+.dispatch .chart-note.caveat {
   color: var(--muted);
   font-size: 0.84rem;
   margin-top: 0.6rem;
 }
 
-.paper-warm .swatch {
+.dispatch .swatch {
   display: inline-block;
   width: 0.7em;
   height: 0.7em;
@@ -494,56 +554,56 @@
   margin-right: 0.35em;
 }
 
-.paper-warm .data-table {
+.dispatch .data-table {
   margin-top: 1.1rem;
   font-size: 0.88rem;
 }
 
-.paper-warm .data-table summary {
+.dispatch .data-table summary {
   cursor: pointer;
   color: var(--muted);
 }
 
-.paper-warm .data-table table {
+.dispatch .data-table table {
   margin-top: 0.5rem;
   border-collapse: collapse;
   width: 100%;
 }
 
-.paper-warm .data-table th,
-.paper-warm .data-table td {
+.dispatch .data-table th,
+.dispatch .data-table td {
   text-align: left;
   padding: 0.25rem 0.75rem 0.25rem 0;
   border-bottom: 1px solid var(--hairline);
   font-weight: 400;
 }
 
-.paper-warm .data-table td:last-child,
-.paper-warm .data-table th:last-child {
+.dispatch .data-table td:last-child,
+.dispatch .data-table th:last-child {
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
 
 /* ---------- the flight vs. everything else ---------- */
 
-.paper-warm .toggle-note {
+.dispatch .toggle-note {
   color: var(--muted);
   font-size: 0.78rem;
   margin: 0 0 1.1rem;
 }
 
-.paper-warm .chart-card-head {
+.dispatch .chart-card-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
 }
 
-.paper-warm .chart-card-head .toggle-note {
+.dispatch .chart-card-head .toggle-note {
   flex: 1;
 }
 
-.paper-warm .chart-card-controls {
+.dispatch .chart-card-controls {
   display: flex;
   flex-direction: column;
   align-items: flex-end;
@@ -551,7 +611,7 @@
   flex-shrink: 0;
 }
 
-.paper-warm .makeup-chip {
+.dispatch .makeup-chip {
   display: flex;
   flex-wrap: wrap;
   justify-content: flex-end;
@@ -559,100 +619,100 @@
   max-width: 22rem;
 }
 
-.paper-warm .makeup-chip-btn {
+.dispatch .makeup-chip-btn {
   font: inherit;
   font-size: 0.7rem;
   line-height: 1.2;
   color: var(--ink-2);
   background: transparent;
   border: 1px solid var(--hairline);
-  border-radius: 999px;
+  border-radius: 0.3rem;
   padding: 0.2rem 0.55rem;
   cursor: pointer;
 }
 
-.paper-warm .makeup-chip-btn:hover {
+.dispatch .makeup-chip-btn:hover {
   color: var(--ink);
   border-color: var(--baseline);
 }
 
-.paper-warm .makeup-chip-btn.is-active {
+.dispatch .makeup-chip-btn.is-active {
   background: var(--ink);
   border-color: var(--ink);
   color: var(--card);
 }
 
-@media (max-width: 560px) {
-  .paper-warm .chart-card-head {
+@container dispatch (max-width: 560px) {
+  .dispatch .chart-card-head {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .paper-warm .chart-card-controls {
+  .dispatch .chart-card-controls {
     align-items: flex-start;
   }
 
-  .paper-warm .makeup-chip {
+  .dispatch .makeup-chip {
     justify-content: flex-start;
     max-width: none;
   }
 }
 
-.paper-warm .data-table .table-note {
+.dispatch .data-table .table-note {
   margin: 0.9rem 0 0.4rem;
 }
 
-.paper-warm .effort-rows {
+.dispatch .effort-rows {
   display: grid;
   gap: 1.25rem;
 }
 
-.paper-warm .effort-row {
+.dispatch .effort-row {
   display: grid;
   grid-template-columns: minmax(150px, 215px) 1fr minmax(84px, auto);
   gap: 0.75rem;
   align-items: center;
 }
 
-@media (max-width: 560px) {
-  .paper-warm .effort-row {
+@container dispatch (max-width: 560px) {
+  .dispatch .effort-row {
     grid-template-columns: 1fr auto;
   }
-  .paper-warm .effort-row .row-head {
+  .dispatch .effort-row .row-head {
     grid-column: 1 / -1;
   }
 }
 
-.paper-warm .effort-row .row-head {
+.dispatch .effort-row .row-head {
   font-size: 0.9rem;
   line-height: 1.35;
 }
 
-.paper-warm .effort-row .row-detail {
+.dispatch .effort-row .row-detail {
   display: block;
   color: var(--muted);
   font-size: 0.78rem;
 }
 
-.paper-warm .effort-row .row-equals {
+.dispatch .effort-row .row-equals {
   font-size: 0.9rem;
   text-align: right;
   white-space: nowrap;
   font-variant-numeric: tabular-nums;
 }
 
-.paper-warm .effort-row .row-equals strong {
+.dispatch .effort-row .row-equals strong {
   font-weight: 700;
 }
 
-.paper-warm .effort-row .row-equals .row-sub {
+.dispatch .effort-row .row-equals .row-sub {
   display: block;
   color: var(--muted);
   font-size: 0.78rem;
   font-weight: 400;
 }
 
-.paper-warm .flight-row-divider {
+.dispatch .flight-row-divider {
   border: 0;
   border-top: 1px dashed var(--baseline);
   margin: 0.35rem 0;
@@ -660,7 +720,7 @@
 
 /* ---------- budget chart ---------- */
 
-.paper-warm .budget-plot {
+.dispatch .budget-plot {
   display: flex;
   align-items: flex-end;
   gap: 4%;
@@ -669,7 +729,7 @@
   margin-top: 2.25rem;
 }
 
-.paper-warm .budget-col {
+.dispatch .budget-col {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -677,16 +737,16 @@
   gap: 2px;
 }
 
-.paper-warm .budget-col .seg {
+.dispatch .budget-col .seg {
   width: 100%;
   position: relative; /* anchors the CSS tooltip */
 }
 
-.paper-warm .budget-col .seg.top {
+.dispatch .budget-col .seg.top {
   border-radius: 4px 4px 0 0;
 }
 
-.paper-warm .budget-col .col-value {
+.dispatch .budget-col .col-value {
   text-align: center;
   font-size: 0.82rem;
   font-variant-numeric: tabular-nums;
@@ -694,20 +754,20 @@
   margin-bottom: 0.25rem;
 }
 
-.paper-warm .budget-labels {
+.dispatch .budget-labels {
   display: flex;
   gap: 4%;
   margin-top: 0.4rem;
 }
 
-.paper-warm .budget-labels .col-label {
+.dispatch .budget-labels .col-label {
   flex: 1;
   text-align: center;
   font-size: 0.8rem;
   color: var(--muted);
 }
 
-.paper-warm .benchmark-legend {
+.dispatch .benchmark-legend {
   margin: 1.25rem 0 0;
   padding: 0;
   display: grid;
@@ -716,140 +776,64 @@
   color: var(--ink-2);
 }
 
-.paper-warm .benchmark-legend div {
+.dispatch .benchmark-legend div {
   display: grid;
   grid-template-columns: 5.5rem 1fr;
   gap: 0.75rem;
 }
 
-.paper-warm .benchmark-legend dt {
+.dispatch .benchmark-legend dt {
   font-weight: 700;
   color: var(--ink);
   font-variant-numeric: tabular-nums;
 }
 
-.paper-warm .benchmark-legend dd {
+.dispatch .benchmark-legend dd {
   margin: 0;
 }
 
 /* ---------- sources ----------
  * The original's sources drawer (.sources-drawer-body in index.css) becomes an
- * in-page footer section; the card grid, :target light-up and methodology
- * styles are ported verbatim, the drawer chrome dropped. The single drawer
- * column becomes a responsive grid — the article is far wider than 22rem. */
+ * in-page footer of credit + methodology notes; the source cards themselves
+ * open in place from each cite superscript (.cite-panel, styled with the
+ * cite rules above), so the drawer's card grid is gone entirely. */
 
-.paper-warm .sources-section {
+.dispatch .sources-section {
   margin-top: 3rem;
   border-top: 1px solid var(--baseline);
   padding-top: 1.5rem;
 }
 
-.paper-warm .sources-section h2 {
+.dispatch .sources-section h2 {
   font-size: 1.25rem;
   font-weight: 700;
   margin: 0 0 0.4rem;
 }
 
-.paper-warm .sources-section .section-sub {
+.dispatch .sources-section .section-sub {
   color: var(--ink-2);
   margin: 0 0 1rem;
   max-width: 62ch;
 }
 
-.paper-warm .about-copy {
+.dispatch .about-copy {
   color: var(--ink-2);
   max-width: 64ch;
 }
 
-.paper-warm .sources-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
-  gap: 0.75rem;
-  margin-top: 1.25rem;
-}
-
-.paper-warm .source-card {
-  display: block;
-  background: var(--card);
-  border: 1px solid var(--hairline);
-  border-radius: 12px;
-  padding: 0.8rem 0.95rem;
-  text-decoration: none;
-  font-size: 0.88rem;
-  line-height: 1.45;
-  scroll-margin-top: 1.25rem;
-}
-
-.paper-warm .source-card:hover {
-  border-color: var(--baseline);
-}
-
-.paper-warm .source-card:target {
-  border-color: var(--cost);
-  box-shadow: 0 0 0 3px rgba(235, 104, 52, 0.22);
-  animation: card-knock 900ms ease-out 1;
-}
-
-@keyframes card-knock {
-  0% {
-    box-shadow: 0 0 0 3px rgba(235, 104, 52, 0.4);
-  }
-  45% {
-    box-shadow: 0 0 0 10px rgba(235, 104, 52, 0.1);
-  }
-  100% {
-    box-shadow: 0 0 0 3px rgba(235, 104, 52, 0.22);
-  }
-}
-
-.paper-warm .source-card .src-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: baseline;
-  gap: 0.5rem;
-}
-
-.paper-warm .source-card .src-kicker {
-  color: var(--muted);
-  font-size: 0.72rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
-}
-
-.paper-warm .source-card .src-num {
-  flex-shrink: 0;
-  color: var(--ink-2);
-  font-size: 0.72rem;
-  font-variant-numeric: tabular-nums;
-  border: 1px solid var(--hairline);
-  border-radius: 999px;
-  padding: 0 0.45em;
-}
-
-.paper-warm .source-card:target .src-num {
-  border-color: var(--cost);
-  color: var(--cost);
-}
-
-.paper-warm .source-card .src-title {
-  display: block;
-  margin-top: 0.15rem;
-}
-
-.paper-warm .methodology {
+.dispatch .methodology {
   margin-top: 2rem;
   font-size: 0.92rem;
   color: var(--ink-2);
 }
 
-.paper-warm .methodology summary {
+.dispatch .methodology summary {
   cursor: pointer;
   color: var(--ink);
   font-weight: 700;
 }
 
-.paper-warm .methodology code {
+.dispatch .methodology code {
   background: var(--card);
   border: 1px solid var(--hairline);
   border-radius: 4px;
@@ -858,6 +842,6 @@
   font-size: 0.88em;
 }
 
-.paper-warm .methodology ul {
+.dispatch .methodology ul {
   padding-left: 1.2rem;
 }

@@ -5,6 +5,7 @@
 @import "./felix.css";
 @import "./logbook.css";
 @import "./planes-tokens.css";
+@import "./planes-desk.css";
 @import "./planes-form.css";
 @import "./planes-receipt.css";
 @import "./planes-charts.css";
@@ -24,6 +25,10 @@
   --color-oxide: #b7410e;
   --color-oxide-hot: #d24a10;
   --color-patina: #3e7a6c;
+  /* Mill metals for data surfaces (the planes charts): machined steel and
+     brass fittings. Named for the shop floor, not the Tailwind palette. */
+  --color-steel: #4a6d8c;
+  --color-brass: #a3762a;
 
   --font-display: "Zilla Slab", "Rockwell", serif;
   --font-body: "Fira Sans", "Segoe UI", sans-serif;

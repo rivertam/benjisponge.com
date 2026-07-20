@@ -13,9 +13,11 @@ mod chrome;
 mod links;
 mod popover;
 mod rail;
+mod spread;
 
 pub use cards::{index_card, video_card};
 pub use chrome::shell;
 pub use links::{ext_link, link_label};
 pub use popover::inline_popover;
 pub use rail::{back_link, page_head, rail_prose, rail_section};
+pub use spread::{doc_head, full_bleed, margin_notes, stamp_seal};

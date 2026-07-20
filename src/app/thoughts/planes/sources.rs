@@ -3,15 +3,19 @@
 //! Ported from `~/how-bad` `src/lib/sources.ts` (the cards) and
 //! `src/components/{Cite,SourcesProvider}.tsx` (how cites render and the
 //! sources copy). The original opened the cards in a slide-over drawer;
-//! here cites are plain fragment links into a sources section at the foot
-//! of the article, so everything works with JavaScript disabled.
+//! here every cite opens its source card in place as a native popover
+//! (declarative `popovertarget`, so still no JavaScript), and the footer
+//! keeps just the credit and the methodology notes.
 
 use std::sync::LazyLock;
+use std::sync::atomic::{AtomicUsize, Ordering};
 
 use topcoat::{
     Result,
     view::{component, view},
 };
+
+use crate::components::{ext_link, inline_popover};
 
 pub struct Source {
     pub id: &'static str,
@@ -71,6 +75,30 @@ static SOURCE_DEFS: &[Def] = &[
         url: "https://www.ic.gc.ca/eic/site/mc-mc.nsf/vwapj/VCF_JetA.pdf/$file/VCF_JetA.pdf",
     },
     Def {
+        id: "cars",
+        kicker: "Gas car footprints",
+        title: "US EPA: greenhouse gas emissions from a typical passenger vehicle",
+        url: "https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle",
+    },
+    Def {
+        id: "compact-mpg",
+        kicker: "Compact-car MPG",
+        title: "US DOE/EPA fueleconomy.gov: 2025 Toyota Corolla — 35 mpg EPA combined",
+        url: "https://www.fueleconomy.gov/feg/bymodel/2025_Toyota_Corolla.shtml",
+    },
+    Def {
+        id: "sports-mpg",
+        kicker: "Sports-car MPG",
+        title: "US DOE/EPA fueleconomy.gov: 2025 Porsche 911 Carrera — 21 mpg EPA combined (Corvette 19, Mustang GT 19)",
+        url: "https://www.fueleconomy.gov/feg/bymodel/2025_Porsche_911.shtml",
+    },
+    Def {
+        id: "hummer",
+        kicker: "The Hummer",
+        title: "Cars.com: Hummer H2 specifications — the 32-gallon fuel tank",
+        url: "https://www.cars.com/research/hummer-h2-2003/specs/",
+    },
+    Def {
         id: "budgets",
         kicker: "1.5 °C, per person",
         title: "1.5-Degree Lifestyles technical report (IGES / Aalto / D-mat, 2019): per-person footprint targets; the mobility split is Annex D, Table D.1",
@@ -93,12 +121,6 @@ static SOURCE_DEFS: &[Def] = &[
         kicker: "The consensus",
         title: "NASA: 97%+ of publishing climate scientists agree humans are warming the planet",
         url: "https://science.nasa.gov/climate-change/scientific-consensus/",
-    },
-    Def {
-        id: "cars",
-        kicker: "Gas car footprints",
-        title: "US EPA: greenhouse gas emissions from a typical passenger vehicle",
-        url: "https://www.epa.gov/greenvehicles/greenhouse-gas-emissions-typical-passenger-vehicle",
     },
     Def {
         id: "ev",
@@ -282,34 +304,87 @@ pub fn source(id: &str) -> Option<&'static Source> {
     SOURCES.iter().find(|s| s.id == id)
 }
 
-/// A citation superscript: a small numbered link down to the matching source
-/// card in [`sources_section`].
+/// "science.org →" — a popover's outbound-link label, cut from its URL.
+fn host_label(url: &str) -> String {
+    let host = url
+        .split_once("://")
+        .map_or(url, |(_, rest)| rest)
+        .split('/')
+        .next()
+        .unwrap_or(url);
+    format!("{} →", host.strip_prefix("www.").unwrap_or(host))
+}
+
+/// Every cite popover on a page needs its own DOM id, and the same source
+/// is cited from several places; a process-wide counter keeps ids unique
+/// across the initial render and any shard re-renders.
+static CITE_SEQ: AtomicUsize = AtomicUsize::new(0);
+
+/// A citation superscript: still the small number, but it opens the source
+/// card in place as an inline popover — kicker, title, outbound link —
+/// instead of jumping to a list at the foot of the page. The panel lives
+/// inside the `<sup>` so consecutive cites stay adjacent for the CSS comma.
 #[component]
 pub async fn cite(id: &str) -> Result {
     let s = source(id).unwrap_or_else(|| panic!("Unknown source anchor: {id}"));
+    let pid = format!("cite-{}-{}", s.id, CITE_SEQ.fetch_add(1, Ordering::Relaxed));
+    let anchor_name = format!("anchor-name: --inline-popover-{pid};");
+    let position_anchor = format!("position-anchor: --inline-popover-{pid};");
+    let link_label = host_label(s.url);
     view! {
         <sup class="cite">
-            <a href=(format!("#src-{}", s.id)) aria-label=(format!("Source: {}", s.title))>(s.num)</a>
+            <button
+                type="button"
+                class="inline-popover-trigger"
+                popovertarget=(pid.as_str())
+                style=(anchor_name.as_str())
+                aria-label=(format!("Source: {}", s.title))
+            >(s.num)</button>
+            <span
+                id=(pid.as_str())
+                class="inline-popover-panel cite-panel"
+                popover="auto"
+                style=(position_anchor.as_str())
+            >
+                <button
+                    type="button"
+                    class="inline-popover-close"
+                    popovertarget=(pid.as_str())
+                    popovertargetaction="hide"
+                    aria-label="Close popover"
+                >"×"</button>
+                <span class="inline-popover-kicker">(s.kicker)</span>
+                <span class="inline-popover-preview">(s.title)</span>
+                ext_link(class: "quiet-link", href: s.url, label: link_label.as_str())
+            </span>
         </sup>
     }
 }
 
-/// The sources footer: the numbered cards every [`cite`] superscript lands
-/// on, plus the credit for the original Shame Plane and the methodology
-/// notes. Copy ported from the original's sources drawer.
+/// The sources footer: the credit for the original Shame Plane and the
+/// methodology notes. The source cards themselves open in place from each
+/// [`cite`] superscript, so there is no list here to jump to. Copy ported
+/// from the original's sources drawer.
 #[component]
 pub async fn sources_section() -> Result {
     view! {
         <footer class="sources-section" id="sources">
             <h2>"Sources"</h2>
-            <p class="section-sub">
-                "Every small blue number on this page lands on one of the numbered cards below; \
-                 click one and the matching card lights up. Each card links out to the primary \
-                 source."
-            </p>
             <p class="about-copy">
-                "Flight Receipt is an independent revival of "
-                <a href="https://web.archive.org/web/2020/https://shameplane.com/">"Shame Plane"</a>
+                "This page was originally a revival of "
+                inline_popover(
+                    id: "shameplane-origin",
+                    label: "Shame Plane",
+                    <span class="inline-popover-preview">
+                        "The original enter-a-flight, watch-the-ice-melt site. I don't know
+                         what happened to the original, but here's the Wayback Machine's copy
+                    "</span>
+                    ext_link(
+                        class: "quiet-link",
+                        href: "https://web.archive.org/web/2020/https://shameplane.com/",
+                        label: "shameplane.com (archived) →"
+                    )
+                )
                 " (2019–2024), the small site that made this calculation famous. Reporting at the \
                  time — the Thomson Reuters Foundation "
                 cite(id: "credit-trf")
@@ -328,23 +403,6 @@ pub async fn sources_section() -> Result {
                  between the short- and long-haul models), and retires the shame: it’s a bill, \
                  not a verdict. No affiliation, no funding, nothing for sale."
             </p>
-            <div class="sources-grid">
-                for s in SOURCES.iter() {
-                    <a
-                        class="source-card"
-                        id=(format!("src-{}", s.id))
-                        href=(s.url)
-                        target="_blank"
-                        rel="noreferrer"
-                    >
-                        <span class="src-top">
-                            <span class="src-kicker">(s.kicker)</span>
-                            <span class="src-num">(s.num)</span>
-                        </span>
-                        <span class="src-title">(s.title)</span>
-                    </a>
-                }
-            </div>
             <details class="methodology">
                 <summary>"How the numbers are computed"</summary>
                 <ul>
@@ -443,10 +501,9 @@ pub async fn sources_section() -> Result {
                         cite(id: "diets")
                         "; hamburger ≈3.6 kg US-typical "
                         cite(id: "meat")
-                        " "
                         cite(id: "heller")
-                        "; A/C, bottles, soda, ChatGPT as cited below. Order-of-magnitude by \
-                         design."
+                        "; A/C, bottles, soda, ChatGPT as cited on their rows. \
+                         Order-of-magnitude by design."
                     </li>
                     <li>
                         "AI queries: OpenAI puts the average ChatGPT query at ≈0.34 Wh — ≈0.13 \
@@ -463,7 +520,6 @@ pub async fn sources_section() -> Result {
                          estimate, which hangs Anthropic’s billing rates on Epoch AI’s measured \
                          ≈0.3 Wh GPT-4o query "
                         cite(id: "ai-agent")
-                        " "
                         cite(id: "ai-epoch")
                         "; at Fable’s price tier, ≈1.5M generated tokens (≈2.9 kWh) plus ≈80M \
                          re-read, nearly all prompt-cache hits (≈3.1 kWh), come to ≈6 kWh — an \
@@ -484,5 +540,27 @@ pub async fn sources_section() -> Result {
                 </ul>
             </details>
         </footer>
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn host_labels_cut_scheme_www_and_path() {
+        assert_eq!(
+            host_label("https://www.science.org/doi/10.1126/science.aag2345"),
+            "science.org →"
+        );
+        assert_eq!(
+            host_label("https://acp.copernicus.org/articles/24/6071/2024/"),
+            "acp.copernicus.org →"
+        );
+        // Every source URL yields a real host, so no popover ships a bare
+        // arrow.
+        for s in SOURCES.iter() {
+            assert!(host_label(s.url).len() > 2, "{}: empty host label", s.id);
+        }
     }
 }

@@ -3,8 +3,8 @@
 
 use std::sync::LazyLock;
 
-use crate::flight::format::{format_js_number, round_count, round_rate_count};
-use crate::flight::reference_data::{ACTIVITIES, Activity};
+use super::format::{format_js_number, round_count, round_rate_count};
+use super::reference_data::{ACTIVITIES, Activity};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
 pub enum ComparisonMode {

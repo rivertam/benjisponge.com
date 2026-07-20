@@ -8,7 +8,7 @@
 //! 2014 (diet footprints per day, taken as 3 meals/day, 1,095 meals/yr),
 //! Berners-Lee (plastics), US grid-average electricity (A/C).
 
-use crate::flight::format::round_count;
+use super::format::round_count;
 
 #[derive(Debug, Clone, Copy)]
 pub struct Activity {
@@ -165,15 +165,15 @@ pub static ACTIVITIES: &[Activity] = &[
 // cut), and each deeper cut takes its own slice plus everything outside it —
 // so a bar's cuttable total is the sum of its non-floor slices.
 //
-// Colors are literal hexes validated for CVD separation and ≥3:1 contrast
-// against the card surface (#fdf9ef); within a bar, darker = the deeper cut.
+// Colors are `--slice-*` tokens declared in styles/planes-tokens.css (so
+// themes can restyle the bars); within a bar, darker = the deeper cut.
 
 #[derive(Debug, Clone, Copy)]
 pub struct FlightAnalogy {
     #[allow(dead_code)] // React list key in the original; kept for data parity
     pub id: &'static str,
     pub kg_per_unit: f64,
-    /// Dashed-line label template; '{n}' becomes the friendly count, e.g. 'driving New York → L.A. ≈{n} times'.
+    /// Dashed-line label template; '{n}' becomes the friendly count, e.g. 'eating ≈{n} hamburgers'.
     pub tick: &'static str,
     /// Fuller unit for tooltips and the data table, e.g. "miles in a gas car".
     pub unit_label: &'static str,
@@ -209,7 +209,7 @@ pub struct CutOption {
 #[derive(Debug, Clone, Copy)]
 pub struct SacrificeBar {
     pub id: &'static str,
-    /// The year being dissected, e.g. "A year of driving".
+    /// The year being dissected, e.g. "A year of eating".
     pub noun: &'static str,
     pub detail: &'static str,
     /// Baseline-first; the last slice sits at the bar's free end.
@@ -222,95 +222,11 @@ pub struct SacrificeBar {
     pub source_ids: &'static [&'static str],
 }
 
-/// The floor color — a deliberately neutral khaki: not actionable, not data you can cut.
-pub const FLOOR_COLOR: &str = "#b3a78c";
+/// The floor color — deliberately neutral, near the paper: not actionable,
+/// not data you can cut.
+pub const FLOOR_COLOR: &str = "var(--slice-floor)";
 
 pub static SACRIFICE_BARS: &[SacrificeBar] = &[
-    SacrificeBar {
-        id: "driving",
-        noun: "Driving ≈32 miles every day for a year",
-        detail: "That's the U.S. average",
-        slices: &[
-            CutSlice {
-                id: "ev-share",
-                cut: Some("going car-free"),
-                label: "What an EV would still emit over the same 11,500 miles (≈100 g/mi on the \
-                        2024 U.S. grid) — only going car-free clears this inner slice",
-                kg: 11500.0 * 0.1,
-                color: "#2a78d6",
-            },
-            CutSlice {
-                id: "gas-premium",
-                cut: Some("swapping to an EV"),
-                label: "The gas premium: ≈300 g/mi × 11,500 mi — gone the day you drive electric \
-                        (EPA ≈400 g/mi vs. US DOE ≈100 g/mi)",
-                kg: 11500.0 * (0.4 - 0.1),
-                color: "#86b6ef",
-            },
-        ],
-        options: &[
-            CutOption {
-                id: "ev-swap",
-                label: "swap to an EV −3.5 t",
-                slice_ids: &["gas-premium"],
-                group: None,
-            },
-            CutOption {
-                id: "car-free",
-                label: "go car-free −4.6 t",
-                slice_ids: &["ev-share", "gas-premium"],
-                group: None,
-            },
-        ],
-        analogies: &[
-            FlightAnalogy {
-                id: "everyday-months",
-                kg_per_unit: (11500.0 * 0.4) / 12.0,
-                tick: "everyday driving for ≈{n} months",
-                unit_label: "months of typical U.S. gas-car driving (≈960 mi/mo)",
-                max_count: Some(21.0),
-                basis: "EPA: ≈400 g CO₂/mi over the U.S. average 11,500 mi/yr",
-                source_ids: &["cars"],
-            },
-            FlightAnalogy {
-                id: "everyday-years",
-                kg_per_unit: 11500.0 * 0.4,
-                tick: "everyday driving for ≈{n} years",
-                unit_label: "years of typical U.S. gas-car driving",
-                max_count: None,
-                basis: "EPA: ≈400 g CO₂/mi over the U.S. average 11,500 mi/yr",
-                source_ids: &["cars"],
-            },
-            FlightAnalogy {
-                id: "coast-drives",
-                kg_per_unit: 2790.0 * 0.4,
-                tick: "driving New York → L.A. ≈{n} times",
-                unit_label: "one-way New York → L.A. drives in a gas car (≈2,790 mi)",
-                max_count: None,
-                basis: "EPA: ≈400 g CO₂/mi",
-                source_ids: &["cars"],
-            },
-            FlightAnalogy {
-                id: "gas-tanks",
-                kg_per_unit: 12.0 * 8.9,
-                tick: "burning ≈{n} tanks of gas",
-                unit_label: "12-gallon tanks of gasoline, burned",
-                max_count: None,
-                basis: "EPA: ≈8.9 kg CO₂ per gallon of gasoline",
-                source_ids: &["cars"],
-            },
-            FlightAnalogy {
-                id: "ev-years",
-                kg_per_unit: 11500.0 * 0.1,
-                tick: "a full year of EV driving, ≈{n} times over",
-                unit_label: "years of typical U.S. driving in an EV",
-                max_count: Some(20.0),
-                basis: "US DOE (AFDC assumptions): ≈100 g CO₂/mi on the 2024 U.S. grid",
-                source_ids: &["ev"],
-            },
-        ],
-        source_ids: &["cars", "ev"],
-    },
     SacrificeBar {
         id: "climate",
         noun: "A year of indoor climate",
@@ -330,7 +246,7 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 label: "The gas premium: what the furnace burns beyond a heat pump’s share of the \
                         same warmth — gone with the electric swap",
                 kg: 840.0,
-                color: "#a63d2f",
+                color: "var(--slice-heat-deep)",
             },
             CutSlice {
                 id: "thermostat",
@@ -338,7 +254,7 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 label: "The top few degrees: nudging the thermostat down ≈3 °F trims roughly a \
                         tenth of the season’s gas (DOE’s rule of thumb: ≈1% per °F)",
                 kg: 240.0,
-                color: "#d08e74",
+                color: "var(--slice-heat-mild)",
             },
             CutSlice {
                 id: "ac-all",
@@ -346,7 +262,7 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 label: "The summer half: ≈800 A/C hours × ≈1.1 kg/hour (≈3 kWh at the ≈0.37 \
                         kg/kWh U.S. grid average). All or nothing: sweat, or emit",
                 kg: 800.0 * 1.1,
-                color: "#b07900",
+                color: "var(--slice-ac)",
             },
         ],
         options: &[
@@ -456,7 +372,7 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 label: "Vegetarian → vegan buys this middle slice: ≈0.3 kg × 1,095 meals \
                         (Scarborough et al. 2014)",
                 kg: 1095.0 * (1.27 - 0.96),
-                color: "#2e8b57",
+                color: "var(--slice-diet-deep)",
             },
             CutSlice {
                 id: "avg-to-veg",
@@ -464,7 +380,7 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 label: "Average → vegetarian shaves this slice: ≈0.6 kg × 1,095 meals \
                         (Scarborough et al. 2014)",
                 kg: 1095.0 * (1.88 - 1.27),
-                color: "#7fbf98",
+                color: "var(--slice-diet-mild)",
             },
             CutSlice {
                 id: "farming",
@@ -472,7 +388,7 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 label: "The farming that grew the food you toss — ≈¾ of wasted food’s footprint. \
                         Composting can’t touch it; only wasting less can",
                 kg: 1095.0 * 0.34 * 0.75,
-                color: "#7454b8",
+                color: "var(--slice-waste-deep)",
             },
             CutSlice {
                 id: "methane",
@@ -480,7 +396,7 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 label: "Landfill methane — ≈¼ of wasted food’s footprint (EPA). Composting alone \
                         kills this end slice, farming emissions and all still spent",
                 kg: 1095.0 * 0.34 * 0.25,
-                color: "#a58fd6",
+                color: "var(--slice-waste-mild)",
             },
         ],
         options: &[
@@ -594,7 +510,7 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                         (our assumed average — between a ≈7 kg tee and ≈33 kg jeans; sector \
                         totals imply more) — going almost all-secondhand erases this",
                 kg: 530.0,
-                color: "#008ba3",
+                color: "var(--slice-fashion-deep)",
             },
             CutSlice {
                 id: "fast-premium",
@@ -602,7 +518,7 @@ pub static SACRIFICE_BARS: &[SacrificeBar] = &[
                 label: "The fast-fashion premium: the second new garment every week — ≈51 more \
                         pieces at ≈10 kg each",
                 kg: 510.0,
-                color: "#6cbccf",
+                color: "var(--slice-fashion-mild)",
             },
         ],
         options: &[
@@ -667,7 +583,7 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
                 label: "The coffee itself: 365 black coffees ≈ 8 kg (Berners-Lee: ≈21 g each) — \
                         only quitting clears it",
                 kg: 365.0 * 0.021,
-                color: "#c65b8a",
+                color: "var(--slice-habit-deep)",
             },
             CutSlice {
                 id: "milk",
@@ -675,7 +591,7 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
                 label: "The milk: a large latte runs ≈340 g against black coffee’s ≈21 g \
                         (Berners-Lee) — switch to black and this slice is gone",
                 kg: 365.0 * (0.34 - 0.021),
-                color: "#d795b1",
+                color: "var(--slice-habit-mild)",
             },
         ],
         options: &[
@@ -733,7 +649,7 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
             label: "One flagship phone ≈70 kg CO₂e, ≈80% of it manufacturing (Apple’s own \
                     lifecycle reports)",
             kg: 70.0,
-            color: "#c65b8a",
+            color: "var(--slice-habit-deep)",
         }],
         options: &[CutOption {
             id: "keep",
@@ -772,7 +688,7 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
             cut: Some("quitting the daily can"),
             label: "365 cans of Diet Coke × ≈150 g (Carbon Trust LCA with Coca-Cola)",
             kg: 365.0 * 0.15,
-            color: "#c65b8a",
+            color: "var(--slice-habit-deep)",
         }],
         options: &[CutOption {
             id: "quit",
@@ -811,7 +727,7 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
             cut: Some("quitting bottled water"),
             label: "365 half-liter bottles × ≈160 g (Berners-Lee)",
             kg: 365.0 * 0.16,
-            color: "#c65b8a",
+            color: "var(--slice-habit-deep)",
         }],
         options: &[CutOption {
             id: "quit",
@@ -851,7 +767,7 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
             label: "730 hours × ≈55 g CO₂e per streaming hour (Carbon Trust, European grid \
                     average)",
             kg: 730.0 * 0.055,
-            color: "#c65b8a",
+            color: "var(--slice-habit-deep)",
         }],
         options: &[CutOption {
             id: "quit",
@@ -891,7 +807,7 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
             label: "10,950 queries × ≈0.13 g (OpenAI’s own figure: ≈0.34 Wh per query at the U.S. \
                     grid average)",
             kg: 10950.0 * 0.00013,
-            color: "#c65b8a",
+            color: "var(--slice-habit-deep)",
         }],
         options: &[CutOption {
             id: "quit",
@@ -932,7 +848,7 @@ pub static HABIT_BARS: &[SacrificeBar] = &[
             cut: Some("sipping from the glass"),
             label: "365 plastic straws × ≈1.5 g (polypropylene-straw LCAs)",
             kg: 365.0 * 0.0015,
-            color: "#c65b8a",
+            color: "var(--slice-habit-deep)",
         }],
         options: &[CutOption {
             id: "quit",
@@ -1059,8 +975,8 @@ pub static BUDGET_TARGETS: &[BudgetTarget] = &[
 
 #[cfg(test)]
 mod tests {
+    use super::super::sources::source;
     use super::*;
-    use crate::flight::sources::source;
 
     fn every_bar() -> impl Iterator<Item = &'static SacrificeBar> {
         SACRIFICE_BARS.iter().chain(HABIT_BARS.iter())

@@ -138,6 +138,27 @@ const LONG_HAUL: HaulModel = HaulModel {
     c: 3446.2,
 };
 
+/// The haul model's average seat count, exposed for the seat-map
+/// instrument's tests: its drawn cabin must stay honest to the model it
+/// depicts.
+#[cfg(test)]
+pub fn seat_count(long_haul: bool) -> f64 {
+    if long_haul {
+        LONG_HAUL.seats
+    } else {
+        SHORT_HAUL.seats
+    }
+}
+
+/// A cabin's myclimate weight relative to the average seat, same purpose.
+pub fn cabin_weight(long_haul: bool, cabin: Cabin) -> f64 {
+    if long_haul {
+        LONG_HAUL.cabin_weight.get(cabin)
+    } else {
+        SHORT_HAUL.cabin_weight.get(cabin)
+    }
+}
+
 pub fn great_circle_km(lat1: f64, lon1: f64, lat2: f64, lon2: f64) -> f64 {
     let to_rad = std::f64::consts::PI / 180.0;
     let phi1 = lat1 * to_rad;

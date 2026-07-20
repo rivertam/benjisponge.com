@@ -2,7 +2,6 @@ mod app;
 mod components;
 mod content;
 mod emdash;
-mod flight;
 mod util;
 
 #[tokio::main]

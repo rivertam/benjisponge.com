@@ -8,7 +8,7 @@ use topcoat::{
     view::{component, view},
 };
 
-use crate::flight::format::format_ice;
+use super::format::format_ice;
 
 /// Patches smaller than this render nothing; callers gate their surrounding
 /// copy on the same floor so the row and the figure agree.

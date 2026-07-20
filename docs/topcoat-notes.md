@@ -127,7 +127,7 @@ stay server-computed.
   Downloads the standalone Tailwind v4 CLI on first build (network).
 - `styles/input.css` starts with `@import "tailwindcss";` then `@theme { … }`
   tokens and any plain CSS (the ported how-bad styles live here, scoped under
-  `.paper-warm`). Tailwind v4: theme via CSS, no config file.
+  `.dispatch`). Tailwind v4: theme via CSS, no config file.
 - Head: `<link rel="stylesheet" href=(topcoat::tailwind::stylesheet!())>`.
 - Source scan honors `.gitignore` from the package root.
 

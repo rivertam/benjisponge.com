@@ -14,11 +14,14 @@ use topcoat::{
     view::{component, view},
 };
 
-use crate::flight::{airports::Airport, emissions::Cabin};
+use super::{airports::Airport, emissions::Cabin};
+use crate::components::stamp_seal;
 
 const AIRPORT_COMBOBOX_JS: Asset = asset!("./airport-combobox.js");
 const AIRPORTS_JSON: Asset = asset!("../../../../data/airports.json");
 
+/// `total` is the filed route's CO₂e figure (e.g. "1.2 t"), stamped on the
+/// docked strip; pass `""` when there's nothing to stamp yet.
 #[component]
 pub async fn flight_form(
     from: Option<Airport>,
@@ -26,6 +29,7 @@ pub async fn flight_form(
     cabin: Cabin,
     round_trip: bool,
     revealed: bool,
+    #[default(String::new())] total: String,
 ) -> Result {
     view! {
         <form
@@ -64,6 +68,9 @@ pub async fn flight_form(
                     "One way"
                 </label>
             </div>
+            if revealed && !total.is_empty() {
+                stamp_seal(text: format!("{total} CO₂e"))
+            }
             // Unlike the original (where React recomputes live and the button
             // disappears after reveal), the server round-trip always needs a
             // submit control, so the button stays — condensed by .form-dock.

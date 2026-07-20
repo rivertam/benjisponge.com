@@ -1,0 +1,152 @@
+/*
+ * The dispatch desk: the full-page scaffold of the planes post. A full-bleed
+ * working surface (the desk) holding the strip bay + paperwork in a wide
+ * pane, with the essay riding alongside as margin notes. The strip itself is
+ * skinned in planes-form.css; tokens in planes-tokens.css; the generic
+ * full-bleed / doc-head / margin-notes / stamp-seal components in site.css.
+ */
+
+/* the desk surface: a whisper darker than the page, edged in hairline */
+.desk-band {
+  background: color-mix(in srgb, var(--color-ink) 2.5%, var(--color-page));
+  border-bottom: 1px solid var(--color-hairline);
+  padding-block: 1.25rem 3rem;
+}
+
+.desk-spread {
+  max-width: 88rem;
+  margin-inline: auto;
+  padding-inline: clamp(1.25rem, 4vw, 3rem);
+  min-height: 82svh;
+  align-content: start;
+}
+
+@media (min-width: 64rem) {
+  .desk-spread {
+    display: grid;
+    grid-template-columns: minmax(0, 1.1fr) minmax(21rem, 28rem);
+    grid-template-areas:
+      'head head'
+      'pane notes';
+    column-gap: clamp(2.5rem, 4vw, 4.5rem);
+    align-items: start;
+  }
+
+  /* a filed flight claims the desk: the pane widens, the notes step back —
+     and the route card lands at the top of their column */
+  .desk-spread--filed {
+    grid-template-columns: minmax(0, 1fr) clamp(19rem, 24vw, 23rem);
+    grid-template-areas:
+      'head head'
+      'pane route'
+      'pane notes';
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .desk-spread > .doc-head {
+    grid-area: head;
+  }
+
+  .desk-spread > .dispatch {
+    grid-area: pane;
+  }
+
+  /* after the .dispatch rule: the route card carries both classes, and
+     route must win the grid-area tie */
+  .desk-spread > .desk-route {
+    grid-area: route;
+    margin-bottom: 1.5rem;
+  }
+
+  .desk-spread > .margin-notes {
+    grid-area: notes;
+  }
+}
+
+/* Below the two-column spread the route card flows between the pane and
+   the notes; give it the notes' own breathing room. */
+.desk-spread > .desk-route {
+  margin-top: 2.5rem;
+}
+
+@media (min-width: 64rem) {
+  .desk-spread > .desk-route {
+    margin-top: 0;
+  }
+}
+
+.desk-spread > .doc-head {
+  margin-block: 1.25rem 2rem;
+}
+
+.desk-spread > .margin-notes {
+  margin-top: 2.5rem;
+}
+
+@media (min-width: 64rem) {
+  .desk-spread > .margin-notes {
+    margin-top: 0;
+  }
+}
+
+/* the pane is the charts' measuring stick — container queries key off it */
+.dispatch {
+  container: dispatch / inline-size;
+}
+
+/* anchor jumps (#allowance, #sources) surface below the racked strip */
+.dispatch :target {
+  scroll-margin-top: calc(var(--strip-h) + 1rem);
+}
+
+/* the bay: unfiled strip slots below the blank strip, waiting */
+.strip-ghosts {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.9rem;
+}
+
+.strip-ghosts > div {
+  position: relative;
+  height: 3.1rem;
+  border: 1px dashed var(--hairline);
+  border-left: 0.375rem solid color-mix(in srgb, var(--muted) 30%, transparent);
+  border-radius: 2px;
+}
+
+.strip-ghosts > div::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 0.65rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  transform: translateY(-50%);
+  border: 1px dashed color-mix(in srgb, var(--muted) 45%, transparent);
+  border-radius: 50%;
+}
+
+.strip-ghosts > div:nth-child(1) {
+  opacity: 0.75;
+}
+
+.strip-ghosts > div:nth-child(2) {
+  opacity: 0.45;
+}
+
+.strip-ghosts > div:nth-child(3) {
+  opacity: 0.22;
+}
+
+/* In the two-column spread the margin-note citations sit a hand's width
+   from the right viewport edge; when anchor positioning applies there, hang
+   their panels leftward instead. (Below 64rem the notes span the full width
+   and the default left-anchored placement is correct.) */
+@media (min-width: 64rem) {
+  @supports (position-anchor: --inline-popover-test) {
+    .margin-notes .inline-popover-panel:popover-open {
+      left: auto;
+      right: anchor(right);
+    }
+  }
+}

@@ -1,29 +1,69 @@
-/* The .paper-warm design tokens, shared by every planes-post stylesheet
-   (form, receipt, charts). Single source of truth — the per-section files
-   declare only their own rules on top of these. */
+/* The .dispatch design tokens, shared by every planes-post stylesheet
+   (desk, form, receipt, charts). Single source of truth — the per-section
+   files declare only their own rules on top of these.
 
-.paper-warm {
-  /* the original :root custom-property block */
-  --page: #f2ead9;
-  --card: #fdf9ef;
-  --ink: #2b2620;
-  --ink-2: #5d5648;
-  --muted: #8f8676;
-  --hairline: #e7dfcc;
-  --baseline: #cdc2a9;
-  --cost: #eb6834;
-  --save: #2a78d6;
-  --save-soft: #86b6ef;
-  --focus: #2a78d6;
-  --domain-transport: #2a78d6;
-  --domain-food: #5a7a4a;
-  --domain-home: #b07900;
-  --domain-habits: #a63d2f;
-  --sans: Seravek, 'Gill Sans Nova', Ubuntu, Calibri, 'DejaVu Sans', source-sans-pro, sans-serif;
-  --mono: ui-monospace, 'SF Mono', 'Cascadia Mono', Menlo, Consolas, monospace;
-  color-scheme: light;
+   Every surface/ink/type token re-points at the site's own theme tokens
+   (input.css @theme), so a future theme restyles the whole calculator by
+   swapping @theme values — nothing here hardcodes the "mill and oxide"
+   light look. The only literal hexes left are the three data hues that have
+   no site-token parent (iris, petrol, rose); they live here, the sanctioned
+   hex home, where a theme can still override them. */
 
-  /* content ~900px; side space reserved for future illustrations */
-  --content-max: 56.25rem; /* 900px */
-  --gutter-min: 2.5rem;
+.dispatch {
+  /* surfaces and ink — straight from the site theme */
+  --page: var(--color-page);
+  --card: var(--color-card);
+  --ink: var(--color-ink);
+  --ink-2: var(--color-ink2);
+  --muted: var(--color-muted);
+  --hairline: var(--color-hairline);
+  --baseline: color-mix(in srgb, var(--color-muted) 55%, var(--color-page));
+
+  /* the semantic pair: the flight is the site's rust; savings are patina */
+  --cost: var(--color-oxide);
+  --cost-hot: var(--color-oxide-hot);
+  --save: var(--color-patina);
+  --save-soft: color-mix(in srgb, var(--color-patina) 45%, var(--color-card));
+  --focus: var(--color-ink);
+
+  /* Compare-view domains: the shop metals, plus the habits' rose */
+  --domain-transport: var(--color-steel);
+  --domain-food: var(--color-patina);
+  --domain-home: var(--color-brass);
+  --domain-habits: var(--slice-habit-deep);
+
+  /* Cuts-view slice families (consumed as inline styles from
+     reference_data.rs — see its color field). Within a bar, deep < mild in
+     lightness; floors are non-actionable and stay near the paper. */
+  --slice-floor: color-mix(in srgb, var(--color-muted) 72%, var(--color-page));
+  --slice-transport-deep: var(--color-steel);
+  --slice-transport-mild: color-mix(in srgb, var(--color-steel) 55%, var(--color-card));
+  --slice-heat-deep: color-mix(in srgb, var(--color-oxide) 50%, var(--color-ink));
+  --slice-heat-mild: color-mix(in srgb, var(--color-oxide) 60%, var(--color-card));
+  --slice-ac: var(--color-brass);
+  --slice-diet-deep: var(--color-patina);
+  --slice-diet-mild: color-mix(in srgb, var(--color-patina) 55%, var(--color-card));
+  --slice-waste-deep: #6d5687;
+  --slice-waste-mild: color-mix(in srgb, #6d5687 65%, var(--color-card));
+  --slice-fashion-deep: #397684;
+  --slice-fashion-mild: color-mix(in srgb, #397684 55%, var(--color-card));
+  --slice-habit-deep: #a05677;
+  --slice-habit-mild: color-mix(in srgb, #a05677 60%, var(--color-card));
+
+  /* type — the site's own faces; the receipt keeps printing in mono */
+  --sans: var(--font-body);
+  --mono: var(--font-meta);
+
+  /* the docked strip's height, for sticky offsets and anchor margins */
+  --strip-h: 4.5rem;
+}
+
+/* In narrower panes the docked strip wraps to a second row; every consumer
+   of --strip-h (rail offset, anchor scroll margins, the ice sticky) picks
+   up the taller figure by inheritance from the pane's children — the
+   container query can't restyle the container itself. */
+@container dispatch (max-width: 800px) {
+  .dispatch > * {
+    --strip-h: 6.5rem;
+  }
 }

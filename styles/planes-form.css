@@ -1,80 +1,122 @@
 /*
- * The planes post's warm paper + flight form, ported from ~/how-bad
- * src/index.css and scoped under .paper-warm (the article surface).
+ * The flight form as a dispatch strip: the route inputs drawn as an air
+ * traffic control flight-progress strip — card stock, hairline rules, an
+ * oxide holder-bar down the left edge, a punched pin-hole. Empty state: one
+ * big blank strip waiting to be filed. Revealed: the same strip racked into
+ * the bay (the sticky .form-dock), condensed but still editable.
+ *
+ * Scope + tokens come from planes-tokens.css (.dispatch); the desk scaffold
+ * around the strip lives in planes-desk.css.
  */
 
-.paper-warm {
-  /* the original page surface (body + .wrap), now one warm card in the post */
-  background: var(--page);
-  color: var(--ink);
-  font-family: var(--sans);
-  font-size: 16px;
+.dispatch {
   line-height: 1.6;
-  -webkit-font-smoothing: antialiased;
-  padding: 2rem 1.25rem 3.5rem;
-  border-radius: 4px;
 }
 
-.paper-warm a {
+.dispatch a {
   color: inherit;
   text-decoration-color: var(--baseline);
   text-underline-offset: 3px;
 }
 
-.paper-warm a:hover {
+.dispatch a:hover {
   text-decoration-color: var(--ink);
 }
 
-/* ---------- flight form ---------- */
+/* ---------- the strip ---------- */
 
-.paper-warm .flight-form {
+.dispatch .flight-form {
   display: grid;
-  gap: 1rem;
+  gap: 1.1rem;
+  position: relative;
+  padding: 1.4rem 1.6rem 1.5rem 2.4rem;
+  background: var(--card);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  box-shadow: 0 1px 0 color-mix(in srgb, var(--ink) 6%, transparent);
 }
 
-/* Sticky condensed controls after reveal — stays editable while scrolling. */
-.paper-warm .form-dock {
+/* the holder-bar: strips are edge-coded; a departure files under oxide */
+.dispatch .flight-form::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 0.375rem;
+  background: var(--cost);
+}
+
+/* the punched pin-hole at the holder end */
+.dispatch .flight-form::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 1.05rem;
+  width: 0.55rem;
+  height: 0.55rem;
+  transform: translateY(-50%);
+  border: 1px solid var(--baseline);
+  border-radius: 50%;
+  background: var(--page);
+}
+
+/* Sticky condensed strip after reveal — racked into the bay, still editable.
+   Same element, same hooks; only the skin condenses. */
+.dispatch .form-dock {
   position: sticky;
   top: 0;
   z-index: 40;
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 0.35rem 0.65rem;
-  padding: 0.4rem 0 0.45rem;
+  gap: 0.35rem 0.9rem;
+  padding: 0.5rem 0.9rem 0.55rem 1.9rem;
   margin: 0 0 0.75rem;
-  background: color-mix(in srgb, var(--page) 94%, transparent);
+  background: color-mix(in srgb, var(--card) 88%, transparent);
   backdrop-filter: blur(10px);
-  border-bottom: 1px solid var(--hairline);
-  box-shadow: 0 6px 14px rgba(72, 58, 32, 0.05);
+  border: 1px solid var(--hairline);
+  border-top: 0;
+  box-shadow: 0 6px 14px color-mix(in srgb, var(--ink) 6%, transparent);
+  animation: strip-rack-in 240ms ease-out;
 }
 
-.paper-warm .form-head--dock {
+@keyframes strip-rack-in {
+  from {
+    transform: translateY(-0.5rem);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+.dispatch .form-dock::after {
+  left: 0.8rem;
+}
+
+.dispatch .form-head--dock {
   margin: 0;
   flex: 0 0 auto;
   align-self: center;
 }
 
-.paper-warm .form-head--dock .eyebrow {
+.dispatch .form-head--dock .eyebrow {
   margin: 0;
   font-size: 0.62rem;
   letter-spacing: 0.1em;
 }
 
-.paper-warm .form-dock .route-fields {
+.dispatch .form-dock .route-fields {
   flex: 1 1 14rem;
   gap: 0.35rem;
   margin: 0;
   min-width: 0;
 }
 
-.paper-warm .form-dock .combobox input {
+.dispatch .form-dock .combobox input {
   padding: 0.28rem 0.5rem;
-  border-radius: 6px;
-  font-size: 0.88rem;
+  font-size: 0.95rem;
 }
 
-.paper-warm .form-dock .trip-options {
+.dispatch .form-dock .trip-options {
   flex: 1 1 auto;
   gap: 0.2rem 0.7rem;
   font-size: 0.8rem;
@@ -82,7 +124,7 @@
   padding-bottom: 0.15rem;
 }
 
-.paper-warm .form-dock .field label {
+.dispatch .form-dock .field label {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -94,72 +136,78 @@
   border: 0;
 }
 
-.paper-warm .form-dock .field {
+.dispatch .form-dock .field {
   position: relative;
 }
 
-/* New for the port: the docked form keeps its submit button (the server
- * round-trip needs one), condensed to match the docked inputs. */
-.paper-warm .form-dock .print-btn {
-  padding: 0.28rem 0.8rem;
-  border-radius: 6px;
-  font-size: 0.88rem;
+/* The docked strip keeps its submit button (the server round-trip needs
+   one), condensed to match the docked inputs. */
+.dispatch .form-dock .print-btn {
+  padding: 0.3rem 0.8rem;
+  font-size: 0.68rem;
 }
 
-@media (max-width: 560px) {
-  .paper-warm .form-dock {
-    padding: 0.35rem 0 0.4rem;
+/* the filed route's total, stamped on the racked strip */
+.dispatch .form-dock .stamp-seal {
+  align-self: center;
+}
+
+@container dispatch (max-width: 560px) {
+  .dispatch .form-dock {
+    padding: 0.35rem 0.6rem 0.4rem 1.6rem;
   }
 
-  .paper-warm .form-dock .route-fields {
+  .dispatch .form-dock .route-fields {
     flex: 1 1 100%;
   }
 }
 
-.paper-warm .route-fields {
+.dispatch .route-fields {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 1rem;
 }
 
-@media (max-width: 560px) {
-  .paper-warm .route-fields {
+@container dispatch (max-width: 560px) {
+  .dispatch .route-fields {
     grid-template-columns: 1fr;
   }
 }
 
-.paper-warm .field label {
+.dispatch .field label {
   display: block;
-  font-size: 0.8rem;
-  font-weight: 600;
+  font-family: var(--mono);
+  font-size: 0.7rem;
+  font-weight: 400;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ink-2);
-  margin-bottom: 0.3rem;
+  letter-spacing: 0.18em;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
 }
 
-.paper-warm .combobox {
+.dispatch .combobox {
   position: relative;
 }
 
-.paper-warm .combobox input {
+.dispatch .combobox input {
   width: 100%;
-  font: inherit;
+  font-family: var(--mono);
+  font-size: 1.05rem;
   color: var(--ink);
-  background: var(--card);
+  background: var(--page);
   border: 1px solid var(--baseline);
-  border-radius: 10px;
-  padding: 0.65rem 0.85rem;
+  border-radius: 2px;
+  padding: 0.6rem 0.85rem;
 }
 
-.paper-warm .combobox input:focus-visible,
-.paper-warm .trip-options input:focus-visible,
-.paper-warm button:focus-visible {
+.dispatch .combobox input:focus-visible,
+.dispatch .trip-options input:focus-visible,
+.dispatch button:focus-visible {
   outline: 2px solid var(--focus);
-  outline-offset: 1px;
+  outline-offset: 2px;
 }
 
-.paper-warm .combobox-list {
+.dispatch .combobox-list {
   position: absolute;
   z-index: 20;
   top: calc(100% + 4px);
@@ -169,22 +217,22 @@
   padding: 0.3rem;
   list-style: none;
   background: var(--card);
-  border: 1px solid var(--baseline);
-  border-radius: 12px;
-  box-shadow: 0 10px 28px rgba(72, 58, 32, 0.16);
+  border: 1px solid var(--hairline);
+  border-radius: 2px;
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--ink) 10%, transparent);
   max-height: 310px;
   overflow-y: auto;
 }
 
 /* Open/close is client state in airport-combobox.js (class is-open), matching
  * the React original's `open` flag. The list is only in the DOM while open. */
-.paper-warm .combobox:not(.is-open) .combobox-list {
+.dispatch .combobox:not(.is-open) .combobox-list {
   display: none;
 }
 
-.paper-warm .combobox-list li {
+.dispatch .combobox-list li {
   padding: 0.45rem 0.6rem;
-  border-radius: 8px;
+  border-radius: 2px;
   cursor: pointer;
   display: flex;
   justify-content: space-between;
@@ -192,68 +240,72 @@
 }
 
 /* Keyboard/mouse highlight — mirrors how-bad's aria-selected styling. */
-.paper-warm .combobox-list li[aria-selected="true"] {
+.dispatch .combobox-list li[aria-selected='true'] {
   background: var(--hairline);
 }
 
-.paper-warm .combobox-list .opt-main {
+.dispatch .combobox-list .opt-main {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.paper-warm .combobox-list .opt-code {
+.dispatch .combobox-list .opt-code {
   color: var(--muted);
   flex-shrink: 0;
   font-family: var(--mono);
   font-size: 0.85em;
 }
 
-.paper-warm .trip-options {
+.dispatch .trip-options {
   display: flex;
   flex-wrap: wrap;
   gap: 0.5rem 1.5rem;
   align-items: center;
 }
 
-.paper-warm .trip-options label {
+.dispatch .trip-options label {
   display: inline-flex;
   align-items: center;
   gap: 0.45rem;
   cursor: pointer;
 }
 
-.paper-warm .trip-options input {
-  accent-color: var(--ink);
+.dispatch .trip-options input {
+  accent-color: var(--cost);
   width: 1rem;
   height: 1rem;
 }
 
-.paper-warm .print-btn {
+/* the stamp button: mono caps, oxide block — filing the strip */
+.dispatch .print-btn {
   justify-self: start;
-  font: inherit;
-  font-weight: 600;
+  font-family: var(--mono);
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
   color: var(--card);
-  background: var(--ink);
+  background: var(--cost);
   border: none;
-  border-radius: 10px;
-  padding: 0.65rem 1.4rem;
+  border-radius: 2px;
+  padding: 0.7rem 1.4rem;
   cursor: pointer;
 }
 
-.paper-warm .print-btn:hover {
-  background: var(--ink-2);
+.dispatch .print-btn:hover {
+  background: var(--cost-hot);
 }
 
-.paper-warm .form-head {
-  margin-bottom: 0.5rem;
+.dispatch .form-head {
+  margin-bottom: 0.25rem;
 }
 
-.paper-warm .eyebrow {
+.dispatch .eyebrow {
   font-family: var(--mono);
   font-size: 0.72rem;
   letter-spacing: 0.14em;
   text-transform: uppercase;
   color: var(--muted);
-  margin: 0 0 0.75rem;
+  margin: 0 0 0.5rem;
 }

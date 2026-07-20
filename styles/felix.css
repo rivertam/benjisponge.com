@@ -1,8 +1,6 @@
-/* Felix starts in the studio, then opens into a contact sheet. */
-body[data-nav-hidden="true"] {
-  overflow-x: clip;
-}
-
+/* Felix starts in the studio, then opens into a contact sheet.
+   (The shared overflow-x clip for nav-hidden pages lives in site.css,
+   beside .full-bleed.) */
 body[data-nav-hidden="true"] .felix-hero {
   min-height: 100svh;
   margin-top: 0;

@@ -208,8 +208,9 @@ fn word_chars(word: &str) -> Vec<char> {
 }
 
 static DB: LazyLock<Db> = LazyLock::new(|| {
-    let airports: Vec<Airport> = serde_json::from_str(include_str!("../../data/airports.json"))
-        .expect("data/airports.json parses");
+    let airports: Vec<Airport> =
+        serde_json::from_str(include_str!("../../../../data/airports.json"))
+            .expect("data/airports.json parses");
     let by_iata: HashMap<String, usize> = airports
         .iter()
         .enumerate()

@@ -14,24 +14,27 @@
 //! positioning, unlike the original's tooltip layer.
 
 use super::ice::{ICE_SHOW_FLOOR_M2, ice_figure};
+use super::instruments::{driving_figure, fuel_figure, seat_figure};
+use super::receipt;
 use topcoat::{
     Result,
     runtime::shard,
     view::{component, view},
 };
 
-use crate::flight::{
+use super::{
+    airports::Airport,
     comparison_scale::{
         ComparisonMode, comparison_rows, domain_color, list_makeup_chips, pick_makeup_row,
     },
-    emissions::FlightImpact,
+    emissions::{Cabin, FlightImpact, FlightInput, JET_FUEL_KG_PER_LITRE, flight_impact},
     format::{
-        format_bar_value, format_count, format_ice, format_js_number, format_tonnes,
+        format_bar_value, format_count, format_ice, format_js_number, format_litres, format_tonnes,
         format_tonnes_smart, format_whole, format_years_span,
     },
     reference_data::{
-        ACTIVITIES, BUDGET_TARGETS, CutOption, FlightAnalogy, HABIT_BARS, SACRIFICE_BARS,
-        SacrificeBar, cuttable_kg, pick_analogy, total_kg,
+        BUDGET_TARGETS, CutOption, FlightAnalogy, HABIT_BARS, SACRIFICE_BARS, SacrificeBar,
+        cuttable_kg, pick_analogy, total_kg,
     },
     sources::cite,
 };
@@ -268,7 +271,6 @@ async fn habits_track(
 #[shard]
 async fn combined_swaps(
     flight_kg: f64,
-    driving: f64,
     heat: f64,
     cool: f64,
     diet: f64,
@@ -284,7 +286,6 @@ async fn combined_swaps(
     let h = habits.round() as i64;
     let ladder = |bar_id: &str, group: Option<&str>| -> i64 {
         match (bar_id, group) {
-            ("driving", None) => driving.round() as i64,
             ("climate", Some("heat")) => heat.round() as i64,
             ("climate", Some("cool")) => cool.round() as i64,
             ("eating", Some("diet")) => diet.round() as i64,
@@ -463,7 +464,7 @@ async fn compare_domain_rows(
 #[component]
 async fn ice_callout(ice_m2: f64) -> Result {
     view! {
-        <aside class="ice-callout" aria-label="Arctic sea ice">
+        <aside class="ice-callout instrument" aria-label="Arctic sea ice">
             <p>
                 "Arctic sea ice melted: "
                 <strong>(format_ice(ice_m2))</strong>
@@ -588,17 +589,35 @@ async fn cuts_data_tables(flight_tonnes: f64, trip_noun: String) -> Result {
     }
 }
 
-/// "The flight vs. everything else": the Cuts/Compare tab shell, both chart
-/// cards (one hidden by a signal; `initial_view` is "cuts" or "compare"),
-/// and the ice callout beside them.
+/// "The flight vs. everything else": the Cuts / Compare / Receipt / Allowance
+/// tab shell, the chart cards (one visible at a time via a signal;
+/// `initial_view` is `"cuts"`, `"compare"`, `"receipt"`, or `"allowance"`),
+/// and the ice callout beside the chart views.
 #[component]
 pub async fn charts_section(
     impact: FlightImpact,
     round_trip: bool,
-    to_city: String,
+    from: Airport,
+    to: Airport,
+    cabin: Cabin,
+    share_path: String,
     initial_view: String,
 ) -> Result {
+    let to_city = to.city.clone();
     let flight_tonnes = impact.tonnes_co2e;
+    let flight_input = FlightInput {
+        from: from.coordinates(),
+        to: to.coordinates(),
+        cabin,
+        round_trip,
+    };
+    let cabin_years = |cabin: Cabin| {
+        flight_impact(&FlightInput {
+            cabin,
+            ..flight_input
+        })
+        .travel_budget_years
+    };
     let flight_kg = flight_tonnes * 1000.0;
     let monk_t = monk_tonnes();
     let scale_max = flight_tonnes.max(monk_t);
@@ -614,10 +633,20 @@ pub async fn charts_section(
         habit_max
     };
     let show_ice = impact.ice_m2 >= ICE_SHOW_FLOOR_M2;
+    // The margin instruments need a real route; a staycation has no rail.
+    let show_rail = impact.distance_km > 0.0 || show_ice;
+    let fuel_litres = impact.fuel_kg / JET_FUEL_KG_PER_LITRE;
+    let seat_fraction = if impact.seat_share_of_aircraft > 0.0 {
+        (1.0 / impact.seat_share_of_aircraft).round()
+    } else {
+        1.0
+    };
+    // The seat map depicts the nearer haul model; 2000 km is the midpoint of
+    // the 1500–2500 km blend zone the fuel model interpolates across.
+    let long_haul = impact.distance_km >= 2000.0;
     let sac_len = SACRIFICE_BARS.len() as i64;
-    let start_compare = initial_view == "compare";
+    let start_view = initial_view.clone();
 
-    let b_driving = find_bar("driving");
     let b_climate = find_bar("climate");
     let b_eating = find_bar("eating");
     let b_fashion = find_bar("fashion");
@@ -629,51 +658,6 @@ pub async fn charts_section(
     let b_gpt = find_bar("chatgpt");
     let b_straw = find_bar("straws");
 
-    // The chart-note copy, including the beaten-count logic and the
-    // monk-year sentence, ported exactly.
-    let beaten = SACRIFICE_BARS
-        .iter()
-        .filter(|bar| flight_kg > total_kg(bar))
-        .count();
-    let quiet_point = if beaten >= 3 {
-        "the dashed line beats almost every whole bar, floors included.".to_string()
-    } else if beaten >= 1 {
-        format!(
-            "the dashed line beats {} of these whole-year bars, floors included — and dwarfs \
-             everything in the “…but what about?” row.",
-            if beaten == 1 { "one" } else { "two" }
-        )
-    } else {
-        "on a short hop the whole-year bars still win — but a single long-haul trip would lay its \
-         dashed line past almost every one of them, floors included."
-            .to_string()
-    };
-    let vegan_years = flight_kg / option_kg(b_eating, "vegan");
-    let monk_sentence = if flight_tonnes > 0.0 {
-        format!(
-            " Go vegan and hold it for twelve months — about a tonne back; this {trip_noun} \
-             spends ≈{} of those years at once. Even the full monk year — car sold, vegan, heat \
-             pump in, closet thrifted, sweating through summer, wasting nothing, every little \
-             habit quit — claws back ≈{}, about {} of these trips.",
-            format_years_span(vegan_years),
-            format_tonnes(monk_t),
-            format_years_span(monk_t / flight_tonnes)
-        )
-    } else {
-        String::new()
-    };
-    let chart_note = format!(
-        "Here’s the quiet point of this whole page: {quiet_point}{monk_sentence} The habits still \
-         count — but if you’re budgeting willpower, spend it where the tonnes are: the flights, \
-         then the car, then the plate. The straws will round themselves."
-    );
-
-    let soda_activity = ACTIVITIES
-        .iter()
-        .find(|a| a.id == "soda")
-        .expect("soda activity");
-    let cola_years = flight_kg / soda_activity.kg_per_unit / 365.0;
-
     let labeled_cell = if flight_tonnes > 0.0 {
         "bar-cell labeled"
     } else {
@@ -682,10 +666,9 @@ pub async fn charts_section(
 
     view! {
         <section class="section">
-            signal compare = start_compare;
+            signal view = start_view;
             signal zoom = false;
             signal fkg = flight_kg;
-            signal p_driving = 0.0;
             signal p_heat = 0.0;
             signal p_cool = 0.0;
             signal p_diet = 0.0;
@@ -710,28 +693,66 @@ pub async fn charts_section(
                     role="tab"
                     id="chart-tab-cuts"
                     aria-controls="chart-panel"
-                    :aria-selected=$(if compare.get() { "false" } else { "true" })
-                    :class=$(if compare.get() { "chart-tab" } else { "chart-tab is-active" })
-                    @click=$(|_e| compare.set(false))
+                    :aria-selected=$(if view.get() == "cuts" { "true" } else { "false" })
+                    :class=$(if view.get() == "cuts" { "chart-tab is-active" } else { "chart-tab" })
+                    @click=$(|_e| view.set("cuts".to_owned()))
                 >"Cuts"</button>
                 <button
                     type="button"
                     role="tab"
                     id="chart-tab-compare"
                     aria-controls="chart-panel"
-                    :aria-selected=$(if compare.get() { "true" } else { "false" })
-                    :class=$(if compare.get() { "chart-tab is-active" } else { "chart-tab" })
-                    @click=$(|_e| compare.set(true))
+                    :aria-selected=$(if view.get() == "compare" { "true" } else { "false" })
+                    :class=$(if view.get() == "compare" { "chart-tab is-active" } else { "chart-tab" })
+                    @click=$(|_e| view.set("compare".to_owned()))
                 >"Compare"</button>
+                <button
+                    type="button"
+                    role="tab"
+                    id="chart-tab-receipt"
+                    aria-controls="chart-panel"
+                    :aria-selected=$(if view.get() == "receipt" { "true" } else { "false" })
+                    :class=$(if view.get() == "receipt" { "chart-tab is-active" } else { "chart-tab" })
+                    @click=$(|_e| view.set("receipt".to_owned()))
+                >"Receipt"</button>
+                <button
+                    type="button"
+                    role="tab"
+                    id="chart-tab-allowance"
+                    aria-controls="chart-panel"
+                    :aria-selected=$(if view.get() == "allowance" { "true" } else { "false" })
+                    :class=$(if view.get() == "allowance" { "chart-tab is-active" } else { "chart-tab" })
+                    @click=$(|_e| view.set("allowance".to_owned()))
+                >"Allowance"</button>
             </div>
             <div
-                class=(if show_ice { "scale-layout scale-layout--ice" } else { "scale-layout" })
+                :class=$(
+                    if view.get() == "receipt" {
+                        "scale-layout"
+                    } else if view.get() == "allowance" {
+                        "scale-layout"
+                    } else if show_rail {
+                        "scale-layout scale-layout--ice"
+                    } else {
+                        "scale-layout"
+                    }
+                )
                 id="chart-panel"
                 role="tabpanel"
-                :aria-labelledby=$(if compare.get() { "chart-tab-compare" } else { "chart-tab-cuts" })
+                :aria-labelledby=$(
+                    if view.get() == "receipt" {
+                        "chart-tab-receipt"
+                    } else if view.get() == "allowance" {
+                        "chart-tab-allowance"
+                    } else if view.get() == "compare" {
+                        "chart-tab-compare"
+                    } else {
+                        "chart-tab-cuts"
+                    }
+                )
             >
                 <div class="scale-main">
-                    <div :hidden=$(compare.get())>
+                    <div :hidden=$(view.get() != "cuts")>
                         <div class="chart-card">
                             <p class="toggle-note">
                                 "the dashed line quotes the flight in each row’s own units, \
@@ -740,7 +761,6 @@ pub async fn charts_section(
 
                             <div
                                 class="effort-rows"
-                                :data-pick-driving=$(p_driving.get())
                                 :data-pick-heat=$(p_heat.get())
                                 :data-pick-cool=$(p_cool.get())
                                 :data-pick-diet=$(p_diet.get())
@@ -782,46 +802,6 @@ pub async fn charts_section(
                                     </span>
                                 </div>
                                 <hr class="flight-row-divider">
-
-                                <div class="effort-row">
-                                    row_head(
-                                        noun: b_driving.noun,
-                                        detail: b_driving.detail,
-                                        source_ids: b_driving.source_ids.to_vec(),
-                                    )
-                                    <div class=(labeled_cell)>
-                                        bar_track(
-                                            bar_id: "driving",
-                                            flight_kg: flight_kg,
-                                            denom_kg: scale_max_kg,
-                                            tonnes_tips: true,
-                                            seed_offset: 0,
-                                            tick_pct: flight_pct,
-                                            trip_noun: trip_noun.to_string(),
-                                        )
-                                        <div
-                                            class="cut-chips"
-                                            role="group"
-                                            aria-label=(format!("Cuts for {}", b_driving.noun))
-                                        >
-                                            <button
-                                                type="button"
-                                                class="cut-chip"
-                                                :aria-pressed=$(if p_driving.get() == 1.0 { "true" } else { "false" })
-                                                @click=$(|_e| if p_driving.get() == 1.0 { p_driving.set(0.0) } else { p_driving.set(1.0) })
-                                            >(opt_label("driving", "ev-swap"))</button>
-                                            <button
-                                                type="button"
-                                                class="cut-chip"
-                                                :aria-pressed=$(if p_driving.get() == 2.0 { "true" } else { "false" })
-                                                @click=$(|_e| if p_driving.get() == 2.0 { p_driving.set(0.0) } else { p_driving.set(2.0) })
-                                            >(opt_label("driving", "car-free"))</button>
-                                        </div>
-                                    </div>
-                                    <span class="row-equals">
-                                        <strong>(format_tonnes_smart(total_kg(b_driving) / 1000.0))</strong>
-                                    </span>
-                                </div>
 
                                 <div class="effort-row">
                                     row_head(
@@ -967,13 +947,9 @@ pub async fn charts_section(
                                         <span class="row-detail">
                                             "lattes, new phones, soda, bottled water, streaming, ChatGPT, straws "
                                             cite(id: "items")
-                                            " "
                                             cite(id: "soda")
-                                            " "
                                             cite(id: "phone")
-                                            " "
                                             cite(id: "streaming")
-                                            " "
                                             cite(id: "ai-openai")
                                         </span>
                                     </span>
@@ -1269,7 +1245,6 @@ pub async fn charts_section(
                                                 type="button"
                                                 class="link-btn"
                                                 @click=$(|_e| {
-                                                    p_driving.set(2.0);
                                                     p_heat.set(2.0);
                                                     p_cool.set(1.0);
                                                     p_diet.set(2.0);
@@ -1288,7 +1263,6 @@ pub async fn charts_section(
                                     </span>
                                     combined_swaps(
                                         flight_kg: $(fkg.get()),
-                                        driving: $(p_driving.get()),
                                         heat: $(p_heat.get()),
                                         cool: $(p_cool.get()),
                                         diet: $(p_diet.get()),
@@ -1305,32 +1279,21 @@ pub async fn charts_section(
                                 </div>
                             </div>
 
-                            <p class="chart-note">(chart_note)</p>
-                            <p class="chart-note caveat">
-                                "A caveat, so the small stuff gets its due: these bars measure \
-                                 greenhouse gases and nothing else. Land use, water use, and \
-                                 plastic in the ocean are real problems in their own right — a \
-                                 straw rounds to zero carbon and can still wash up on a beach. \
-                                 They deserve pages of their own someday. This page measures the \
-                                 one problem where flying towers over everything."
-                            </p>
+                            <p class="chart-note caveat">"
+                                Caveat: these bars measure greenhouse gases and nothing else.
+                                Land use, water use, and plastic in the ocean are real problems in their own right.
+                                A straw rounds to zero carbon and can still wash up on a beach or
+                                kill a turtle. These issues deserve pages of their own. This page measures the
+                                 one problem where flying towers over everything.
+                            "</p>
                             cuts_data_tables(
                                 flight_tonnes: flight_tonnes,
                                 trip_noun: trip_noun.to_string(),
                             )
                         </div>
-                        if flight_tonnes > 0.0 {
-                            <p class="pull-quote">
-                                "You could drink a Diet Coke "
-                                <em>"every day"</em>
-                                " for "
-                                <span class="mark">(format!("≈{} years", format_count(cola_years)))</span>
-                                " before it added up to this one flight."
-                            </p>
-                        }
                     </div>
 
-                    <div :hidden=$(!compare.get())>
+                    <div :hidden=$(view.get() != "compare")>
                         <div class="chart-card">
                             <div class="chart-card-head">
                                 <p class="toggle-note">
@@ -1411,9 +1374,51 @@ pub async fn charts_section(
                             </div>
                         </div>
                     </div>
+
+                    <div :hidden=$(view.get() != "receipt")>
+                        receipt::receipt(
+                            from: from.clone(),
+                            to: to.clone(),
+                            cabin: cabin,
+                            round_trip: round_trip,
+                            impact: impact,
+                            share_path: share_path,
+                        )
+                    </div>
+
+                    <div :hidden=$(view.get() != "allowance")>
+                        budget_chart(
+                            flight_tonnes: flight_tonnes,
+                            economy_years: cabin_years(Cabin::Economy),
+                            business_years: cabin_years(Cabin::Business),
+                            first_years: cabin_years(Cabin::First),
+                        )
+                    </div>
                 </div>
-                if show_ice {
-                    ice_callout(ice_m2: impact.ice_m2)
+                if show_rail {
+                    <div class="instrument-rail" :hidden=$(
+                        if view.get() == "receipt" {
+                            true
+                        } else {
+                            view.get() == "allowance"
+                        }
+                    )>
+                        if impact.distance_km > 0.0 {
+                            fuel_figure(
+                                litres: fuel_litres,
+                                litres_label: format_litres(fuel_litres),
+                            )
+                            seat_figure(
+                                cabin: cabin,
+                                seat_fraction: seat_fraction,
+                                long_haul: long_haul,
+                            )
+                            driving_figure(flight_kg: flight_kg)
+                        }
+                        if show_ice {
+                            ice_callout(ice_m2: impact.ice_m2)
+                        }
+                    </div>
                 }
             </div>
         </section>
@@ -1438,8 +1443,7 @@ pub async fn budget_chart(
     let px = |t: f64| ((t / scale_max) * PLOT_HEIGHT).max(2.0);
 
     view! {
-        <section class="section" id="allowance">
-            <h2>"The flight vs. your travel allowance"</h2>
+        <div class="allowance-panel" id="allowance">
             <aside class="aside-card">
                 <h3>"The Paris Agreement, in sixty seconds"</h3>
                 <p>
@@ -1490,17 +1494,17 @@ pub async fn budget_chart(
                 cite(id: "budgets")
                 " The slice available for getting around — car, bus, train, ferry, and plane, \
                  all of it — is the travel allowance on your receipt: about 0.43 t a year at \
-                 the 2030 milestone, tightening each decade after. Below, those allowances \
+                 the 2030 milestone, tightening each decade after. Here, those allowances \
                  stand next to this one flight."
             </p>
-            <div class="chart-card breakout">
+            <div class="chart-card">
                 <div class="budget-plot" style=(format!("height:{PLOT_HEIGHT}px"))>
                     <div class="budget-col">
                         <div class="col-value">(format_tonnes(flight_tonnes))</div>
                         <div
                             class="seg top"
                             tabindex="0"
-                            style=(format!("height:{}px;background:var(--cost)", px(flight_tonnes)))
+                            style=(format!("height:{:.1}px;background:var(--cost)", px(flight_tonnes)))
                         >
                             <span class="tip">(format!(
                                 "This flight: {} CO₂e",
@@ -1515,7 +1519,7 @@ pub async fn budget_chart(
                                 class="seg top"
                                 tabindex="0"
                                 style=(format!(
-                                    "height:{}px;background:var(--save-soft)",
+                                    "height:{:.1}px;background:var(--save-soft)",
                                     px(target.total - target.travel)
                                 ))
                             >
@@ -1529,7 +1533,7 @@ pub async fn budget_chart(
                                 class="seg"
                                 tabindex="0"
                                 style=(format!(
-                                    "height:{}px;background:var(--save)",
+                                    "height:{:.1}px;background:var(--save)",
                                     px(target.travel)
                                 ))
                             >
@@ -1620,7 +1624,7 @@ pub async fn budget_chart(
                     </table>
                 </details>
             </div>
-        </section>
+        </div>
     }
 }
 
@@ -1685,6 +1689,33 @@ mod tests {
                  attribute"
             );
         }
+    }
+
+    /// The other direction: the tests above only prove CSS names exist in
+    /// Rust, so a stylesheet rewrite could silently drop the whole erased
+    /// table and still pass. Pin its shape — every declared pick attribute
+    /// must appear in at least one CSS selector, and the selector table must
+    /// keep its 22 entries (one per pick level × slice combination).
+    #[test]
+    fn css_erased_table_is_complete() {
+        let declared = tokens_after(SELF, ":data-pick-");
+        let used = tokens_after(CSS, "data-pick-");
+        for token in &declared {
+            assert!(
+                used.contains(token),
+                "charts_section declares :{token} but planes-charts.css never keys on it — \
+                 erased styling silently lost?"
+            );
+        }
+        let table_rows = CSS
+            .lines()
+            .filter(|l| l.contains("[data-pick-") && l.contains("] .seg-"))
+            .count();
+        assert!(
+            table_rows >= 22,
+            "the erased-slice selector table shrank to {table_rows} rows (expected ≥22) — \
+             a stylesheet rewrite dropped part of it"
+        );
     }
 }
 
