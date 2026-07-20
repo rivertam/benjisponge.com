@@ -19,6 +19,7 @@ jobs:
   deploy:
     needs: check
     runs-on: ubuntu-latest
+    environment: prod
     concurrency:
       group: deploy
       cancel-in-progress: false
