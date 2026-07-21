@@ -1,10 +1,9 @@
+# Pre-commit keeps auto-fix + one clippy pass + the full test suite.
+# CI still runs `just check` (fmt --check, clippy, test) — don't re-run that
+# here or every commit pays for clippy twice.
 pre-commit:
   parallel: false
   commands:
-    rustfix:
-      glob: "*.rs"
-      run: cargo fix --all-targets --allow-dirty --allow-staged
-      stage_fixed: true
     clippy:
       glob: "*.rs"
       run: cargo clippy --fix --all-targets --allow-dirty --allow-staged -- -D warnings
@@ -13,5 +12,5 @@ pre-commit:
       glob: "*.rs"
       run: cargo fmt
       stage_fixed: true
-    check:
-      run: just check
+    test:
+      run: cargo test
