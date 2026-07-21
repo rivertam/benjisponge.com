@@ -92,13 +92,22 @@ const PHOTOS: &[Photo] = &[
         height: 1600,
     },
     Photo {
-        slug: "2024-poolside",
-        src: asset!("./felix/photos/2024-poolside.webp"),
-        alt: "Felix standing beside a small pool and a deck.",
-        stamp: "nov 2024",
-        caption: "Poolside inspection.",
-        width: 1312,
+        slug: "graceful",
+        src: asset!("./felix/photos/graceful.webp"),
+        alt: "The epitome of grace. I'm sorry, you have to see it to believe it.",
+        stamp: "oct 2023",
+        caption: "The epitome of grace.",
+        width: 1067,
         height: 1600,
+    },
+    Photo {
+        slug: "phone-background",
+        src: asset!("./felix/photos/phone-background.webp"),
+        alt: "Felix standing alertly on a tree stump in an autumn forest.",
+        stamp: "oct 2023",
+        caption: "",
+        width: 158,
+        height: 320,
     },
     Photo {
         slug: "2025-rug",
@@ -164,7 +173,9 @@ async fn felix_page(initial_photo: &str) -> Result {
                         id: "felix-name",
                         label: meta.title,
                         <span class="inline-popover-preview">
-                            "He's named after Supreme Court Justice Felix Frankfurter, and all of my family's dogs are named after Jewish Supreme Court Justices, including Brandeis, two Cardozos, and a Ruthie."
+                            "He's named after Supreme Court Justice Felix Frankfurter.
+                             In fact, all of my family's dogs are named after Jewish Supreme Court Justices,
+                             including Brandeis, two Cardozos, and a Ruthie."
                         </span>
                         ext_link(
                             class: "quiet-link",
