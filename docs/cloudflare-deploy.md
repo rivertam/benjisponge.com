@@ -23,6 +23,13 @@ and static assets. Config in `deploy/wrangler.jsonc`; image in
 
 ## Rules
 
+- Deploy from a committed HEAD. RELEASE_ID is `git rev-parse --short HEAD`,
+  so deploying uncommitted changes reuses the previous cache keys and the
+  edge keeps serving the old HTML (and a warm container may keep serving the
+  old image until it restarts). Escape hatch if it happens: bump the spire
+  data version (`npx wrangler d1 execute benjisponge-spire --remote
+  --command "UPDATE spire_meta SET v = v + 1 WHERE k = 'version'"`) — that
+  re-keys `/`, `/spire`, and `/feed.xml`; anything else needs a commit.
 - Adding dynamic/uncacheable routes (polls etc.): register them in
   `NEVER_CACHE` in `deploy/src/cache.ts`, or add a data-version segment to
   the cache key there. Do not sprinkle cache logic elsewhere.
@@ -47,6 +54,26 @@ and static assets. Config in `deploy/wrangler.jsonc`; image in
 - Container scales to zero (`sleepAfter = "15m"`); 1–3 s cold start on first
   uncached/POST hit after idle is accepted — don't add cron-warming without
   asking.
+
+## Spire run database (D1)
+
+- `benjisponge-spire` D1 database, bound as `SPIRE_DB`; schema lives in
+  `spire-schema.sql` (idempotent):
+  `npx wrangler d1 execute benjisponge-spire --remote --file=spire-schema.sql`
+- API in `src/spire.ts`: `GET /api/spire/runs` and `GET /api/spire/ids` are
+  public; `POST /api/spire/runs` needs the `SPIRE_SYNC_TOKEN` Worker secret
+  as a Bearer token. The local copy the CLI reads lives at
+  `~/.config/benjisponge/spire.token`. Rotate by regenerating the file
+  (`openssl rand -hex 32 > ~/.config/benjisponge/spire.token`) then
+  `npx wrangler secret put SPIRE_SYNC_TOKEN < ~/.config/benjisponge/spire.token`
+- Write path is `just sync-spire` (`src/bin/spire_sync.rs`) on the machine
+  with the save files. Idempotent twice over: the CLI diffs against
+  `/api/spire/ids`, and the server INSERT OR IGNOREs by run id.
+- Every insert bumps `spire_meta.version`. The container renders `/spire`,
+  `/`, and `/feed.xml` from `GET /api/spire/runs` (60 s in-process cache),
+  and those three paths embed the version in their edge-cache key
+  (`DATA_VERSIONED` in `cache.ts`) — so a sync invalidates exactly those
+  pages on the next request, with no deploy and no purge call.
 
 ## One-time account setup (manual)
 

@@ -150,12 +150,14 @@ Router needs `.assets(AssetBundle::load().unwrap())`.
 ```sh
 export PATH="$HOME/.cargo/bin:$PATH"   # topcoat CLI lives here
 cargo build                            # also runs tailwind via build.rs
-topcoat asset bundle                   # extracts embedded assets → target/assets/
+topcoat asset bundle --bin benjisponge # extracts embedded assets → target/assets/
 PORT=4610 ./target/debug/benjisponge     # serve (defaults 127.0.0.1:3000)
 ```
 
 `AssetBundle::load()` panics without the `topcoat asset bundle` step (it
-searches `target/assets`). Release: `cargo build -r && topcoat asset bundle -r`.
+searches `target/assets`). `--bin benjisponge` is required since the crate
+grew a second binary (spire_sync) — the bundler refuses to guess. Release:
+`cargo build -r && topcoat asset bundle -r --bin benjisponge`.
 `topcoat dev` = watch mode (build+bundle+serve), not script-friendly.
 `topcoat::dev::script()` = live-reload in dev; harmless in release.
 `PORT=4670 topcoat dev` — app keeps the PORT; the reload broadcast

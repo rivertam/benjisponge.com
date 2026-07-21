@@ -27,6 +27,16 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BenjispongeContainer"] }],
 
+  // The Slay the Spire 2 run archive (schema: spire-schema.sql; API:
+  // src/spire.ts; writes need the SPIRE_SYNC_TOKEN secret).
+  "d1_databases": [
+    {
+      "binding": "SPIRE_DB",
+      "database_name": "benjisponge-spire",
+      "database_id": "2dd320a4-f70d-495f-a1cd-08f5582327c7"
+    }
+  ],
+
   "vars": {
     "SITE_ORIGIN": "https://benjisponge.com",
     // Overridden per-deploy: wrangler deploy --var RELEASE_ID:<git sha>

@@ -10,7 +10,7 @@ use topcoat::{
     Result,
     asset::{AssetBundle, RouterBuilderAssetExt},
     context::Cx,
-    router::{Router, RouterBuilderDiscoverExt, page, query_params},
+    router::{Router, RouterBuilderDiscoverExt, headers, page, query_params},
     view::view,
 };
 
@@ -19,6 +19,7 @@ use crate::{
     content::{
         interests::INTERESTS,
         logbook::{Entry, FILTER_TAGS, Kind, LOG, serial},
+        spire_runs::{self, Run, SPIRE_CACHE_REFRESH_HEADER, fmt_duration},
     },
     util::urlencode,
 };
@@ -43,12 +44,62 @@ struct Chip {
     active: bool,
 }
 
+/// One timeline item: a curated logbook entry, or a Slay the Spire 2 victory
+/// pulled from the synced run database (wins only — deaths stay on `/spire`).
+enum Item<'a> {
+    Log {
+        serial: String,
+        entry: &'static Entry,
+    },
+    Win(&'a Run),
+}
+
+impl<'a> Item<'a> {
+    fn date(&self) -> &str {
+        match self {
+            Item::Log { entry, .. } => entry.date(),
+            Item::Win(run) => &run.date,
+        }
+    }
+
+    /// Sort rank on equal dates: the curated entry leads the day's wins.
+    fn rank(&self) -> u8 {
+        match self {
+            Item::Log { .. } => 0,
+            Item::Win(_) => 1,
+        }
+    }
+
+    /// Tie-break among same-date wins; logbook dates are day-granular.
+    fn start_time(&self) -> i64 {
+        match self {
+            Item::Log { .. } => 0,
+            Item::Win(run) => run.start_time,
+        }
+    }
+}
+
 /// One visible timeline row, precomputed so the markup stays declarative.
-struct Row {
+struct Row<'a> {
     /// Set when the year changes between consecutive visible entries.
-    year_mark: Option<&'static str>,
-    serial: String,
-    entry: &'static Entry,
+    year_mark: Option<String>,
+    item: Item<'a>,
+}
+
+impl<'a> Row<'a> {
+    fn log(&self) -> Option<(&str, &'static Entry)> {
+        match &self.item {
+            Item::Log { serial, entry } => Some((serial.as_str(), entry)),
+            Item::Win(_) => None,
+        }
+    }
+
+    fn win(&self) -> Option<&'a Run> {
+        match self.item {
+            Item::Win(run) => Some(run),
+            Item::Log { .. } => None,
+        }
+    }
 }
 
 /// The homepage URL for a filter state, dropping absent params.
@@ -130,25 +181,41 @@ async fn home(cx: &Cx) -> Result {
         });
     }
 
-    let mut rows: Vec<Row> = Vec::new();
-    let mut last_year: Option<&str> = None;
+    // Curated entries and synced spire wins interleave into one timeline.
+    // Wins behave like updates tagged "games" for the filter row.
+    let spire = spire_runs::load(headers(cx).contains_key(SPIRE_CACHE_REFRESH_HEADER)).await;
+    let mut items: Vec<Item> = Vec::new();
     for (index, entry) in LOG.iter().enumerate() {
         if kind.is_some_and(|k| entry.kind() != k)
             || tag.is_some_and(|t| !entry.tags().contains(&t))
         {
             continue;
         }
-        let year = &entry.date()[0..4];
-        let year_mark = match last_year {
-            Some(prev) if prev != year => Some(year),
-            _ => None,
-        };
-        last_year = Some(year);
-        rows.push(Row {
-            year_mark,
+        items.push(Item::Log {
             serial: serial(index),
             entry,
         });
+    }
+    if !kind.is_some_and(|k| k != Kind::Update) && !tag.is_some_and(|t| t != "games") {
+        items.extend(spire.runs.iter().filter(|r| r.win).map(Item::Win));
+    }
+    items.sort_by(|a, b| {
+        b.date()
+            .cmp(a.date())
+            .then_with(|| a.rank().cmp(&b.rank()))
+            .then_with(|| b.start_time().cmp(&a.start_time()))
+    });
+
+    let mut rows: Vec<Row> = Vec::new();
+    let mut last_year: Option<String> = None;
+    for item in items {
+        let year = item.date()[0..4].to_string();
+        let year_mark = match &last_year {
+            Some(prev) if *prev != year => Some(year.clone()),
+            _ => None,
+        };
+        last_year = Some(year);
+        rows.push(Row { year_mark, item });
     }
 
     view! { shell(title: "", active: "log",
@@ -218,67 +285,92 @@ async fn home(cx: &Cx) -> Result {
         // badge wherever the visible entries change year.
         <section class="log-timeline">
             for row in rows.iter() {
-                if let Some(year) = row.year_mark {
+                if let Some(year) = &row.year_mark {
                     <div class="log-row">
-                        <span class="log-year">(year)</span>
+                        <span class="log-year">(year.as_str())</span>
                     </div>
                 }
-                if let Entry::Essay { title, teaser, slug, tags, .. } = row.entry {
-                    <article class="log-row">
-                        <span class="log-mark log-mark-essay"></span>
-                        <div class="log-rail">
-                            <p class="log-date">(row.entry.date())</p>
-                            <p class="log-serial">(row.serial.as_str())</p>
-                        </div>
-                        <div class="log-card">
-                            <span class="log-stamp">"essay"</span>
-                            <h2 class="log-card-title font-display font-bold">
-                                <a class="oxlink" href=(format!("/thoughts/{slug}"))>(title)</a>
-                            </h2>
-                            <p class="mt-2.5 max-w-prose leading-relaxed text-ink2">(teaser)</p>
-                            <div class="mt-4 flex flex-wrap items-baseline gap-3 font-meta text-xs">
-                                for t in tags.iter() {
-                                    <a class="log-tag" href=(home_url(kind_param, Some(t)))>(format!("#{t}"))</a>
-                                }
-                                <a
-                                    class="ml-auto text-ink2 no-underline hover:text-oxide"
-                                    href=(format!("/thoughts/{slug}"))
-                                >link_label(label: "read →")</a>
+                if let Some((serial, entry)) = row.log() {
+                    if let Entry::Essay { title, teaser, slug, tags, .. } = entry {
+                        <article class="log-row">
+                            <span class="log-mark log-mark-essay"></span>
+                            <div class="log-rail">
+                                <p class="log-date">(entry.date())</p>
+                                <p class="log-serial">(serial)</p>
                             </div>
-                        </div>
-                    </article>
-                }
-                if let Entry::Note { body, source, slug, .. } = row.entry {
-                    <article class="log-row">
-                        <span class="log-mark log-mark-note"></span>
-                        <div class="log-rail">
-                            <p class="log-date">(row.entry.date())</p>
-                            <p class="log-serial">(row.serial.as_str())</p>
-                        </div>
-                        <div class="log-note min-w-0">
-                            <p class="log-note-body font-display">(body)</p>
-                            <p class="mt-2.5 font-meta text-xs text-muted">
-                                "note · "
-                                (source)
-                                " · "
-                                <a class="log-permalink" href=(format!("/thoughts/{slug}"))>"permalink"</a>
+                            <div class="log-card">
+                                <span class="log-stamp">"essay"</span>
+                                <h2 class="log-card-title font-display font-bold">
+                                    <a class="oxlink" href=(format!("/thoughts/{slug}"))>(title)</a>
+                                </h2>
+                                <p class="mt-2.5 max-w-prose leading-relaxed text-ink2">(teaser)</p>
+                                <div class="mt-4 flex flex-wrap items-baseline gap-3 font-meta text-xs">
+                                    for t in tags.iter() {
+                                        <a class="log-tag" href=(home_url(kind_param, Some(t)))>(format!("#{t}"))</a>
+                                    }
+                                    <a
+                                        class="ml-auto text-ink2 no-underline hover:text-oxide"
+                                        href=(format!("/thoughts/{slug}"))
+                                    >link_label(label: "read →")</a>
+                                </div>
+                            </div>
+                        </article>
+                    }
+                    if let Entry::Note { body, source, slug, .. } = entry {
+                        <article class="log-row">
+                            <span class="log-mark log-mark-note"></span>
+                            <div class="log-rail">
+                                <p class="log-date">(entry.date())</p>
+                                <p class="log-serial">(serial)</p>
+                            </div>
+                            <div class="log-note min-w-0">
+                                <p class="log-note-body font-display">(body)</p>
+                                <p class="mt-2.5 font-meta text-xs text-muted">
+                                    "note · "
+                                    (source)
+                                    " · "
+                                    <a class="log-permalink" href=(format!("/thoughts/{slug}"))>"permalink"</a>
+                                </p>
+                            </div>
+                        </article>
+                    }
+                    if let Entry::Update { stamp, label, body, href, link_label: update_link_label, .. } = entry {
+                        <article class="log-row items-baseline">
+                            <span class="log-mark log-mark-update"></span>
+                            <p class="log-date">(entry.date())</p>
+                            <p class="log-update min-w-0">
+                                <span class="log-update-stamp">(format!("[{stamp}]"))</span>
+                                " "
+                                <span class="text-patina">(format!("{label} ·"))</span>
+                                " "
+                                (body)
+                                " "
+                                <a class="log-update-link" href=(href)>
+                                    link_label(label: update_link_label)
+                                </a>
                             </p>
-                        </div>
-                    </article>
+                        </article>
+                    }
                 }
-                if let Entry::Update { stamp, label, body, href, link_label: update_link_label, .. } = row.entry {
+                if let Some(run) = row.win() {
                     <article class="log-row items-baseline">
                         <span class="log-mark log-mark-update"></span>
-                        <p class="log-date">(row.entry.date())</p>
+                        <p class="log-date">(run.date.as_str())</p>
                         <p class="log-update min-w-0">
-                            <span class="log-update-stamp">(format!("[{stamp}]"))</span>
+                            <span class="log-update-stamp">"[win]"</span>
                             " "
-                            <span class="text-patina">(format!("{label} ·"))</span>
+                            <span class="text-patina">"spire ·"</span>
                             " "
-                            (body)
+                            (format!(
+                                "{}, Ascension {} — {} floors in {}.",
+                                run.character,
+                                run.ascension,
+                                run.floors,
+                                fmt_duration(run.run_time)
+                            ))
                             " "
-                            <a class="log-update-link" href=(href)>
-                                link_label(label: update_link_label)
+                            <a class="log-update-link" href="/spire">
+                                link_label(label: "run log →")
                             </a>
                         </p>
                     </article>

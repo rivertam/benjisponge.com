@@ -1,5 +1,13 @@
 import { Container, getContainer } from "@cloudflare/containers";
-import { cacheKey, cacheable, fromCache, storeInCache } from "./cache";
+import {
+  DATA_VERSIONED,
+  cacheKey,
+  cacheable,
+  fromCache,
+  refreshSpireData,
+  storeInCache,
+} from "./cache";
+import { handleSpire, spireDataVersion } from "./spire";
 
 export class BenjispongeContainer extends Container<Env> {
   defaultPort = 8080;
@@ -19,6 +27,12 @@ export default {
       );
     }
 
+    // The spire run database API — served from D1 right here; never cached,
+    // never touches the container (which is itself a GET-side consumer).
+    if (url.pathname.startsWith("/api/spire")) {
+      return handleSpire(request, env, url);
+    }
+
     const container = getContainer(env.SITE_CONTAINER, "site");
 
     if (!cacheable(request, url)) {
@@ -26,11 +40,18 @@ export default {
       return container.fetch(request);
     }
 
-    const key = cacheKey(url, env.RELEASE_ID);
+    const dataVersion = DATA_VERSIONED.has(url.pathname)
+      ? await spireDataVersion(env)
+      : null;
+    const key = cacheKey(url, env.RELEASE_ID, dataVersion);
     const hit = await fromCache(key);
     if (hit) return hit;
 
-    const response = await container.fetch(request);
+    // A versioned cache miss can be caused by a sync while the container's
+    // in-process run cache is still warm. Mark it so the renderer fetches the
+    // new data before this response is stored under the new versioned key.
+    const originRequest = dataVersion === null ? request : refreshSpireData(request);
+    const response = await container.fetch(originRequest);
     if (!response.ok) return response; // 404s stay uncached — cheap and deterministic
     return storeInCache(ctx, key, response);
   },

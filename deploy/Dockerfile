@@ -16,7 +16,9 @@ COPY styles ./styles
 COPY data ./data
 # build.rs downloads the standalone Tailwind v4 CLI here (needs network + certs)
 RUN cargo build --release
-RUN topcoat asset bundle --release
+# --bin: the crate also builds the spire_sync CLI, and the bundler needs to
+# know which binary's assets to extract.
+RUN topcoat asset bundle --release --bin benjisponge
 
 FROM debian:trixie-slim
 RUN apt-get update && apt-get install -y --no-install-recommends ca-certificates \

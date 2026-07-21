@@ -8,17 +8,17 @@ install-hooks:
 
 # Start the development server with live reload
 dev port="3000":
-    PORT={{port}} topcoat dev
+    PORT={{port}} topcoat dev --bin benjisponge
 
 # Build the debug binary and extract its assets
 build:
     cargo build
-    topcoat asset bundle
+    topcoat asset bundle --bin benjisponge
 
 # Build the release binary and extract its assets
 release:
     cargo build --release
-    topcoat asset bundle --release
+    topcoat asset bundle --release --bin benjisponge
 
 # Build the container image, sync its bundled assets, and deploy to Cloudflare
 deploy:
@@ -30,6 +30,10 @@ deploy:
     docker rm benjisponge-extract
     rm -f deploy/assets/_topcoat/assets/manifest.toml
     cd deploy && npx wrangler deploy --var RELEASE_ID:$(git rev-parse --short HEAD)
+
+# Upload new Slay the Spire 2 runs to the site's database (see --help)
+sync-spire *args:
+    cargo run --bin spire_sync -- {{args}}
 
 # Run formatting, lint, and test checks
 check:

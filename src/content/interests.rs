@@ -37,8 +37,7 @@ pub static INTERESTS: [Interest; 8] = [
     Interest {
         slug: "spire",
         title: "Slay the Spire",
-        teaser: "Slay the Spire at Ascension 20, with an annotated run synopsis, because a win \
-                 nobody can audit barely counts.",
+        teaser: "I play a lot of Slay the Spire (currently, Slay the Spire 2)",
     },
     Interest {
         slug: "simulation",
