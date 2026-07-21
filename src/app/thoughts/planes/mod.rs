@@ -288,16 +288,15 @@ async fn planes(cx: &Cx) -> Result {
                                     label: "Our World in Data →"
                                 )
                             )
-                            ", and it's ramped up significantly and isn't stopping. Our \
+                            ", and it's ramped up significantly and isn't stopping. Our
                              great-great-grandparents had to take ships to get across the Atlantic Ocean."
                         </p>
 
-                        <p>
-                            "The upsides are real: cultural diffusion, collaboration across borders, a \
-                             smaller world. I'm not here to deny them. If you want to argue that the pros \
-                             of commercial travel outweigh the cons, fine — but let's at least get the \
-                             cons right first."
-                        </p>
+                        <p>"
+                            Upsides exist: cultural diffusion, collaboration across borders, a
+                             smaller world. If you want to argue that the pros of commercial travel outweigh the cons,
+                             fine — but let's at least get the cons right first.
+                        "</p>
                     )
                 </div>
             )
