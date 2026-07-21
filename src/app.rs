@@ -15,8 +15,11 @@ use topcoat::{
 };
 
 use crate::{
-    components::{link_label, shell},
-    content::logbook::{Entry, FILTER_TAGS, Kind, LOG, serial},
+    components::{ext_link, inline_popover, link_label, shell},
+    content::{
+        interests::INTERESTS,
+        logbook::{Entry, FILTER_TAGS, Kind, LOG, serial},
+    },
     util::urlencode,
 };
 
@@ -26,17 +29,6 @@ pub fn router() -> Router {
         .discover()
         .build()
 }
-
-/// The hero's rotating objects of affection. CSS cycles through them
-/// (`.log-hero-word` in `styles/logbook.css`); reduced motion pins the first.
-static HERO_WORDS: [&str; 6] = [
-    "Rust.",
-    "drums.",
-    "split keyboards.",
-    "my dog.",
-    "crosswords.",
-    "swing.",
-];
 
 #[query_params(error = redirect("?"))]
 struct HomeQuery {
@@ -160,23 +152,43 @@ async fn home(cx: &Cx) -> Result {
     }
 
     view! { shell(title: "", active: "log",
-        // Hero: "I like {word}", the word cycling through the log's whole
-        // range of enthusiasms. Pure CSS — see .log-hero-* in logbook.css.
+        // Hero: "I like {interest}", cycling the interest registry. Pure CSS
+        // — see .log-hero-* in logbook.css. Each word links to its page; only
+        // the currently visible one is hoverable (visibility + pause-on-hover).
         <section class="mt-16">
             <h1 class="log-hero font-display text-[2.75rem] leading-none font-bold tracking-tight sm:text-[4rem]">
                 "I like "
                 <span class="log-hero-words">
-                    for word in HERO_WORDS.iter() {
-                        <span class="log-hero-word text-oxide">(word)</span>
+                    for interest in INTERESTS
+                        .iter()
+                        .filter(|i| !matches!(i.slug, "simulation" | "puzzles"))
+                    {
+                        <a
+                            class="log-hero-word text-oxide"
+                            href=(format!("/{}", interest.slug))
+                        >(format!("{}.", interest.title.to_lowercase()))</a>
                     }
                 </span>
             </h1>
             <p class="mt-4 max-w-prose text-[17px] leading-relaxed text-ink2">
-                "Software engineer in New York; co-founder of DigiChem. This is the \
-                 logbook — everything gets an entry, long or short."
+                "Software developer in New York"
             </p>
             <p class="mt-5 font-meta text-[13px] text-muted">
-                "now — building DigiChem · recording drums · Ascension 20 "
+                "now — building "
+                inline_popover(
+                    id: "digichem-cite",
+                    label: "DigiChem",
+                    <span class="inline-popover-preview">
+                        "A startup that was trying to do digital manufacturing of specialty \
+                         chemicals and is currently sourcing ideas."
+                    </span>
+                    ext_link(
+                        class: "quiet-link",
+                        href: "https://digichem.com",
+                        label: "digichem.com →"
+                    )
+                )"
+                · I contain " <a href="./interests">"multitudes"</a>
                 <span class="log-caret text-oxide">"▍"</span>
             </p>
         </section>

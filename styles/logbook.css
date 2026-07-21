@@ -6,24 +6,44 @@
  */
 
 /*
- * Hero rotation, CSS only: the six words stack in one inline-grid cell and
- * take turns — each rises in (the design's wordIn feel), holds for its 2.6s
- * slot of the 15.6s cycle, and cuts out as the next one starts. The global
- * reduced-motion kill switch in input.css stops the animation, so the
- * override below pins the first word visible.
+ * Hero rotation, CSS only: the interest words stack in one inline-grid cell
+ * and take turns — each rises in (the design's wordIn feel), holds for its
+ * 2.6s slot of the 15.6s cycle (6 interests; simulation and puzzles are
+ * omitted), and cuts out as the next one starts. nowrap keeps "I like" and
+ * the word on one line even when the grid is as wide as the longest title.
+ * Visibility hides the off words from hit-testing so only the live one is
+ * a link; hover pauses the cycle so you can click. The global reduced-motion
+ * kill switch in input.css stops the animation, so the override below pins
+ * the first word visible.
  */
 .log-hero {
   min-height: 1em;
+  white-space: nowrap;
 }
 
 .log-hero-words {
   display: inline-grid;
+  vertical-align: baseline;
+}
+
+.log-hero-words:hover .log-hero-word {
+  animation-play-state: paused;
 }
 
 .log-hero-word {
   grid-area: 1 / 1;
+  white-space: nowrap;
   opacity: 0;
+  visibility: hidden;
+  text-decoration: none;
+  text-underline-offset: 0.18em;
   animation: log-word 15.6s ease infinite;
+}
+
+.log-hero-word:hover,
+.log-hero-word:focus-visible {
+  text-decoration: underline;
+  text-decoration-thickness: 0.08em;
 }
 
 .log-hero-word:nth-child(2) {
@@ -45,19 +65,23 @@
 @keyframes log-word {
   0% {
     opacity: 0;
+    visibility: visible;
     transform: translateY(0.18em);
   }
   2.7% {
     opacity: 1;
+    visibility: visible;
     transform: translateY(0);
   }
   16.6% {
     opacity: 1;
+    visibility: visible;
     transform: translateY(0);
   }
   16.7%,
   100% {
     opacity: 0;
+    visibility: hidden;
     transform: translateY(0.18em);
   }
 }
@@ -65,10 +89,12 @@
 @media (prefers-reduced-motion: reduce) {
   .log-hero-word {
     opacity: 0;
+    visibility: hidden;
   }
 
   .log-hero-word:first-child {
     opacity: 1;
+    visibility: visible;
     transform: none;
   }
 }
