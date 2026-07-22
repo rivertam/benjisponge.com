@@ -19,7 +19,7 @@ pub(super) struct WorkoutCard<'a> {
     pub(super) description: Option<&'a str>,
     pub(super) notes: Option<&'a str>,
     pub(super) set_count: usize,
-    pub(super) groups: Vec<ExerciseGroup<'a>>,
+    pub(super) blocks: Vec<ExerciseBlock<'a>>,
 }
 
 impl<'a> From<&'a fitness::Workout> for WorkoutCard<'a> {
@@ -41,7 +41,7 @@ impl<'a> From<&'a fitness::Workout> for WorkoutCard<'a> {
             description: workout.description.as_deref(),
             notes: workout.notes.as_deref(),
             set_count: workout.sets.len(),
-            groups: exercise_groups(&workout.sets, &workout.path),
+            blocks: exercise_blocks(&workout.sets, &workout.path),
         }
     }
 }
@@ -52,8 +52,14 @@ pub(super) fn workout_url(path: &str) -> String {
 
 pub(super) struct ExerciseGroup<'a> {
     pub(super) name: &'a str,
+    pub(super) superset_id: Option<u64>,
     pub(super) volume_points: u32,
     pub(super) rows: Vec<SetRow<'a>>,
+}
+
+pub(super) struct ExerciseBlock<'a> {
+    pub(super) superset_id: Option<u64>,
+    pub(super) groups: Vec<ExerciseGroup<'a>>,
 }
 
 pub(super) struct SetRow<'a> {
@@ -105,18 +111,23 @@ pub(super) struct Pager {
     pub(super) parts: Vec<Option<usize>>,
 }
 
-fn exercise_groups<'a>(sets: &'a [fitness::Set], workout_path: &str) -> Vec<ExerciseGroup<'a>> {
+fn exercise_blocks<'a>(sets: &'a [fitness::Set], workout_path: &str) -> Vec<ExerciseBlock<'a>> {
     let mut groups = Vec::new();
     let mut start = 0;
     while start < sets.len() {
         let name = sets[start].exercise_name.as_str();
+        let superset_id = sets[start].superset_id;
         let mut end = start + 1;
-        while end < sets.len() && sets[end].exercise_name == name {
+        while end < sets.len()
+            && sets[end].exercise_name == name
+            && sets[end].superset_id == superset_id
+        {
             end += 1;
         }
         let slice = &sets[start..end];
         groups.push(ExerciseGroup {
             name,
+            superset_id,
             volume_points: slice.iter().map(set_volume_points).sum(),
             rows: slice
                 .iter()
@@ -132,7 +143,22 @@ fn exercise_groups<'a>(sets: &'a [fitness::Set], workout_path: &str) -> Vec<Exer
         });
         start = end;
     }
-    groups
+
+    let mut blocks: Vec<ExerciseBlock<'a>> = Vec::new();
+    for group in groups {
+        if group.superset_id.is_some()
+            && let Some(block) = blocks.last_mut()
+            && block.superset_id == group.superset_id
+        {
+            block.groups.push(group);
+        } else {
+            blocks.push(ExerciseBlock {
+                superset_id: group.superset_id,
+                groups: vec![group],
+            });
+        }
+    }
+    blocks
 }
 
 /// Encodes the permanent workout path into a CSS custom-ident-safe ID. Set
@@ -195,9 +221,6 @@ fn set_details(set: &fitness::Set) -> String {
         && load_or_reps_is_primary
     {
         details.push(format!("distance {}", format_scaled(distance, 1_000)));
-    }
-    if let Some(superset) = set.superset_id {
-        details.push(format!("superset {superset}"));
     }
     if set.reps.is_none() && set.distance_milli.is_none() && set.set_time_seconds.is_none() {
         details.push("incomplete".to_string());
@@ -315,7 +338,7 @@ mod tests {
         timed.set_time_seconds = Some(75);
         timed.superset_id = Some(1);
         assert_eq!(prescription(&timed), "1m 15s");
-        assert_eq!(set_details(&timed), "superset 1");
+        assert_eq!(set_details(&timed), "");
 
         let mut distance = set();
         distance.distance_milli = Some(2_500);
@@ -333,6 +356,29 @@ mod tests {
 
         weighted.reps = None;
         assert_eq!(prescription(&weighted), "95 lbs");
+    }
+
+    #[test]
+    fn adjacent_exercises_with_the_same_superset_share_one_block() {
+        let mut normal = set();
+        normal.exercise_name = "Press".to_string();
+
+        let mut first = set();
+        first.ordinal = 2;
+        first.exercise_name = "Press".to_string();
+        first.superset_id = Some(7);
+
+        let mut second = set();
+        second.ordinal = 3;
+        second.exercise_name = "Row".to_string();
+        second.superset_id = Some(7);
+
+        let sets = [normal, first, second];
+        let blocks = exercise_blocks(&sets, "lift");
+        assert_eq!(blocks.len(), 2);
+        assert_eq!(blocks[0].groups.len(), 1);
+        assert_eq!(blocks[1].superset_id, Some(7));
+        assert_eq!(blocks[1].groups.len(), 2);
     }
 
     #[test]

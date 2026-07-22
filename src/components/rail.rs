@@ -1,4 +1,5 @@
-//! The margin rail: stamped rows, page heads, and the closing back-link row.
+//! The margin rail: stamped rows, grouped rows, page heads, and the closing
+//! back-link row.
 
 use topcoat::{
     Result,
@@ -53,6 +54,24 @@ pub async fn rail_section(#[default("mt-10")] class: &str, stamp: &str, child: V
 pub async fn rail_prose(#[default("mt-10")] class: &str, stamp: &str, child: View) -> Result {
     let prose = view! { <div class="max-w-prose space-y-4 text-ink2">(child)</div> }?;
     view! { rail_section(class: class, stamp: stamp, (prose)) }
+}
+
+/// Visually and semantically groups related rail rows with one bracket in the
+/// gutter. `label` names the relationship for assistive technology without
+/// adding another visible line of metadata. Add `rail-group-compact` through
+/// `class` when the group lives inside a card rather than on the full rail.
+#[component]
+pub async fn rail_group(#[default("")] class: &str, label: &str, child: View) -> Result {
+    let group_class = if class.is_empty() {
+        "rail-group".to_string()
+    } else {
+        format!("rail-group {class}")
+    };
+    view! {
+        <div class=(group_class.as_str()) role="group" aria-label=(label)>
+            (child)
+        </div>
+    }
 }
 
 /// A page's closing rail row: a quiet link back up to the section index.

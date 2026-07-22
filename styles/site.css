@@ -53,6 +53,39 @@
   align-items: start;
 }
 
+/* Related rail rows can share one square bracket in the gutter. The bracket
+ * carries grouping without repeating a label on every row; its component
+ * supplies the relationship as an accessible name. Compact groups retain the
+ * inset form when nested inside cards. */
+.rail-group {
+  position: relative;
+  padding-left: 1.2rem;
+}
+
+.rail-group::before {
+  content: "";
+  position: absolute;
+  z-index: 1;
+  top: 0.25rem;
+  bottom: 0.25rem;
+  left: 0.1rem;
+  width: 0.55rem;
+  border-block: 1.5px solid color-mix(in srgb, var(--color-oxide) 72%, var(--color-hairline));
+  border-left: 1.5px solid color-mix(in srgb, var(--color-oxide) 72%, var(--color-hairline));
+  pointer-events: none;
+}
+
+@media (min-width: 40rem) {
+  .rail-group:not(.rail-group-compact) {
+    padding-left: 0;
+  }
+
+  .rail-group:not(.rail-group-compact)::before {
+    left: 9.35rem;
+    width: 0.55rem;
+  }
+}
+
 /*
  * Oxidation hover: interactive ink corrodes toward oxide and the underline
  * thickens. The reduced-motion kill switch in input.css disables the

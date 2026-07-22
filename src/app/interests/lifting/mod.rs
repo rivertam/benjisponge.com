@@ -16,7 +16,7 @@ use topcoat::{
 };
 
 use crate::{
-    components::{back_link, page_head, rail_section, shell},
+    components::{back_link, page_head, rail_group, rail_section, shell},
     content::interests::interest,
 };
 
@@ -1141,7 +1141,18 @@ async fn workout_detail(workout: &fitness::Workout) -> Result {
             if let Some(notes) = workout.notes {
                 <p class=(WORKOUT_NOTE)>(notes)</p>
             }
-            for group in workout.groups.iter() {
+            for block in workout.blocks.iter() {
+                workout_detail_block(block: block)
+            }
+        </article>
+    }
+}
+
+#[component]
+async fn workout_detail_block(block: &results::ExerciseBlock<'_>) -> Result {
+    let groups = view! {
+        <div class="space-y-4">
+            for group in block.groups.iter() {
                 <section class="rail-row rail-row-top">
                     <div class="rail-stamp sm:pt-[0.2rem]">
                         <h2 class="font-semibold text-ink2">(group.name)</h2>
@@ -1157,7 +1168,13 @@ async fn workout_detail(workout: &fitness::Workout) -> Result {
                     </ol>
                 </section>
             }
-        </article>
+        </div>
+    }?;
+    if let Some(id) = block.superset_id {
+        let label = format!("Superset {id}");
+        view! { rail_group(label: label.as_str(), (groups)) }
+    } else {
+        Ok(groups)
     }
 }
 
@@ -1170,27 +1187,44 @@ async fn workout_body(workout: WorkoutCard<'_>) -> Result {
         if let Some(notes) = workout.notes {
             <p class=(WORKOUT_NOTE)>(notes)</p>
         }
-        for group in workout.groups.iter() {
-            <section class="mt-3">
-                <div class="flex items-end justify-between gap-[0.7rem] pb-[0.35rem]">
-                    <h4 class="text-[0.9rem] font-semibold leading-[1.3]">
-                        (group.name)
-                    </h4>
-                    <span class=(META_SMALL)>
-                        (format!(
-                            "{} {} · {} volume points", group.rows.len(), plural(group
-                            .rows.len(), "set", "sets"), format_integer(group
-                            .volume_points),
-                        ))
-                    </span>
-                </div>
-                <ol>
-                    for row in group.rows.iter() {
-                        set_row(row: row, divided: true)
-                    }
-                </ol>
-            </section>
+        for block in workout.blocks.iter() {
+            workout_body_block(block: block)
         }
+    }
+}
+
+#[component]
+async fn workout_body_block(block: &results::ExerciseBlock<'_>) -> Result {
+    let groups = view! {
+        <div>
+            for group in block.groups.iter() {
+                <section class="mt-3">
+                    <div class="flex items-end justify-between gap-[0.7rem] pb-[0.35rem]">
+                        <h4 class="text-[0.9rem] font-semibold leading-[1.3]">
+                            (group.name)
+                        </h4>
+                        <span class=(META_SMALL)>
+                            (format!(
+                                "{} {} · {} volume points", group.rows.len(), plural(group
+                                .rows.len(), "set", "sets"), format_integer(group
+                                .volume_points),
+                            ))
+                        </span>
+                    </div>
+                    <ol>
+                        for row in group.rows.iter() {
+                            set_row(row: row, divided: true)
+                        }
+                    </ol>
+                </section>
+            }
+        </div>
+    }?;
+    if let Some(id) = block.superset_id {
+        let label = format!("Superset {id}");
+        view! { rail_group(class: "rail-group-compact", label: label.as_str(), (groups)) }
+    } else {
+        Ok(groups)
     }
 }
 
