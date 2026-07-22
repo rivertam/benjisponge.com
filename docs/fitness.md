@@ -6,8 +6,10 @@ or local fitness startup. Exact API/filter/import contracts live in
 
 ## Data flow
 
-- Page/filter markup: `src/app/interests/lifting.rs`; browser query/rendering:
-  `src/app/interests/lifting/fitness.js`; styles: `styles/lifting.css`.
+- Page, filter/query handling, API reader, and HTML rendering:
+  `src/app/interests/lifting/`; styles: `styles/lifting.css`. Results are fully
+  server-rendered. `auto-filter.js` only debounces form changes and navigates
+  to the canonical GET URL; the Apply button remains the no-JavaScript path.
 - Public reads and authenticated imports: `deploy/src/fitness.ts`; D1 schema:
   `deploy/fitness-schema.sql`.
 - CSV parsing, stable IDs, taxonomy, chunking: `src/bin/fitness_sync.rs`.
@@ -33,14 +35,15 @@ or local fitness startup. Exact API/filter/import contracts live in
   `WORKOUT_DATA_CSV=/path/export.csv just dev [port]`.
 - Local D1 persists under ignored `deploy/.wrangler/state`. Stop `just dev`
   before deleting that directory for a clean rebuild.
-- Port 8791 is reserved for Wrangler. Local `/lifting` falls back to that API.
+- Port 8791 is reserved for Wrangler. `just dev` points `/lifting`'s server-side
+  API reader at that local Worker.
 
 ## Changing taxonomy or filters
 
 - Taxonomy originates in `exercise_tags()` and `SQUAT_TYPE_EXERCISES`; update
   importer tests with every classification rule.
-- Keep taxonomy values aligned with filter lists in `lifting.rs` and labels /
-  advanced-filter detection in `fitness.js`.
+- Keep taxonomy values aligned with the filter lists, labels, and
+  advanced-filter detection in `src/app/interests/lifting/filters.rs`.
 - Normal sync is append-only. It does not resend fully imported workouts for a
   taxonomy-only change. No retag command exists: write an explicit API/D1
   migration instead of rerunning normal sync. Reset local D1 when validating.
@@ -63,7 +66,7 @@ or local fitness startup. Exact API/filter/import contracts live in
 ```sh
 just check
 just build
-node --check src/app/interests/lifting/fitness.js
+node --check src/app/interests/lifting/auto-filter.js
 bash -n scripts/dev.sh
 cd deploy && npx wrangler types --check && npx tsc --noEmit
 ```

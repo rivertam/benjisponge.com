@@ -13,9 +13,10 @@ and static assets. Config in `deploy/wrangler.jsonc`; image in
   `deploy/assets/_topcoat/` (gitignored; only `_headers` is committed).
   A missed hash falls through Worker → container, which has the same files on
   disk — stale sync degrades, never breaks.
-- GET pages — edge-cached via Cache API (`deploy/src/cache.ts`); cache key
-  embeds RELEASE_ID (git sha passed via `--var` at deploy), so each deploy
-  atomically invalidates all pages. No purge API calls.
+- GET pages — eligible for edge caching via Cache API (`deploy/src/cache.ts`),
+  unless the origin returns `Cache-Control: no-store` or `private`; cache keys
+  embed RELEASE_ID (git sha passed via `--var` at deploy), so each deploy
+  atomically invalidates all stored pages. No purge API calls.
 - Non-GET (shard POSTs `/_topcoat/shards/*`) — straight to the container.
 - www.benjisponge.com → 301 apex; required, not cosmetic: the planes page
   bakes the Host header into its QR-code URL, so caching two hosts would
@@ -30,9 +31,11 @@ and static assets. Config in `deploy/wrangler.jsonc`; image in
   data version (`npx wrangler d1 execute benjisponge-spire --remote
   --command "UPDATE spire_meta SET v = v + 1 WHERE k = 'version'"`) — that
   re-keys `/`, `/spire`, and `/feed.xml`; anything else needs a commit.
-- Adding dynamic/uncacheable routes (polls etc.): register them in
-  `NEVER_CACHE` in `deploy/src/cache.ts`, or add a data-version segment to
-  the cache key there. Do not sprinkle cache logic elsewhere.
+- Adding dynamic/uncacheable routes (polls etc.): return a
+  `Cache-Control: no-store` or `Cache-Control: private` header from the
+  renderer. For dynamic responses that should remain cached, add a data-version
+  segment to the cache key in `deploy/src/cache.ts`. Do not sprinkle
+  route-specific cache logic elsewhere.
 - `manifest.toml` is deliberately excluded from the synced assets: it is
   unhashed and only the binary needs it (its own copy ships in the image).
 - After editing `wrangler.jsonc`: rerun `npx wrangler types` in `deploy/`
@@ -177,6 +180,13 @@ an explicit replacement migration rather than silently rewriting history.
 The normal CLI only posts workouts containing a missing set, so taxonomy-only
 changes on a fully imported archive likewise need a deliberate re-import/API
 call (or will arrive when that exercise is included with a later missing set).
+
+`/lifting` fetches these public reads from the Topcoat server and returns
+complete HTML. Its small browser enhancement only debounces the native filter
+form and navigates to a new GET URL. The route returns `Cache-Control: no-store`,
+so the generic edge policy leaves its HTML unstored and an import is visible on
+the next request. `just dev` sets `FITNESS_DATA_ORIGIN` to the local Worker;
+production uses `SITE_ORIGIN`.
 
 Sync from the machine that has the export:
 

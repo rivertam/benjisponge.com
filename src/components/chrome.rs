@@ -25,11 +25,15 @@ pub const FIRA_MONO: Font = fontsource_font!(FIRA_MONO, host: Asset);
 /// `"interests"`, or `""` for none — and gets the oxide underline.
 ///
 /// `hide_nav` removes the header for an immersive, self-contained page.
+///
+/// `runtime` controls Topcoat's browser runtime. It defaults on for existing
+/// pages; fully server-rendered pages can opt out and ship no production JS.
 #[component]
 pub async fn shell(
     title: &str,
     active: &str,
     #[default(false)] hide_nav: bool,
+    #[default(true)] runtime: bool,
     child: View,
 ) -> Result {
     let title = if title.is_empty() {
@@ -54,7 +58,9 @@ pub async fn shell(
                 <meta name="viewport" content="width=device-width, initial-scale=1">
                 <title>(title)</title>
                 topcoat::dev::script()
-                topcoat::runtime::script()
+                if runtime {
+                    topcoat::runtime::script()
+                }
                 <link rel="stylesheet" href=(topcoat::tailwind::stylesheet!())>
                 topcoat::font::link(font: ZILLA_SLAB)
                 topcoat::font::link(font: FIRA_SANS)

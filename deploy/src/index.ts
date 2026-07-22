@@ -42,7 +42,7 @@ export default {
 
     const container = getContainer(env.SITE_CONTAINER, "site");
 
-    if (!cacheable(request, url)) {
+    if (!cacheable(request)) {
       // Shard POSTs (/_topcoat/shards/*) and any future mutating routes.
       return container.fetch(request);
     }

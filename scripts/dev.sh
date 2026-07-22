@@ -145,4 +145,4 @@ printf 'dev: syncing %s into local D1\n' "${workout_csv}"
 printf 'dev: fitness API ready at %s; starting Topcoat on port %s\n' \
     "${fitness_api}" "${site_port}"
 cd "${repo_root}"
-PORT="${site_port}" topcoat dev --bin benjisponge
+FITNESS_DATA_ORIGIN="${fitness_api}" PORT="${site_port}" topcoat dev --bin benjisponge

@@ -4,11 +4,9 @@
 //
 // The cache key embeds RELEASE_ID, so every deploy atomically invalidates all
 // cached pages without purge API calls. When more dynamic content arrives
-// (polls, etc.), add its purge lever here: either list routes in NEVER_CACHE,
-// or add a data-version segment to the key and bump it on writes — the spire
-// run log does the latter via DATA_VERSIONED.
-
-const NEVER_CACHE: string[] = [];
+// (polls, etc.), its renderer can return Cache-Control: no-store/private, or
+// add a data-version segment here and bump it on writes — the spire run log
+// does the latter via DATA_VERSIONED.
 
 // Pages that render the synced spire run log (exact pathnames). Their cache
 // key embeds the run database's version counter, so a sync invalidates them
@@ -20,9 +18,8 @@ export const DATA_VERSIONED = new Set(["/", "/spire", "/feed.xml"]);
 // ensuring the new edge-cache entry contains the newly synced run.
 export const SPIRE_CACHE_REFRESH_HEADER = "x-spire-cache-refresh";
 
-export function cacheable(request: Request, url: URL): boolean {
-  if (request.method !== "GET") return false;
-  return !NEVER_CACHE.some((prefix) => url.pathname.startsWith(prefix));
+export function cacheable(request: Request): boolean {
+  return request.method === "GET";
 }
 
 export function cacheKey(
@@ -54,10 +51,23 @@ export function storeInCache(
   key: Request,
   response: Response,
 ): Response {
+  if (bypassesSharedCache(response)) return response;
+
   const copy = new Response(response.clone().body, response);
   // s-maxage governs the edge; max-age=0 keeps browsers revalidating so a
   // deploy shows up on the next page load.
   copy.headers.set("Cache-Control", "public, max-age=0, s-maxage=86400");
   ctx.waitUntil(caches.default.put(key, copy.clone()));
   return copy;
+}
+
+function bypassesSharedCache(response: Response): boolean {
+  const cacheControl = response.headers.get("Cache-Control");
+  if (cacheControl === null) return false;
+
+  return cacheControl.split(",").some((directive) => {
+    const [rawName] = directive.split("=", 1);
+    const name = rawName.trim().toLowerCase();
+    return name === "no-store" || name === "private";
+  });
 }
