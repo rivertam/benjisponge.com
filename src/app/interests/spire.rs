@@ -77,94 +77,126 @@ async fn spire(cx: &Cx) -> Result {
         None => format!("{total} runs since {since} — no wins yet"),
     };
 
-    view! { shell(title: meta.title, active: "interests",
-        page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
-        rail_section(class: "mt-10", stamp: "run log",
-            <p class="max-w-prose text-ink2">
-                "There's a cron job on my computer that syncs up my spire runs to this site"
-            </p>
-            if !log.live {
-                <p class="mt-3 font-meta text-sm text-muted">
-                    "The run database is unreachable right now — check back shortly."
+    view! {
+        shell(
+            title: meta.title,
+            active: "interests",
+            page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
+            rail_section(
+                class: "mt-10",
+                stamp: "run log",
+                <p class="max-w-prose text-ink2">
+                    "There's a cron job on my computer that syncs up my spire runs to this site"
                 </p>
-            }
-            if log.live && log.runs.is_empty() {
-                <p class="mt-3 font-meta text-sm text-muted">"No runs synced yet."</p>
-            }
-            if !log.runs.is_empty() {
-                <p id="run-log" class="mt-3 font-meta text-[13px] text-muted">(summary.as_str())</p>
-                <div class="mt-4 overflow-x-auto">
-                    <table class="w-full border-collapse font-meta text-[13px]">
-                        <thead>
-                            <tr class="text-left text-muted">
-                                <th class="pb-2 pr-4 font-normal">"date"</th>
-                                <th class="pb-2 pr-4 font-normal">"character"</th>
-                                <th class="pb-2 pr-4 font-normal">"result"</th>
-                                <th class="pb-2 pr-4 text-right font-normal">"asc"</th>
-                                <th class="pb-2 pr-4 text-right font-normal">"floors"</th>
-                                <th class="pb-2 text-right font-normal">"time"</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            for run in visible.iter() {
-                                <tr class="border-t border-hairline">
-                                    <td class="py-1.5 pr-4 whitespace-nowrap text-muted">
-                                        (run.date.as_str())
-                                    </td>
-                                    <td class="py-1.5 pr-4 whitespace-nowrap">
-                                        (run.character.as_str())
-                                        if run.game_mode != "standard" {
-                                            <span class="text-muted">(format!(" · {}", run.game_mode))</span>
-                                        }
-                                    </td>
-                                    <td class=(result_class(run))>
-                                        (run.result_label())
-                                        if let Some(kind) = &run.kill_kind {
-                                            <span class="text-muted">(format!(" ({kind})"))</span>
-                                        }
-                                    </td>
-                                    <td class="py-1.5 pr-4 text-right tabular-nums">
-                                        (format!("{}", run.ascension))
-                                    </td>
-                                    <td class="py-1.5 pr-4 text-right tabular-nums">
-                                        (format!("{}", run.floors))
-                                    </td>
-                                    <td class="py-1.5 text-right whitespace-nowrap tabular-nums">
-                                        (fmt_duration(run.run_time))
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-                if pages > 1 {
-                    <nav class="mt-4 flex flex-wrap items-baseline gap-3 font-meta text-[13px]">
-                        if page > 1 {
-                            <a class="quiet-link" href=(page_url(page - 1))>"← newer"</a>
-                        }
-                        for n in page_numbers.iter() {
-                            <a
-                                class=(if *n == page { "log-chip log-chip-active" } else { "log-chip" })
-                                href=(page_url(*n))
-                            >(format!("{n}"))</a>
-                        }
-                        if page < pages {
-                            <a class="quiet-link" href=(page_url(page + 1))>"older →"</a>
-                        }
-                    </nav>
+                if !log.live {
+                    <p class="mt-3 font-meta text-sm text-muted">
+                        "The run database is unreachable right now — check back shortly."
+                    </p>
                 }
-            }
+                if log.live && log.runs.is_empty() {
+                    <p class="mt-3 font-meta text-sm text-muted">
+                        "No runs synced yet."
+                    </p>
+                }
+                if !log.runs.is_empty() {
+                    <p id="run-log" class="mt-3 font-meta text-[13px] text-muted">
+                        (summary.as_str())
+                    </p>
+                    <div class="mt-4 overflow-x-auto">
+                        <table class="w-full border-collapse font-meta text-[13px]">
+                            <thead>
+                                <tr class="text-left text-muted">
+                                    <th class="pb-2 pr-4 font-normal">"date"</th>
+                                    <th class="pb-2 pr-4 font-normal">"character"</th>
+                                    <th class="pb-2 pr-4 font-normal">"result"</th>
+                                    <th class="pb-2 pr-4 text-right font-normal">"asc"</th>
+                                    <th class="pb-2 pr-4 text-right font-normal">"floors"</th>
+                                    <th class="pb-2 text-right font-normal">"time"</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                for run in visible.iter() {
+                                    <tr class="border-t border-hairline">
+                                        <td class="py-1.5 pr-4 whitespace-nowrap text-muted">
+                                            (run.date.as_str())
+                                        </td>
+                                        <td class="py-1.5 pr-4 whitespace-nowrap">
+                                            (run.character.as_str())
+                                            if run.game_mode != "standard" {
+                                                <span class="text-muted">
+                                                    (format!(" · {}", run.game_mode))
+                                                </span>
+                                            }
+                                        </td>
+                                        <td class=(result_class(run))>
+                                            (run.result_label())
+                                            if let Some(kind) = &run.kill_kind {
+                                                <span class="text-muted">(format!(" ({kind})"))</span>
+                                            }
+                                        </td>
+                                        <td class="py-1.5 pr-4 text-right tabular-nums">
+                                            (format!("{}", run.ascension))
+                                        </td>
+                                        <td class="py-1.5 pr-4 text-right tabular-nums">
+                                            (format!("{}", run.floors))
+                                        </td>
+                                        <td
+                                            class="py-1.5 text-right whitespace-nowrap tabular-nums"
+                                        >
+                                            (fmt_duration(run.run_time))
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                    if pages > 1 {
+                        <nav
+                            class="mt-4 flex flex-wrap items-baseline gap-3 font-meta text-[13px]"
+                        >
+                            if page > 1 {
+                                <a class="quiet-link" href=(page_url(page - 1))>
+                                    "← newer"
+                                </a>
+                            }
+                            for n in page_numbers.iter() {
+                                <a
+                                    class=(if *n == page {
+                                        "log-chip log-chip-active"
+                                    } else {
+                                        "log-chip"
+                                    })
+                                    href=(page_url(*n))
+                                >
+                                    (format!("{n}"))
+                                </a>
+                            }
+                            if page < pages {
+                                <a class="quiet-link" href=(page_url(page + 1))>
+                                    "older →"
+                                </a>
+                            }
+                        </nav>
+                    }
+                }
+            )
+            rail_section(
+                class: "mt-6",
+                stamp: "links",
+                <p class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">
+                    <a
+                        class="oxlink"
+                        href="https://reddit.com/r/slaythespire/comments/jkqx35/annotated_run_synopsis_my_second_a20_win_only_a/"
+                    >
+                        link_label(
+                            label: "this one crazy run I got in Slay the Spire 1"
+                        )
+                    </a>
+                </p>
+            )
+            back_link(href: "/interests", label: "all interests")
         )
-        rail_section(class: "mt-6", stamp: "links",
-            <p class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">
-                <a
-                    class="oxlink"
-                    href="https://reddit.com/r/slaythespire/comments/jkqx35/annotated_run_synopsis_my_second_a20_win_only_a/"
-                >link_label(label: "this one crazy run I got in Slay the Spire 1")</a>
-            </p>
-        )
-        back_link(href: "/interests", label: "all interests")
-    ) }
+    }
 }
 
 #[route(GET "/interests/spire")]

@@ -57,28 +57,42 @@ async fn not_found(cx: &Cx) -> Result {
     let suggestion_tail =
         format!(" is {edits} away; redirecting there would have been presumptuous.");
 
-    view! { shell(title: "404", active: "",
-        (StatusCode::NOT_FOUND)
-        <section class="mt-16 sm:mt-24">
-            <header class="rail-row">
-                <p class="rail-stamp">"404"</p>
-                <div class="min-w-0">
-                    <h1 class="font-display text-4xl font-bold tracking-tight">"No such page."</h1>
-                    <p class="mt-4 font-meta text-sm text-ink2">"GET " (requested) " — nothing at that path."</p>
-                    if let Some(path) = suggestion {
-                        <p class="mt-3 max-w-prose text-ink2">
-                            <a class="oxlink" href=(path.as_str())>(path.as_str())</a>
-                            (suggestion_tail.as_str())
+    view! {
+        shell(
+            title: "404",
+            active: "",
+            (StatusCode::NOT_FOUND)
+            <section class="mt-16 sm:mt-24">
+                <header class="rail-row">
+                    <p class="rail-stamp">"404"</p>
+                    <div class="min-w-0">
+                        <h1 class="font-display text-4xl font-bold tracking-tight">
+                            "No such page."
+                        </h1>
+                        <p class="mt-4 font-meta text-sm text-ink2">
+                            "GET "
+                            (requested)
+                            " — nothing at that path."
                         </p>
-                    }
-                    <p class="mt-8 rail-stamp rail-stamp-label">"the index"</p>
-                    <ul class="mt-2 space-y-1 font-meta text-sm">
-                        for route in routes.iter() {
-                            <li><a class="quiet-link" href=(route.as_str())>(route.as_str())</a></li>
+                        if let Some(path) = suggestion {
+                            <p class="mt-3 max-w-prose text-ink2">
+                                <a class="oxlink" href=(path.as_str())>(path.as_str())</a>
+                                (suggestion_tail.as_str())
+                            </p>
                         }
-                    </ul>
-                </div>
-            </header>
-        </section>
-    ) }
+                        <p class="mt-8 rail-stamp rail-stamp-label">"the index"</p>
+                        <ul class="mt-2 space-y-1 font-meta text-sm">
+                            for route in routes.iter() {
+                                <li>
+                                    <a class="quiet-link" href=(route.as_str())>
+                                        (route.as_str())
+                                    </a>
+                                </li>
+                            }
+                        </ul>
+                    </div>
+                </header>
+            </section>
+        )
+    }
 }

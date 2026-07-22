@@ -26,12 +26,17 @@ pub(super) async fn calendar_heatmap(days: Vec<CalendarDay>) -> Result {
                 <header class="fitness-heatmap-head">
                     <div>
                         <p class="fitness-kicker">"training volume"</p>
-                        <h2 id="fitness-heatmap-title" class="font-display text-2xl font-semibold">
+                        <h2
+                            id="fitness-heatmap-title"
+                            class="font-display text-2xl font-semibold"
+                        >
                             "Volume points"
                         </h2>
                     </div>
                 </header>
-                <p class="fitness-heatmap-empty">"No lifting days are available yet."</p>
+                <p class="fitness-heatmap-empty">
+                    "No lifting days are available yet."
+                </p>
             </section>
         };
     };
@@ -49,7 +54,10 @@ pub(super) async fn calendar_heatmap(days: Vec<CalendarDay>) -> Result {
             <header class="fitness-heatmap-head">
                 <div>
                     <p class="fitness-kicker">"training volume"</p>
-                    <h2 id="fitness-heatmap-title" class="font-display text-2xl font-semibold">
+                    <h2
+                        id="fitness-heatmap-title"
+                        class="font-display text-2xl font-semibold"
+                    >
                         "Volume points"
                     </h2>
                     <p class="fitness-heatmap-subtitle">(subtitle.as_str())</p>
@@ -64,7 +72,9 @@ pub(super) async fn calendar_heatmap(days: Vec<CalendarDay>) -> Result {
                             class="fitness-heatmap-legend-cell"
                             style=(style.as_str())
                             aria-hidden="true"
-                        ></span>
+                        >
+
+                        </span>
                     }
                     <span>"more"</span>
                 </div>
@@ -74,7 +84,9 @@ pub(super) async fn calendar_heatmap(days: Vec<CalendarDay>) -> Result {
                 <div class="fitness-heatmap-chart">
                     <div class="fitness-heatmap-months" aria-hidden="true">
                         for label in calendar.month_labels.iter() {
-                            <span style=(label.style.as_str())>(label.label.as_str())</span>
+                            <span style=(label.style.as_str())>
+                                (label.label.as_str())
+                            </span>
                         }
                     </div>
                     <div class="fitness-heatmap-weekdays" aria-hidden="true">
@@ -86,7 +98,10 @@ pub(super) async fn calendar_heatmap(days: Vec<CalendarDay>) -> Result {
                         <span>"F"</span>
                         <span></span>
                     </div>
-                    <nav class="fitness-heatmap-grid" aria-label=(navigation_label.as_str())>
+                    <nav
+                        class="fitness-heatmap-grid"
+                        aria-label=(navigation_label.as_str())
+                    >
                         for cell in calendar.cells.iter() {
                             if let Some(href) = &cell.href {
                                 <a
@@ -95,14 +110,18 @@ pub(super) async fn calendar_heatmap(days: Vec<CalendarDay>) -> Result {
                                     title=(cell.label.as_str())
                                     aria-label=(cell.label.as_str())
                                     style=(cell.style.as_str())
-                                ></a>
+                                >
+
+                                </a>
                             } else {
                                 <span
                                     class=(cell.class.as_str())
                                     title=(cell.label.as_str())
                                     aria-hidden="true"
                                     style=(cell.style.as_str())
-                                ></span>
+                                >
+
+                                </span>
                             }
                         }
                     </nav>

@@ -19,21 +19,21 @@ use crate::{
 
 #[page("/interests")]
 async fn interests() -> Result {
-    view! { shell(title: "Interests", active: "interests",
-        page_head(
-            stamp: "index",
+    view! {
+        shell(
             title: "Interests",
-            lede: "I contain multitudes.",
+            active: "interests",
+            page_head(stamp: "index", title: "Interests", lede: "I contain multitudes.")
+            <section class="mt-14 space-y-10">
+                for interest in INTERESTS.iter() {
+                    index_card(
+                        stamp: interest.slug,
+                        href: format!("/{}", interest.slug),
+                        title: interest.title,
+                        teaser: interest.teaser
+                    )
+                }
+            </section>
         )
-        <section class="mt-14 space-y-10">
-            for interest in INTERESTS.iter() {
-                index_card(
-                    stamp: interest.slug,
-                    href: format!("/{}", interest.slug),
-                    title: interest.title,
-                    teaser: interest.teaser,
-                )
-            }
-        </section>
-    ) }
+    }
 }

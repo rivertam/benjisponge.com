@@ -132,154 +132,183 @@ async fn swing_media(cx: &Cx) -> Result {
 #[component]
 async fn swing_page(initial_media: &str) -> Result {
     let meta = interest("swing");
-    view! { shell(title: meta.title, active: "interests",
-        page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
-        rail_prose(stamp: "",
-            <p>
-                "Technically I started swing dancing at Wash U in St. Louis. I joined the swing dance
+    view! {
+        shell(
+            title: meta.title,
+            active: "interests",
+            page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
+            rail_prose(
+                stamp: "",
+                <p>
+                    "Technically I started swing dancing at Wash U in St. Louis. I joined the swing dance
                 team \"Swing Theory\" to spend more time with a girl."
-            </p>
-            <p>"
+                </p>
+                <p>
+                    "
                 In 2023, I started swing dancing again. I've been dancing at least once or twice a month
                 since then, sometimes as often as 4x a week.
-            "</p>
-            <p>
-                "If you're looking for swing events (in New York), I highly recommend "
-                ext_link(
-                    class: "quiet-link",
-                    href: "https://thisweekinswingnyc.com",
-                    label: "thisweekinswingnyc.com"
-                )
-                " for a full list of pretty much every event in NYC."
-            </p>
-        )
-        rail_section(class: "mt-12", stamp: "footage",
-            <div
-                class="swing-gallery"
-                data-swing-gallery=""
-                data-swing-gallery-initial=(initial_media)
-                aria-label="Photos and videos of Ben swing dancing"
-            >
-                for media in MEDIA {
-                    <figure class="swing-media">
-                        <button
-                            class="swing-media-button"
-                            type="button"
-                            data-swing-gallery-trigger=""
-                            data-swing-gallery-slug=(media.slug)
-                            data-swing-gallery-src=(media.src)
-                            data-swing-gallery-kind=(media.kind.label())
-                            data-swing-gallery-alt=(media.alt)
-                            data-swing-gallery-caption=(media.caption)
-                            aria-label=(format!("Open {}: {}", media.kind.label().to_lowercase(), media.alt))
-                        >
-                            if media.kind == MediaKind::Photo {
-                                <img
-                                    src=(media.preview)
-                                    alt=(media.alt)
-                                    width=(media.width)
-                                    height=(media.height)
-                                    loading="lazy"
-                                    decoding="async"
-                                >
-                            } else {
-                                <img
-                                    src=(media.preview)
-                                    alt=""
-                                    width=(media.width)
-                                    height=(media.height)
-                                    aria-hidden="true"
-                                    loading="lazy"
-                                    decoding="async"
-                                >
-                            }
-                            <span class="swing-media-kind" aria-hidden="true">(media.kind.label())</span>
-                            if media.kind == MediaKind::Video {
-                                <span class="swing-media-play" aria-hidden="true">"▶"</span>
-                            }
-                            <span class="swing-media-expand" aria-hidden="true">
-                                if media.kind == MediaKind::Video { "Play" } else { "Open" }
-                            </span>
-                        </button>
-                        <figcaption>
-                            <span class="swing-media-label">(media.kind.label())</span>
-                            if media.slug == "with-amanda-frim-fram" {
-                                <span>
-                                    "Dancing with Amanda at "
-                                    ext_link(
-                                        class: "quiet-link",
-                                        href: "https://frimframjam.com/",
-                                        label: "Frim Fram ↗"
-                                    )
-                                </span>
-                            } else {
-                                <span>(media.caption)</span>
-                            }
-                        </figcaption>
-                    </figure>
-                }
-            </div>
-        )
-        <dialog
-            class="swing-lightbox"
-            data-swing-gallery-dialog=""
-            aria-labelledby="swing-lightbox-title"
-            aria-describedby="swing-lightbox-help"
-        >
-            <div class="swing-lightbox-frame">
-                <button
-                    class="swing-lightbox-close"
-                    type="button"
-                    data-swing-gallery-close=""
-                    aria-label="Close gallery"
-                >
-                    <span aria-hidden="true">"×"</span>
-                </button>
-                <div class="swing-lightbox-stage">
-                    <button
-                        class="swing-lightbox-nav swing-lightbox-prev"
-                        type="button"
-                        data-swing-gallery-prev=""
-                        aria-label="Previous item"
-                    >
-                        <span aria-hidden="true">"←"</span>
-                    </button>
-                    <img class="swing-lightbox-image" data-swing-gallery-image="" alt="">
-                    <video
-                        class="swing-lightbox-video"
-                        data-swing-gallery-video=""
-                        controls=""
-                        playsinline=""
-                        preload="metadata"
-                        aria-label=""
-                        hidden=""
-                    ></video>
-                    <button
-                        class="swing-lightbox-nav swing-lightbox-next"
-                        type="button"
-                        data-swing-gallery-next=""
-                        aria-label="Next item"
-                    >
-                        <span aria-hidden="true">"→"</span>
-                    </button>
-                </div>
-                <div class="swing-lightbox-details">
-                    <p
-                        id="swing-lightbox-title"
-                        class="swing-lightbox-position"
-                        data-swing-gallery-position=""
-                        aria-live="polite"
-                    ></p>
-                    <p class="swing-lightbox-caption" data-swing-gallery-caption=""></p>
-                </div>
-                <p id="swing-lightbox-help" class="swing-lightbox-help">
-                    "Use the left and right arrow keys to browse. Press Escape to close."
+            "
                 </p>
-            </div>
-        </dialog>
-        <script type="module" src=(SWING_GALLERY_JS)></script>
-        back_link(href: "/interests", label: "all interests")
-    ) }
+                <p>
+                    "If you're looking for swing events (in New York), I highly recommend "
+                    ext_link(
+                        class: "quiet-link",
+                        href: "https://thisweekinswingnyc.com",
+                        label: "thisweekinswingnyc.com"
+                    )
+                    " for a full list of pretty much every event in NYC."
+                </p>
+            )
+            rail_section(
+                class: "mt-12",
+                stamp: "footage",
+                <div
+                    class="swing-gallery"
+                    data-swing-gallery=""
+                    data-swing-gallery-initial=(initial_media)
+                    aria-label="Photos and videos of Ben swing dancing"
+                >
+                    for media in MEDIA {
+                        <figure class="swing-media">
+                            <button
+                                class="swing-media-button"
+                                type="button"
+                                data-swing-gallery-trigger=""
+                                data-swing-gallery-slug=(media.slug)
+                                data-swing-gallery-src=(media.src)
+                                data-swing-gallery-kind=(media.kind.label())
+                                data-swing-gallery-alt=(media.alt)
+                                data-swing-gallery-caption=(media.caption)
+                                aria-label=(format!(
+                                    "Open {}: {}", media.kind.label().to_lowercase(), media.alt
+                                ))
+                            >
+                                if media.kind == MediaKind::Photo {
+                                    <img
+                                        src=(media.preview)
+                                        alt=(media.alt)
+                                        width=(media.width)
+                                        height=(media.height)
+                                        loading="lazy"
+                                        decoding="async"
+                                    >
+                                } else {
+                                    <img
+                                        src=(media.preview)
+                                        alt=""
+                                        width=(media.width)
+                                        height=(media.height)
+                                        aria-hidden="true"
+                                        loading="lazy"
+                                        decoding="async"
+                                    >
+                                }
+                                <span class="swing-media-kind" aria-hidden="true">
+                                    (media.kind.label())
+                                </span>
+                                if media.kind == MediaKind::Video {
+                                    <span class="swing-media-play" aria-hidden="true">
+                                        "▶"
+                                    </span>
+                                }
+                                <span class="swing-media-expand" aria-hidden="true">
+                                    if media.kind == MediaKind::Video {
+                                        "Play"
+                                    } else {
+                                        "Open"
+                                    }
+                                </span>
+                            </button>
+                            <figcaption>
+                                <span class="swing-media-label">(media.kind.label())</span>
+                                if media.slug == "with-amanda-frim-fram" {
+                                    <span>
+                                        "Dancing with Amanda at "
+                                        ext_link(
+                                            class: "quiet-link",
+                                            href: "https://frimframjam.com/",
+                                            label: "Frim Fram ↗"
+                                        )
+                                    </span>
+                                } else {
+                                    <span>(media.caption)</span>
+                                }
+                            </figcaption>
+                        </figure>
+                    }
+                </div>
+            )
+            <dialog
+                class="swing-lightbox"
+                data-swing-gallery-dialog=""
+                aria-labelledby="swing-lightbox-title"
+                aria-describedby="swing-lightbox-help"
+            >
+                <div class="swing-lightbox-frame">
+                    <button
+                        class="swing-lightbox-close"
+                        type="button"
+                        data-swing-gallery-close=""
+                        aria-label="Close gallery"
+                    >
+                        <span aria-hidden="true">"×"</span>
+                    </button>
+                    <div class="swing-lightbox-stage">
+                        <button
+                            class="swing-lightbox-nav swing-lightbox-prev"
+                            type="button"
+                            data-swing-gallery-prev=""
+                            aria-label="Previous item"
+                        >
+                            <span aria-hidden="true">"←"</span>
+                        </button>
+                        <img
+                            class="swing-lightbox-image"
+                            data-swing-gallery-image=""
+                            alt=""
+                        >
+                        <video
+                            class="swing-lightbox-video"
+                            data-swing-gallery-video=""
+                            controls=""
+                            playsinline=""
+                            preload="metadata"
+                            aria-label=""
+                            hidden=""
+                        >
+
+                        </video>
+                        <button
+                            class="swing-lightbox-nav swing-lightbox-next"
+                            type="button"
+                            data-swing-gallery-next=""
+                            aria-label="Next item"
+                        >
+                            <span aria-hidden="true">"→"</span>
+                        </button>
+                    </div>
+                    <div class="swing-lightbox-details">
+                        <p
+                            id="swing-lightbox-title"
+                            class="swing-lightbox-position"
+                            data-swing-gallery-position=""
+                            aria-live="polite"
+                        >
+
+                        </p>
+                        <p class="swing-lightbox-caption" data-swing-gallery-caption="">
+
+                        </p>
+                    </div>
+                    <p id="swing-lightbox-help" class="swing-lightbox-help">
+                        "Use the left and right arrow keys to browse. Press Escape to close."
+                    </p>
+                </div>
+            </dialog>
+            <script type="module" src=(SWING_GALLERY_JS)></script>
+            back_link(href: "/interests", label: "all interests")
+        )
+    }
 }
 
 #[route(GET "/interests/swing")]
