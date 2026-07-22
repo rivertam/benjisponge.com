@@ -21,7 +21,7 @@ if (form instanceof HTMLFormElement) {
       pairs.push(`${encode(key)}=${encode(value)}`);
     }
     const query = pairs.length === 0 ? "" : `?${pairs.join("&")}`;
-    return `/lifting${query}#set-log`;
+    return `/lifting/log${query}#set-log`;
   };
 
   const navigate = () => {

@@ -2,7 +2,7 @@
 //!
 //! The importer keeps source spelling for provenance, produces normalized
 //! display names for filtering, and assigns stable ids from the workout's
-//! local start time plus each row's ordinal within the whole workout.
+//! UTC start time plus each row's ordinal within the whole workout.
 //! Cross-layer invariants and taxonomy workflow: `docs/fitness.md`.
 
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
@@ -36,7 +36,7 @@ FLAGS
   -h, --help      this text
 
 BEHAVIOR
-  1. Parse every CSV row and group rows by the export's local workout start.
+  1. Parse every CSV row and group rows by the export's UTC workout start.
   2. GET  <api>/api/fitness/ids to learn which set ids already exist.
   3. POST <api>/api/fitness/import (Bearer token) with missing workouts and
      their exercises and sets, oldest first, in bounded whole-workout chunks.
@@ -111,7 +111,7 @@ struct Workout {
     id: String,
     title: String,
     raw_title: String,
-    started_at_local: String,
+    started_at_utc: String,
     duration_seconds: i64,
     duration_suspicious: bool,
     notes: Option<String>,
@@ -370,10 +370,13 @@ fn parse_set_time(value: &str) -> Result<Option<i64>, String> {
     }
 }
 
-fn canonical_local_start(value: &str) -> Result<String, String> {
+/// Strong's `Date` column is a UTC timestamp without an explicit offset.
+/// Keep its canonical wall-clock representation unchanged so existing stable
+/// workout and set IDs remain stable.
+fn canonical_utc_start(value: &str) -> Result<String, String> {
     let value = value.trim();
     if value.len() != 19 {
-        return Err(format!("invalid local workout start {value:?}"));
+        return Err(format!("invalid UTC workout start {value:?}"));
     }
     let bytes = value.as_bytes();
     if bytes[4] != b'-'
@@ -382,11 +385,11 @@ fn canonical_local_start(value: &str) -> Result<String, String> {
         || bytes[13] != b':'
         || bytes[16] != b':'
     {
-        return Err(format!("invalid local workout start {value:?}"));
+        return Err(format!("invalid UTC workout start {value:?}"));
     }
     for (start, end) in [(0, 4), (5, 7), (8, 10), (11, 13), (14, 16), (17, 19)] {
         if !bytes[start..end].iter().all(u8::is_ascii_digit) {
-            return Err(format!("invalid local workout start {value:?}"));
+            return Err(format!("invalid UTC workout start {value:?}"));
         }
     }
     let year: i32 = value[0..4].parse().expect("validated digits");
@@ -404,13 +407,13 @@ fn canonical_local_start(value: &str) -> Result<String, String> {
         _ => 0,
     };
     if day == 0 || day > month_days || hour >= 24 || minute >= 60 || second >= 60 {
-        return Err(format!("invalid local workout start {value:?}"));
+        return Err(format!("invalid UTC workout start {value:?}"));
     }
     Ok(format!("{} {}", &value[..10], &value[11..]))
 }
 
-fn workout_id(started_at_local: &str) -> String {
-    format!("fitness:{}", started_at_local.replacen(' ', "T", 1))
+fn workout_id(started_at_utc: &str) -> String {
+    format!("fitness:{}", started_at_utc.replacen(' ', "T", 1))
 }
 
 fn set_id(workout_id: &str, ordinal: usize) -> String {
@@ -748,11 +751,7 @@ fn parse_reader<R: Read>(reader: R) -> Result<Export, String> {
 
         let raw_title = get(columns.title, "Title")?.to_string();
         let title = contextual(required_display(&raw_title, "title"), row, "Title")?;
-        let start = contextual(
-            canonical_local_start(get(columns.date, "Date")?),
-            row,
-            "Date",
-        )?;
+        let start = contextual(canonical_utc_start(get(columns.date, "Date")?), row, "Date")?;
         let duration = contextual(
             parse_colon_seconds(get(columns.duration, "Duration")?),
             row,
@@ -807,7 +806,7 @@ fn parse_reader<R: Read>(reader: R) -> Result<Export, String> {
                         id,
                         title,
                         raw_title: raw_title.clone(),
-                        started_at_local: start.clone(),
+                        started_at_utc: start.clone(),
                         duration_seconds: duration,
                         duration_suspicious: duration == 0 || duration >= 4 * 60 * 60,
                         notes: notes.clone(),
@@ -828,7 +827,7 @@ fn parse_reader<R: Read>(reader: R) -> Result<Export, String> {
             || bundle.workout.description != description
         {
             return Err(format!(
-                "CSV row {row}: workout metadata changed within local start {start}"
+                "CSV row {row}: workout metadata changed within UTC start {start}"
             ));
         }
         let ordinal = bundle.sets.len() + 1;
@@ -1063,8 +1062,8 @@ async fn main() -> ExitCode {
         .collect();
     missing.sort_by(|left, right| {
         left.workout
-            .started_at_local
-            .cmp(&right.workout.started_at_local)
+            .started_at_utc
+            .cmp(&right.workout.started_at_utc)
     });
     let missing_sets: usize = missing
         .iter()
@@ -1211,7 +1210,7 @@ mod tests {
         assert_eq!(first.workout.id, "fitness:2026-07-21T14:39:04");
         assert_eq!(first.workout.title, "First workout");
         assert_eq!(first.workout.raw_title, "First workout ");
-        assert_eq!(first.workout.started_at_local, "2026-07-21 14:39:04");
+        assert_eq!(first.workout.started_at_utc, "2026-07-21 14:39:04");
         assert_eq!(first.workout.duration_seconds, 2_110);
         assert_eq!(first.workout.source, "workout-data-csv");
         assert!(!first.workout.duration_suspicious);
@@ -1274,14 +1273,34 @@ mod tests {
     }
 
     #[test]
-    fn local_dates_are_validated_and_canonicalized() {
+    fn utc_dates_are_validated_and_canonicalized() {
         assert_eq!(
-            canonical_local_start("2024-02-29 01:02:03").unwrap(),
+            canonical_utc_start("2024-02-29 01:02:03").unwrap(),
             "2024-02-29 01:02:03"
         );
-        assert!(canonical_local_start("2023-02-29 01:02:03").is_err());
-        assert!(canonical_local_start("2024-13-01 01:02:03").is_err());
-        assert!(canonical_local_start("2024-01-01 24:02:03").is_err());
+        assert!(canonical_utc_start("2023-02-29 01:02:03").is_err());
+        assert!(canonical_utc_start("2024-13-01 01:02:03").is_err());
+        assert!(canonical_utc_start("2024-01-01 24:02:03").is_err());
+    }
+
+    #[test]
+    fn import_payload_sends_utc_start_without_changing_stable_ids() {
+        let csv = format!(
+            "{HEADER}UTC workout,2026-07-12 00:33:27,00:01:00,,,Squat,,,,,,,,NORMAL_SET,,\n"
+        );
+        let export = parse_reader(csv.as_bytes()).unwrap();
+        let workout = &export.workouts[0];
+        let payload = payload_for(&[workout], &export.exercises);
+        let serialized = serde_json::to_value(payload).unwrap();
+        let imported_workout = &serialized["workouts"][0];
+
+        assert_eq!(
+            imported_workout["started_at_utc"],
+            serde_json::Value::String("2026-07-12 00:33:27".to_string())
+        );
+        assert!(imported_workout.get("started_at_local").is_none());
+        assert_eq!(workout.workout.id, "fitness:2026-07-12T00:33:27");
+        assert_eq!(workout.sets[0].id, "fitness:2026-07-12T00:33:27:0001");
     }
 
     #[test]
@@ -1413,7 +1432,7 @@ mod tests {
                 id: number.to_string(),
                 title: String::new(),
                 raw_title: String::new(),
-                started_at_local: String::new(),
+                started_at_utc: String::new(),
                 duration_seconds: 1,
                 duration_suspicious: false,
                 notes: None,

@@ -1,17 +1,19 @@
 -- Fitness set archive (see src/fitness.ts for the API over it).
--- Idempotent; apply to the existing site-data database with:
+-- Idempotent for an empty fitness archive; apply after a fitness-only reset with:
 --   cd deploy && npx wrangler d1 execute benjisponge-spire --remote --file=fitness-schema.sql
 
 PRAGMA foreign_keys = ON;
 
--- The source export supplies a local wall-clock start, not an offset or time
--- zone. Keep it verbatim so date, weekday, and time-of-day filters describe
--- when the workout was actually logged rather than a guessed UTC instant.
+-- Strong's source `Date` is UTC. Keep that canonical instant for stable IDs
+-- and chronological ordering, then materialize its America/New_York civil
+-- clock for every reader-facing date, filter, calendar cell, and URL.
 CREATE TABLE IF NOT EXISTS workouts (
   id                  TEXT PRIMARY KEY,
   title               TEXT NOT NULL,
   raw_title           TEXT NOT NULL,
+  started_at_utc      TEXT NOT NULL,
   started_at_local    TEXT NOT NULL,
+  eastern_offset_minutes INTEGER NOT NULL CHECK (eastern_offset_minutes IN (-300, -240)),
   duration_seconds    INTEGER NOT NULL CHECK (duration_seconds BETWEEN 0 AND 604800),
   duration_suspicious INTEGER NOT NULL CHECK (duration_suspicious IN (0, 1)),
   notes               TEXT,
@@ -21,6 +23,7 @@ CREATE TABLE IF NOT EXISTS workouts (
   CHECK (length(id) BETWEEN 1 AND 128),
   CHECK (length(title) BETWEEN 1 AND 240),
   CHECK (length(raw_title) BETWEEN 1 AND 240),
+  CHECK (started_at_utc GLOB '????-??-?? ??:??:??'),
   CHECK (started_at_local GLOB '????-??-?? ??:??:??'),
   CHECK (notes IS NULL OR length(notes) <= 10000),
   CHECK (description IS NULL OR length(description) <= 10000)
@@ -78,8 +81,12 @@ CREATE TABLE IF NOT EXISTS set_records (
   UNIQUE (set_id, kind)
 ) STRICT, WITHOUT ROWID;
 
-CREATE INDEX IF NOT EXISTS workouts_started_at
+CREATE INDEX IF NOT EXISTS workouts_started_at_utc
+  ON workouts (started_at_utc DESC, id DESC);
+CREATE INDEX IF NOT EXISTS workouts_started_at_local
   ON workouts (started_at_local DESC, id DESC);
+CREATE INDEX IF NOT EXISTS workouts_public_path
+  ON workouts (started_at_local, eastern_offset_minutes);
 CREATE INDEX IF NOT EXISTS sets_exercise
   ON sets (exercise_name);
 CREATE INDEX IF NOT EXISTS sets_type

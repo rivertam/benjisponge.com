@@ -65,31 +65,88 @@ pub(super) struct Timing {
     pub(super) range: String,
 }
 
-pub(super) fn workout_timing(raw: &str, duration_seconds: u64) -> Timing {
-    let Some(start) = LocalDateTime::parse(raw) else {
+/// Format a workout interval from the Eastern-local endpoints projected by the
+/// Worker. In particular, do not derive an end wall-clock time by adding the
+/// duration: that would get both DST transitions wrong.
+pub(super) fn workout_timing(
+    started_at_local: &str,
+    ended_at_local: &str,
+    eastern_offset_minutes: i32,
+    end_eastern_offset_minutes: i32,
+) -> Timing {
+    let Some(start) = LocalDateTime::parse(started_at_local) else {
         return Timing {
-            date: if raw.is_empty() {
+            date: if started_at_local.is_empty() {
                 "unknown date".to_string()
             } else {
-                raw.to_string()
+                started_at_local.to_string()
             },
             range: "time unavailable".to_string(),
         };
     };
-    let end = start.add_seconds(duration_seconds);
+
+    let Some(end) = LocalDateTime::parse(ended_at_local) else {
+        return Timing {
+            date: start.format_date(),
+            range: "time unavailable".to_string(),
+        };
+    };
+
+    let labels = (eastern_offset_minutes != end_eastern_offset_minutes)
+        .then(|| {
+            (
+                eastern_zone_name(eastern_offset_minutes),
+                eastern_zone_name(end_eastern_offset_minutes),
+            )
+        })
+        .filter(|(start, end)| start.is_some() && end.is_some());
+    let start_time = format_time_with_zone(start, labels.and_then(|(start, _)| start));
+    let end_time = format_time_with_zone(end, labels.and_then(|(_, end)| end));
     let range = if start.same_date(end) {
-        format!("{}–{}", start.format_time(), end.format_time())
+        format!("{start_time}–{end_time}")
     } else {
-        format!(
-            "{}–{} {}",
-            start.format_time(),
-            end.format_date(),
-            end.format_time(),
-        )
+        format!("{start_time}–{} {end_time}", end.format_date(),)
     };
     Timing {
         date: start.format_date(),
         range,
+    }
+}
+
+/// A machine-readable local timestamp which keeps the Eastern UTC offset
+/// attached instead of silently presenting it as a timezone-free value.
+pub(super) fn workout_datetime(raw: &str, eastern_offset_minutes: i32) -> String {
+    let Some(local) = LocalDateTime::parse(raw) else {
+        return raw.replace(' ', "T");
+    };
+    let offset = eastern_offset_minutes.unsigned_abs();
+    let sign = if eastern_offset_minutes < 0 { '-' } else { '+' };
+    format!(
+        "{:04}-{:02}-{:02}T{:02}:{:02}:{:02}{sign}{:02}:{:02}",
+        local.year,
+        local.month,
+        local.day,
+        local.hour,
+        local.minute,
+        local.second,
+        offset / 60,
+        offset % 60,
+    )
+}
+
+fn eastern_zone_name(offset_minutes: i32) -> Option<&'static str> {
+    match offset_minutes {
+        -240 => Some("EDT"),
+        -300 => Some("EST"),
+        _ => None,
+    }
+}
+
+fn format_time_with_zone(time: LocalDateTime, zone: Option<&str>) -> String {
+    let time = time.format_time();
+    match zone {
+        Some(zone) => format!("{time} {zone}"),
+        None => time,
     }
 }
 
@@ -145,23 +202,6 @@ impl LocalDateTime {
         (raw.as_bytes().get(4) == Some(&b'-') && (1..=12).contains(&value.month)).then_some(value)
     }
 
-    fn add_seconds(self, seconds: u64) -> Self {
-        let start_seconds =
-            u64::from(self.hour) * 3_600 + u64::from(self.minute) * 60 + u64::from(self.second);
-        let elapsed = start_seconds + seconds;
-        let days = days_from_civil(self.year, self.month, self.day) + (elapsed / 86_400) as i64;
-        let day_seconds = elapsed % 86_400;
-        let (year, month, day) = civil_from_days(days);
-        Self {
-            year,
-            month,
-            day,
-            hour: (day_seconds / 3_600) as u32,
-            minute: (day_seconds % 3_600 / 60) as u32,
-            second: (day_seconds % 60) as u32,
-        }
-    }
-
     fn same_date(self, other: Self) -> bool {
         (self.year, self.month, self.day) == (other.year, other.month, other.day)
     }
@@ -207,32 +247,6 @@ fn days_in_month(year: i64, month: u32) -> u32 {
     }
 }
 
-// Howard Hinnant's civil-calendar conversions, with day zero at 1970-01-01.
-fn days_from_civil(mut year: i64, month: u32, day: u32) -> i64 {
-    year -= i64::from(month <= 2);
-    let era = if year >= 0 { year } else { year - 399 } / 400;
-    let year_of_era = year - era * 400;
-    let adjusted_month = i64::from(month) + if month > 2 { -3 } else { 9 };
-    let day_of_year = (153 * adjusted_month + 2) / 5 + i64::from(day) - 1;
-    let day_of_era = year_of_era * 365 + year_of_era / 4 - year_of_era / 100 + day_of_year;
-    era * 146_097 + day_of_era - 719_468
-}
-
-fn civil_from_days(mut days: i64) -> (i64, u32, u32) {
-    days += 719_468;
-    let era = if days >= 0 { days } else { days - 146_096 } / 146_097;
-    let day_of_era = days - era * 146_097;
-    let year_of_era =
-        (day_of_era - day_of_era / 1_460 + day_of_era / 36_524 - day_of_era / 146_096) / 365;
-    let mut year = year_of_era + era * 400;
-    let day_of_year = day_of_era - (365 * year_of_era + year_of_era / 4 - year_of_era / 100);
-    let month_piece = (5 * day_of_year + 2) / 153;
-    let day = day_of_year - (153 * month_piece + 2) / 5 + 1;
-    let month = month_piece + if month_piece < 10 { 3 } else { -9 };
-    year += i64::from(month <= 2);
-    (year, month as u32, day as u32)
-}
-
 pub(super) fn plural<'a>(count: usize, one: &'a str, many: &'a str) -> &'a str {
     if count == 1 { one } else { many }
 }
@@ -251,9 +265,30 @@ mod tests {
     }
 
     #[test]
-    fn local_workout_times_cross_days_without_inventing_a_timezone() {
-        let timing = workout_timing("2024-02-29 23:45:00", 5_400);
+    fn worker_projected_end_time_crosses_days_without_local_arithmetic() {
+        let timing = workout_timing("2024-02-29 23:45:00", "2024-03-01 01:15:00", -300, -300);
         assert_eq!(timing.date, "Feb 29, 2024");
         assert_eq!(timing.range, "11:45 PM–Mar 1, 2024 1:15 AM");
+    }
+
+    #[test]
+    fn dst_fall_back_shows_both_eastern_abbreviations() {
+        let timing = workout_timing("2026-11-01 01:50:00", "2026-11-01 01:10:00", -240, -300);
+        assert_eq!(timing.date, "Nov 1, 2026");
+        assert_eq!(timing.range, "1:50 AM EDT–1:10 AM EST");
+    }
+
+    #[test]
+    fn dst_spring_forward_uses_worker_end_and_offset() {
+        let timing = workout_timing("2026-03-08 01:55:00", "2026-03-08 03:05:00", -300, -240);
+        assert_eq!(timing.range, "1:55 AM EST–3:05 AM EDT");
+    }
+
+    #[test]
+    fn machine_time_keeps_its_eastern_offset() {
+        assert_eq!(
+            workout_datetime("2026-07-11 20:33:27", -240),
+            "2026-07-11T20:33:27-04:00"
+        );
     }
 }

@@ -3,16 +3,15 @@
 mod data;
 mod filters;
 mod format;
+mod heatmap;
 mod results;
 
 use topcoat::{
     Result,
     asset::{Asset, asset},
     context::Cx,
-    router::{
-        HeaderValue, header, page, parse_query_params, redirect, redirect_permanent, route, uri,
-    },
-    view::view,
+    router::{HeaderValue, header, not_found, page, parse_query_params, path_param, redirect, uri},
+    view::{component, view},
 };
 
 use crate::{
@@ -22,21 +21,109 @@ use crate::{
 
 use self::{
     data as fitness,
-    filters::{EQUIPMENT, Filters, MOVEMENT_DETAILS, MOVEMENTS, MUSCLES, SET_TYPES},
+    filters::{EQUIPMENT, Filters, LOG_PATH, MOVEMENT_DETAILS, MOVEMENTS, MUSCLES, SET_TYPES},
     format::{format_archive_summary, format_integer, plural},
-    results::{WorkoutCard, make_pager, total_pages},
+    results::{WorkoutCard, make_pager, total_pages, workout_url},
 };
 
 const AUTO_FILTER_JS: Asset = asset!("./auto-filter.js");
 
+#[path_param]
+struct WorkoutPath(str);
+
 #[page("/lifting")]
 async fn lifting(cx: &Cx) -> Result {
+    // Filtered archive links remain useful; the archive itself now lives at
+    // `/lifting/log`.
+    if let Some(query) = uri(cx).query() {
+        return Err(redirect(&format!("{LOG_PATH}?{query}")).into());
+    }
+
+    let meta = interest("lifting");
+    let (calendar, latest) = fitness::load_home().await;
+    if let Err(error) = &calendar {
+        eprintln!("fitness calendar fetch failed: {error}");
+    }
+    if let Err(error) = &latest {
+        eprintln!("fitness latest workout fetch failed: {error}");
+    }
+
+    let calendar_days = calendar.ok().map(|calendar| calendar.days);
+    let latest_error = latest.as_ref().err();
+    let latest_workout = latest
+        .as_ref()
+        .ok()
+        .and_then(|detail| detail.workout.as_ref());
+    let next_lift_url = latest
+        .as_ref()
+        .ok()
+        .and_then(|detail| detail.older_workout_path.as_deref())
+        .map(workout_url);
+
+    view! {
+        ((header::CACHE_CONTROL, HeaderValue::from_static("no-store")))
+        shell(title: meta.title, active: "interests", runtime: false,
+        page_head(
+            stamp: meta.slug,
+            title: meta.title,
+            lede: meta.teaser,
+        )
+        <div class="fitness">
+            rail_section(class: "mt-10", stamp: "volume",
+                if let Some(days) = calendar_days {
+                    heatmap::calendar_heatmap(days: days)
+                } else {
+                    <section class="fitness-calendar-error">
+                        <p class="fitness-empty-copy">"Daily volume is unavailable right now."</p>
+                    </section>
+                }
+            )
+
+            rail_section(class: "mt-12", stamp: "sets",
+                <header class="fitness-results-head" id="set-log">
+                    <div>
+                        <h2 class="font-display text-2xl font-semibold">"Most recent lift"</h2>
+                        <p class="fitness-result-count">"Each workout has its own linkable page."</p>
+                    </div>
+                    <a class="fitness-full-log-link" href=(LOG_PATH)>"search full log →"</a>
+                    if let Some(href) = &next_lift_url {
+                            <a class="fitness-lift-link" href=(href.as_str())>"see next lift →"</a>
+                    }
+
+                </header>
+            )
+
+            <section class="fitness-list" aria-label="Most recent workout">
+                if latest_error.is_some() {
+                    <div class="fitness-empty fitness-error">
+                        <p class="fitness-empty-title">"The latest lift did not load."</p>
+                        <p class="fitness-empty-copy">"Try the workout archive again in a moment."</p>
+                        <a class="fitness-empty-reset" href="/lifting#set-log">"retry"</a>
+                    </div>
+                } else if let Some(workout) = latest_workout {
+                    workout_sheet(workout: workout, permalink: true)
+                } else {
+                    <div class="fitness-empty">
+                        <p class="fitness-empty-title">"No lifts yet."</p>
+                        <p class="fitness-empty-copy">"The workout archive will appear here after its first import."</p>
+                    </div>
+                }
+            </section>
+
+        </div>
+        back_link(href: "/interests", label: "all interests")
+        )
+    }
+}
+
+#[page("/lifting/log")]
+async fn lifting_log(cx: &Cx) -> Result {
     let raw = match parse_query_params::<Vec<(String, String)>>(cx) {
         Ok(raw) => raw,
-        Err(_) => return Err(redirect("/lifting").into()),
+        Err(_) => return Err(redirect(LOG_PATH).into()),
     };
     let Some(filters) = Filters::normalize(raw) else {
-        return Err(redirect("/lifting").into());
+        return Err(redirect(LOG_PATH).into());
     };
     let canonical = filters.query();
     if uri(cx).query().is_some_and(|query| query != canonical) {
@@ -105,10 +192,6 @@ async fn lifting(cx: &Cx) -> Result {
             .map(|message| format!("A filter was rejected · {message}"))
             .unwrap_or_else(|| "Workout database is unreachable.".to_string()),
     };
-    let workout_cards: Vec<WorkoutCard<'_>> = sets
-        .as_ref()
-        .map(|page| page.workouts.iter().map(WorkoutCard::from).collect())
-        .unwrap_or_default();
     let pager = sets
         .as_ref()
         .ok()
@@ -132,13 +215,13 @@ async fn lifting(cx: &Cx) -> Result {
                             <p class="fitness-summary">(archive_summary.as_str())</p>
                         </div>
                         if !active_filters.is_empty() {
-                            <a class="fitness-clear" href="/lifting">"clear filters"</a>
+                            <a class="fitness-clear" href=(LOG_PATH)>"clear filters"</a>
                         }
                     </div>
 
                     <form
                         class="fitness-form"
-                        action="/lifting#set-log"
+                        action="/lifting/log#set-log"
                         method="get"
                         data-lifting-filters=""
                     >
@@ -439,7 +522,7 @@ async fn lifting(cx: &Cx) -> Result {
                         if let Some(message) = error.rejected_message() {
                             <p class="fitness-empty-title">"That filter combination is not valid."</p>
                             <p class="fitness-empty-copy">(message)</p>
-                            <a class="fitness-empty-reset" href="/lifting#set-log">"clear every filter"</a>
+                            <a class="fitness-empty-reset" href="/lifting/log#set-log">"clear every filter"</a>
                         } else {
                             <p class="fitness-empty-title">"The set log did not load."</p>
                             <p class="fitness-empty-copy">"The filters are intact. Try the database again."</p>
@@ -459,95 +542,13 @@ async fn lifting(cx: &Cx) -> Result {
                                 "Loosen a movement, date, or numeric filter and the log will reappear."
                             }
                         </p>
-                        <a class="fitness-empty-reset" href="/lifting#set-log">"clear every filter"</a>
+                        <a class="fitness-empty-reset" href="/lifting/log#set-log">"clear every filter"</a>
                     </div>
                 }
-                for workout in workout_cards.iter() {
-                    <article class="fitness-workout rail-row">
-                        <div class="fitness-workout-stamp rail-stamp">
-                            <time
-                                datetime=(workout.datetime.as_str())
-                                title="Workout-local start and end time from the source data"
-                            >
-                                <span class="fitness-stamp-date">(workout.date.as_str())</span>
-                                <span class="fitness-stamp-time">(workout.time_range.as_str())</span>
-                            </time>
-                        </div>
-                        <div class="fitness-sheet">
-                            <header class="fitness-sheet-head">
-                                <h3 class="fitness-workout-title">(workout.title)</h3>
-                                <p class="fitness-workout-meta">
-                                    (format!(
-                                        "{} · {} {}",
-                                        workout.duration,
-                                        workout.set_count,
-                                        plural(workout.set_count, "set", "sets"),
-                                    ))
-                                    if workout.duration_suspicious {
-                                        " · "
-                                        <span
-                                            class="fitness-timer-warning"
-                                            title="This source workout was left running for at least four hours, or recorded as zero."
-                                        >"timer outlier"</span>
-                                    }
-                                </p>
-                            </header>
-                            if let Some(description) = workout.description {
-                                <p class="fitness-workout-note">(description)</p>
-                            }
-                            if let Some(notes) = workout.notes {
-                                <p class="fitness-workout-note">(notes)</p>
-                            }
-                            for group in workout.groups.iter() {
-                                <section class="fitness-exercise-group">
-                                    <div class="fitness-exercise-head">
-                                        <h4 class="fitness-exercise-name">(group.name)</h4>
-                                        <span class="fitness-exercise-count">
-                                            (format!(
-                                                "{} {} · {} volume points",
-                                                group.rows.len(),
-                                                plural(group.rows.len(), "set", "sets"),
-                                                format_integer(group.volume_points),
-                                            ))
-                                        </span>
-                                    </div>
-                                    <ol class="fitness-set-list">
-                                        for row in group.rows.iter() {
-                                            <li class="fitness-set-row">
-                                                <span
-                                                    class=(row.marker_class)
-                                                    role="img"
-                                                    title=(row.marker_title.as_str())
-                                                    aria-label=(row.marker_label.as_str())
-                                                >
-                                                    if let Some(text) = &row.marker_text {
-                                                        (text.as_str())
-                                                    }
-                                                    for style in row.point_styles.iter() {
-                                                        <span
-                                                            class="fitness-set-point fitness-set-point-filled"
-                                                            style=(style.as_str())
-                                                            aria-hidden="true"
-                                                        >"★"</span>
-                                                    }
-                                                </span>
-                                                <span class="fitness-set-prescription">(row.prescription.as_str())</span>
-                                                <span class="fitness-set-details">(row.details.as_str())</span>
-                                                <span class="fitness-set-records">
-                                                    for record in row.records.iter() {
-                                                        <span class=(record.class.as_str())>(record.label.as_str())</span>
-                                                    }
-                                                </span>
-                                                if let Some(note) = row.note {
-                                                    <span class="fitness-set-note">(note)</span>
-                                                }
-                                            </li>
-                                        }
-                                    </ol>
-                                </section>
-                            }
-                        </div>
-                    </article>
+                if let Ok(page) = &sets {
+                    for workout in page.workouts.iter() {
+                        workout_sheet(workout: workout, permalink: true)
+                    }
                 }
             </section>
 
@@ -585,7 +586,181 @@ async fn lifting(cx: &Cx) -> Result {
     }
 }
 
-#[route(GET "/interests/lifting")]
-async fn legacy_lifting() -> Result {
-    Err(redirect_permanent("/lifting").into())
+#[page("/lifting/{workout_path}")]
+async fn lift_detail(cx: &Cx) -> Result {
+    let workout_path = path_param::<WorkoutPath>(cx);
+    if uri(cx).query().is_some() {
+        return Err(redirect(&workout_url(workout_path)).into());
+    }
+
+    let detail = fitness::load_workout_by_path(workout_path).await;
+    if matches!(&detail, Err(error) if error.is_not_found()) {
+        return Err(not_found().into());
+    }
+    if let Err(error) = &detail {
+        eprintln!("fitness workout fetch failed: {error}");
+    }
+
+    let meta = interest("lifting");
+    let workout = detail
+        .as_ref()
+        .ok()
+        .and_then(|detail| detail.workout.as_ref());
+    let page_title = workout
+        .map(|workout| format!("{} · {}", workout.title, meta.title))
+        .unwrap_or_else(|| meta.title.to_string());
+    let newer_lift_url = detail
+        .as_ref()
+        .ok()
+        .and_then(|detail| detail.newer_workout_path.as_deref())
+        .map(workout_url);
+    let older_lift_url = detail
+        .as_ref()
+        .ok()
+        .and_then(|detail| detail.older_workout_path.as_deref())
+        .map(workout_url);
+
+    view! {
+        ((header::CACHE_CONTROL, HeaderValue::from_static("no-store")))
+        shell(title: page_title.as_str(), active: "interests", runtime: false,
+        page_head(
+            stamp: "lift",
+            title: "Workout",
+            lede: "A complete, linkable entry from my workout archive.",
+        )
+        <div class="fitness">
+            <section class="fitness-list" aria-label="Workout">
+                if let Some(workout) = workout {
+                    workout_sheet(workout: workout, permalink: false)
+                } else {
+                    <div class="fitness-empty fitness-error">
+                        <p class="fitness-empty-title">"This lift did not load."</p>
+                        <p class="fitness-empty-copy">"Try the latest workout or the full archive again in a moment."</p>
+                        <a class="fitness-empty-reset" href="/lifting">"latest lift"</a>
+                    </div>
+                }
+            </section>
+
+            if newer_lift_url.is_some() || older_lift_url.is_some() {
+                <nav class="fitness-lift-nav" aria-label="Workout navigation">
+                    if let Some(href) = &newer_lift_url {
+                        <a class="fitness-lift-link" href=(href.as_str())>"← newer lift"</a>
+                    } else {
+                        <span></span>
+                    }
+                    <a class="fitness-lift-link fitness-latest-link" href="/lifting">"latest lift"</a>
+                    if let Some(href) = &older_lift_url {
+                        <a class="fitness-lift-link" href=(href.as_str())>"see next lift →"</a>
+                    } else {
+                        <span></span>
+                    }
+                </nav>
+            }
+        </div>
+        back_link(href: "/lifting", label: "latest lift")
+        )
+    }
+}
+
+#[component]
+async fn workout_sheet(workout: &fitness::Workout, permalink: bool) -> Result {
+    let workout = WorkoutCard::from(workout);
+    let workout_link_label = format!("Open {} workout", workout.title);
+    view! {
+        <article class="fitness-workout rail-row">
+            <div class="fitness-workout-stamp rail-stamp">
+                <time
+                    datetime=(workout.datetime.as_str())
+                    title="Eastern start and end time from the workout archive"
+                >
+                    <span class="fitness-stamp-date">(workout.date.as_str())</span>
+                    <span class="fitness-stamp-time">(workout.time_range.as_str())</span>
+                </time>
+            </div>
+            <div class="fitness-sheet">
+                <header class="fitness-sheet-head">
+                    <h3 class="fitness-workout-title">
+                        if permalink {
+                            <a
+                                class="fitness-workout-link"
+                                href=(workout.href.as_str())
+                                aria-label=(workout_link_label.as_str())
+                            >(workout.title)</a>
+                        } else {
+                            (workout.title)
+                        }
+                    </h3>
+                    <p class="fitness-workout-meta">
+                        (format!(
+                            "{} · {} {}",
+                            workout.duration,
+                            workout.set_count,
+                            plural(workout.set_count, "set", "sets"),
+                        ))
+                        if workout.duration_suspicious {
+                            " · "
+                            <span
+                                class="fitness-timer-warning"
+                                title="This source workout was left running for at least four hours, or recorded as zero."
+                            >"timer outlier"</span>
+                        }
+                    </p>
+                </header>
+                if let Some(description) = workout.description {
+                    <p class="fitness-workout-note">(description)</p>
+                }
+                if let Some(notes) = workout.notes {
+                    <p class="fitness-workout-note">(notes)</p>
+                }
+                for group in workout.groups.iter() {
+                    <section class="fitness-exercise-group">
+                        <div class="fitness-exercise-head">
+                            <h4 class="fitness-exercise-name">(group.name)</h4>
+                            <span class="fitness-exercise-count">
+                                (format!(
+                                    "{} {} · {} volume points",
+                                    group.rows.len(),
+                                    plural(group.rows.len(), "set", "sets"),
+                                    format_integer(group.volume_points),
+                                ))
+                            </span>
+                        </div>
+                        <ol class="fitness-set-list">
+                            for row in group.rows.iter() {
+                                <li class="fitness-set-row">
+                                    <span
+                                        class=(row.marker_class)
+                                        role="img"
+                                        title=(row.marker_title.as_str())
+                                        aria-label=(row.marker_label.as_str())
+                                    >
+                                        if let Some(text) = &row.marker_text {
+                                            (text.as_str())
+                                        }
+                                        for style in row.point_styles.iter() {
+                                            <span
+                                                class="fitness-set-point fitness-set-point-filled"
+                                                style=(style.as_str())
+                                                aria-hidden="true"
+                                            >"★"</span>
+                                        }
+                                    </span>
+                                    <span class="fitness-set-prescription">(row.prescription.as_str())</span>
+                                    <span class="fitness-set-details">(row.details.as_str())</span>
+                                    <span class="fitness-set-records">
+                                        for record in row.records.iter() {
+                                            <span class=(record.class.as_str())>(record.label.as_str())</span>
+                                        }
+                                    </span>
+                                    if let Some(note) = row.note {
+                                        <span class="fitness-set-note">(note)</span>
+                                    }
+                                </li>
+                            }
+                        </ol>
+                    </section>
+                }
+            </div>
+        </article>
+    }
 }

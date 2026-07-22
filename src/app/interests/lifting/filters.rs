@@ -3,6 +3,7 @@
 use crate::util::urlencode;
 
 const DEFAULT_PER_PAGE: &str = "10";
+pub(super) const LOG_PATH: &str = "/lifting/log";
 
 pub(super) const MOVEMENTS: &[(&str, &str)] = &[
     ("squat-type", "squat-type"),
@@ -170,9 +171,9 @@ impl Filters {
     pub(super) fn url(&self, fragment: bool) -> String {
         let query = self.query();
         let mut url = if query.is_empty() {
-            "/lifting".to_string()
+            LOG_PATH.to_string()
         } else {
-            format!("/lifting?{query}")
+            format!("{LOG_PATH}?{query}")
         };
         if fragment {
             url.push_str("#set-log");
@@ -370,10 +371,13 @@ mod tests {
             ("page".into(), "4".into()),
         ])
         .expect("safe query");
-        assert_eq!(filters.page_url(1), "/lifting?movement=squat-type#set-log");
+        assert_eq!(
+            filters.page_url(1),
+            "/lifting/log?movement=squat-type#set-log"
+        );
         assert_eq!(
             filters.page_url(3),
-            "/lifting?movement=squat-type&page=3#set-log"
+            "/lifting/log?movement=squat-type&page=3#set-log"
         );
     }
 

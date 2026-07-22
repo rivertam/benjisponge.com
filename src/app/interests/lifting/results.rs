@@ -3,10 +3,12 @@
 use super::{
     data as fitness,
     filters::{Filters, SET_TYPES, lookup},
-    format::{format_duration, format_scaled, workout_timing},
+    format::{format_duration, format_scaled, workout_datetime, workout_timing},
 };
+use crate::util::urlencode;
 
 pub(super) struct WorkoutCard<'a> {
+    pub(super) href: String,
     pub(super) title: &'a str,
     pub(super) datetime: String,
     pub(super) date: String,
@@ -21,10 +23,16 @@ pub(super) struct WorkoutCard<'a> {
 
 impl<'a> From<&'a fitness::Workout> for WorkoutCard<'a> {
     fn from(workout: &'a fitness::Workout) -> Self {
-        let timing = workout_timing(&workout.started_at_local, workout.duration_seconds);
+        let timing = workout_timing(
+            &workout.started_at_local,
+            &workout.ended_at_local,
+            workout.eastern_offset_minutes,
+            workout.end_eastern_offset_minutes,
+        );
         Self {
+            href: workout_url(&workout.path),
             title: &workout.title,
-            datetime: workout.started_at_local.replace(' ', "T"),
+            datetime: workout_datetime(&workout.started_at_local, workout.eastern_offset_minutes),
             date: timing.date,
             time_range: timing.range,
             duration: format_duration(workout.duration_seconds),
@@ -35,6 +43,10 @@ impl<'a> From<&'a fitness::Workout> for WorkoutCard<'a> {
             groups: exercise_groups(&workout.sets),
         }
     }
+}
+
+pub(super) fn workout_url(path: &str) -> String {
+    format!("/lifting/{}", urlencode(path))
 }
 
 pub(super) struct ExerciseGroup<'a> {
@@ -294,6 +306,22 @@ mod tests {
         }
     }
 
+    fn workout() -> fitness::Workout {
+        fitness::Workout {
+            path: "2026-07-21T17-03-00-04-00".to_string(),
+            title: "Lift".to_string(),
+            started_at_local: "2026-07-21 17:03:00".to_string(),
+            ended_at_local: "2026-07-21 18:03:00".to_string(),
+            eastern_offset_minutes: -240,
+            end_eastern_offset_minutes: -240,
+            duration_seconds: 3_600,
+            duration_suspicious: false,
+            notes: None,
+            description: None,
+            sets: vec![set()],
+        }
+    }
+
     #[test]
     fn missing_effort_is_not_coerced_to_zero() {
         assert_eq!(effort_points(None), 2);
@@ -335,5 +363,17 @@ mod tests {
         distance.set_time_seconds = Some(60);
         assert_eq!(prescription(&distance), "distance 2.5");
         assert_eq!(set_details(&distance), "1m 00s");
+    }
+
+    #[test]
+    fn workout_links_use_the_workers_canonical_public_path() {
+        let workout = workout();
+        let card = WorkoutCard::from(&workout);
+        assert_eq!(card.href, "/lifting/2026-07-21T17-03-00-04-00");
+    }
+
+    #[test]
+    fn worker_paths_are_escaped_as_one_url_segment() {
+        assert_eq!(workout_url("manual:abc 123"), "/lifting/manual%3Aabc%20123");
     }
 }

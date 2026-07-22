@@ -1,5 +1,6 @@
 // /api/fitness/* -- the public fitness archive and private bounded import path.
-// Source timestamps are local wall-clock strings; no timezone is inferred.
+// Strong exports UTC timestamps. Store that source instant and project every
+// public date, time, filter, calendar square, and URL into America/New_York.
 // Cross-layer invariants and taxonomy workflow: ../../docs/fitness.md.
 
 import { bearerAuthorized } from "./auth";
@@ -12,7 +13,9 @@ type IncomingWorkout = {
   id: string;
   title: string;
   raw_title: string;
+  started_at_utc: string;
   started_at_local: string;
+  eastern_offset_minutes: number;
   duration_seconds: number;
   duration_suspicious: boolean;
   notes: string | null;
@@ -64,12 +67,16 @@ type FilterSql = {
 
 type CountRow = { total_sets: number; total_workouts: number };
 type IdRow = { id: string };
+type WorkoutPositionRow = IdRow & {
+  started_at_utc: string;
+};
+type CalendarDayRow = { date: string; volume_points: number };
 
 type SetRow = {
   workout_id: string;
   title: string;
   raw_title: string;
-  started_at_local: string;
+  started_at_utc: string;
   duration_seconds: number;
   duration_suspicious: number;
   workout_notes: string | null;
@@ -116,9 +123,13 @@ type ApiSet = {
 
 type ApiWorkout = {
   id: string;
+  path: string;
   title: string;
   raw_title: string;
   started_at_local: string;
+  ended_at_local: string;
+  eastern_offset_minutes: number;
+  end_eastern_offset_minutes: number;
   duration_seconds: number;
   duration_suspicious: boolean;
   notes: string | null;
@@ -138,6 +149,29 @@ const TAG_PATTERN = /^[a-z0-9][a-z0-9-]{0,63}$/;
 const SET_TYPE_PATTERN = /^(?:WARMUP_SET|NORMAL_SET|FAILURE_SET|PARTIAL_REPS_SET|DROP_SET|NEGATIVE_REPS_SET)$/;
 const PUBLIC_HEADERS = { "Access-Control-Allow-Origin": "*" };
 const TAG_KINDS: readonly TagKind[] = ["movement", "muscle", "equipment"];
+const WORKOUT_PUBLIC_PREFIX = "/api/fitness/workouts/by-path/";
+const FITNESS_ID_PREFIX = "fitness:";
+const EASTERN_TIME_ZONE = "America/New_York";
+const EASTERN_PARTS = new Intl.DateTimeFormat("en-US-u-ca-iso8601-nu-latn", {
+  timeZone: EASTERN_TIME_ZONE,
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+  hourCycle: "h23",
+});
+// Keep the calendar's score in lockstep with `set_volume_points()` in the
+// server-rendered site. It is deliberately an effort score, not load × reps.
+const VOLUME_POINTS_SQL = `CASE
+  WHEN s.set_type = 'FAILURE_SET' THEN 6
+  WHEN s.set_type = 'WARMUP_SET' THEN 0
+  WHEN s.effort_hundredths = 0 THEN 5
+  WHEN s.effort_hundredths = 100 THEN 4
+  WHEN s.effort_hundredths = 200 THEN 3
+  ELSE 2
+END`;
 const ALLOWED_FILTERS = new Set([
   "q",
   "movement",
@@ -175,6 +209,15 @@ export async function handleFitness(
     }
     if (request.method === "GET" && url.pathname === "/api/fitness/facets") {
       return await listFacets(env, url);
+    }
+    if (request.method === "GET" && url.pathname === "/api/fitness/calendar") {
+      return await listCalendar(env, url);
+    }
+    if (request.method === "GET" && url.pathname === "/api/fitness/workouts/latest") {
+      return await latestWorkout(env, url);
+    }
+    if (request.method === "GET" && url.pathname.startsWith(WORKOUT_PUBLIC_PREFIX)) {
+      return await workoutDetailByPath(env, url);
     }
     if (request.method === "GET" && url.pathname === "/api/fitness/ids") {
       return await listIds(env, url);
@@ -225,7 +268,7 @@ async function listSets(env: FitnessEnv, url: URL): Promise<Response> {
           JOIN exercises e ON e.name = s.exercise_name
          WHERE s.workout_id = w.id AND ${parsed.where}
       )
-      ORDER BY w.started_at_local DESC, w.id DESC
+      ORDER BY w.started_at_utc DESC, w.id DESC
       LIMIT ? OFFSET ?`,
   ).bind(...parsed.params, parsed.perPage, offset);
 
@@ -252,10 +295,34 @@ async function listSets(env: FitnessEnv, url: URL): Promise<Response> {
     );
   }
 
+  const workouts = await loadWorkouts(env, workoutIds, parsed.where, parsed.params);
+  return json(
+    {
+      version,
+      page: parsed.page,
+      per_page: parsed.perPage,
+      total_sets: count?.total_sets ?? 0,
+      total_workouts: count?.total_workouts ?? 0,
+      workouts,
+    },
+    200,
+    true,
+  );
+}
+
+/// Materialize the public workout shape once so filtered archive pages and
+/// permanent workout pages cannot drift in their set/record rendering.
+async function loadWorkouts(
+  env: FitnessEnv,
+  workoutIds: string[],
+  where: string,
+  params: Array<string | number>,
+): Promise<ApiWorkout[]> {
+  if (workoutIds.length === 0) return [];
   const workoutPlaceholders = placeholders(workoutIds.length);
-  const rowParams: Array<string | number> = [...workoutIds, ...parsed.params];
+  const rowParams: Array<string | number> = [...workoutIds, ...params];
   const rowsStatement = env.SITE_DB.prepare(
-    `SELECT w.id AS workout_id, w.title, w.raw_title, w.started_at_local,
+    `SELECT w.id AS workout_id, w.title, w.raw_title, w.started_at_utc,
             w.duration_seconds, w.duration_suspicious,
             w.notes AS workout_notes, w.description AS workout_description,
             s.id AS set_id, s.ordinal, e.name AS exercise_name,
@@ -266,8 +333,8 @@ async function listSets(env: FitnessEnv, url: URL): Promise<Response> {
        JOIN workouts w ON w.id = s.workout_id
        JOIN exercises e ON e.name = s.exercise_name
       WHERE s.workout_id IN (${workoutPlaceholders})
-        AND ${parsed.where}
-      ORDER BY w.started_at_local DESC, w.id DESC, s.ordinal ASC`,
+        AND ${where}
+      ORDER BY w.started_at_utc DESC, w.id DESC, s.ordinal ASC`,
   ).bind(...rowParams);
   const recordsStatement = env.SITE_DB.prepare(
     `SELECT sr.set_id, sr.ordinal, sr.level, sr.kind
@@ -276,7 +343,7 @@ async function listSets(env: FitnessEnv, url: URL): Promise<Response> {
        JOIN workouts w ON w.id = s.workout_id
        JOIN exercises e ON e.name = s.exercise_name
       WHERE s.workout_id IN (${workoutPlaceholders})
-        AND ${parsed.where}
+        AND ${where}
       ORDER BY sr.set_id, sr.ordinal`,
   ).bind(...rowParams);
   const [rowsResult, recordsResult] = await Promise.all([
@@ -296,11 +363,17 @@ async function listSets(env: FitnessEnv, url: URL): Promise<Response> {
   for (const row of rowsResult.results) {
     let workout = workoutsById.get(row.workout_id);
     if (!workout) {
+      const start = easternInstant(row.started_at_utc);
+      const end = easternInstant(row.started_at_utc, row.duration_seconds);
       workout = {
         id: row.workout_id,
+        path: publicWorkoutPath(start),
         title: row.title,
         raw_title: row.raw_title,
-        started_at_local: row.started_at_local,
+        started_at_local: start.local,
+        ended_at_local: end.local,
+        eastern_offset_minutes: start.offsetMinutes,
+        end_eastern_offset_minutes: end.offsetMinutes,
         duration_seconds: row.duration_seconds,
         duration_suspicious: row.duration_suspicious === 1,
         notes: row.workout_notes,
@@ -327,18 +400,7 @@ async function listSets(env: FitnessEnv, url: URL): Promise<Response> {
     });
   }
 
-  return json(
-    {
-      version,
-      page: parsed.page,
-      per_page: parsed.perPage,
-      total_sets: count?.total_sets ?? 0,
-      total_workouts: count?.total_workouts ?? 0,
-      workouts,
-    },
-    200,
-    true,
-  );
+  return workouts;
 }
 
 type SummaryRow = {
@@ -411,6 +473,185 @@ async function listFacets(env: FitnessEnv, url: URL): Promise<Response> {
     200,
     true,
   );
+}
+
+async function listCalendar(env: FitnessEnv, url: URL): Promise<Response> {
+  if (url.search !== "") return badFilter("calendar does not accept filters");
+
+  const [daysResult, version] = await Promise.all([
+    env.SITE_DB.prepare(
+      `SELECT substr(w.started_at_local, 1, 10) AS date,
+              SUM(${VOLUME_POINTS_SQL}) AS volume_points
+         FROM sets s
+         JOIN workouts w ON w.id = s.workout_id
+        GROUP BY substr(w.started_at_local, 1, 10)
+        ORDER BY date`,
+    ).all<CalendarDayRow>(),
+    fitnessDataVersion(env),
+  ]);
+  return json({ version, days: daysResult.results }, 200, true);
+}
+
+async function latestWorkout(env: FitnessEnv, url: URL): Promise<Response> {
+  if (url.search !== "") return badFilter("latest workout does not accept filters");
+  const latest = await env.SITE_DB.prepare(
+    `SELECT id, started_at_utc
+       FROM workouts
+      ORDER BY started_at_utc DESC, id DESC
+      LIMIT 1`,
+  ).first<WorkoutPositionRow>();
+  return workoutDetailResponse(env, latest);
+}
+
+async function workoutDetailByPath(env: FitnessEnv, url: URL): Promise<Response> {
+  if (url.search !== "") return badFilter("workout does not accept filters");
+  const path = publicWorkoutPathFromRequest(url.pathname);
+  if (path === null) return json({ error: "not found" }, 404, true);
+  const workout = await env.SITE_DB.prepare(
+    `SELECT id, started_at_utc
+       FROM workouts
+      WHERE started_at_local = ? AND eastern_offset_minutes = ?`,
+  )
+    .bind(path.local, path.offsetMinutes)
+    .first<WorkoutPositionRow>();
+  if (workout === null) return json({ error: "not found" }, 404, true);
+  return workoutDetailResponse(env, workout);
+}
+
+async function workoutDetailResponse(
+  env: FitnessEnv,
+  current: WorkoutPositionRow | null,
+): Promise<Response> {
+  if (current === null) {
+    return json(
+      {
+        version: await fitnessDataVersion(env),
+        workout: null,
+        newer_workout_path: null,
+        older_workout_path: null,
+      },
+      200,
+      true,
+    );
+  }
+
+  const [workouts, newer, older, version] = await Promise.all([
+    loadWorkouts(env, [current.id], "1 = 1", []),
+    env.SITE_DB.prepare(
+      `SELECT id, started_at_utc
+         FROM workouts
+        WHERE started_at_utc > ?
+           OR (started_at_utc = ? AND id > ?)
+        ORDER BY started_at_utc ASC, id ASC
+        LIMIT 1`,
+    )
+      .bind(current.started_at_utc, current.started_at_utc, current.id)
+      .first<WorkoutPositionRow>(),
+    env.SITE_DB.prepare(
+      `SELECT id, started_at_utc
+         FROM workouts
+        WHERE started_at_utc < ?
+           OR (started_at_utc = ? AND id < ?)
+        ORDER BY started_at_utc DESC, id DESC
+        LIMIT 1`,
+    )
+      .bind(current.started_at_utc, current.started_at_utc, current.id)
+      .first<WorkoutPositionRow>(),
+    fitnessDataVersion(env),
+  ]);
+  return json(
+    {
+      version,
+      workout: workouts[0] ?? null,
+      newer_workout_path: newer
+        ? publicWorkoutPath(easternInstant(newer.started_at_utc))
+        : null,
+      older_workout_path: older
+        ? publicWorkoutPath(easternInstant(older.started_at_utc))
+        : null,
+    },
+    200,
+    true,
+  );
+}
+
+type PublicWorkoutPosition = { local: string; offsetMinutes: number };
+
+function publicWorkoutPathFromRequest(pathname: string): PublicWorkoutPosition | null {
+  const encoded = pathname.slice(WORKOUT_PUBLIC_PREFIX.length);
+  if (encoded.length === 0 || encoded.includes("/")) return null;
+  try {
+    return parsePublicWorkoutPath(decodeURIComponent(encoded));
+  } catch {
+    return null;
+  }
+}
+
+function parsePublicWorkoutPath(value: string): PublicWorkoutPosition | null {
+  const match = value.match(
+    /^(\d{4}-\d{2}-\d{2})T(\d{2})-(\d{2})-(\d{2})([+-])(\d{2})-(\d{2})$/,
+  );
+  if (!match) return null;
+  const local = `${match[1]} ${match[2]}:${match[3]}:${match[4]}`;
+  if (!validLocalDateTime(local)) return null;
+  const offsetMinutes = (Number(match[6]) * 60 + Number(match[7])) * (match[5] === "-" ? -1 : 1);
+  // The Strong archive is deliberately fixed to America/New_York. Keeping
+  // the offset in the path distinguishes the repeated autumn hour.
+  if (offsetMinutes !== -300 && offsetMinutes !== -240) return null;
+  return { local, offsetMinutes };
+}
+
+type EasternInstant = { local: string; offsetMinutes: number };
+
+/** Convert a validated UTC wall-clock source string to America/New_York. */
+function easternInstant(utc: string, addSeconds = 0): EasternInstant {
+  const source = utcDate(utc);
+  if (source === null) throw new Error(`invalid UTC timestamp: ${utc}`);
+  const instant = new Date(source.getTime() + addSeconds * 1_000);
+  const parts = new Map<string, string>();
+  for (const part of EASTERN_PARTS.formatToParts(instant)) {
+    if (part.type !== "literal") parts.set(part.type, part.value);
+  }
+  const year = parts.get("year");
+  const month = parts.get("month");
+  const day = parts.get("day");
+  const minute = parts.get("minute");
+  const second = parts.get("second");
+  let hour = parts.get("hour");
+  if (!year || !month || !day || !hour || !minute || !second) {
+    throw new Error("America/New_York formatter omitted a date-time part");
+  }
+  // Some ICU versions format midnight as 24:00 despite hourCycle h23.
+  if (hour === "24") hour = "00";
+  const local = `${year}-${month}-${day} ${hour}:${minute}:${second}`;
+  const localAsUtc = Date.UTC(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hour),
+    Number(minute),
+    Number(second),
+  );
+  return { local, offsetMinutes: Math.round((localAsUtc - instant.getTime()) / 60_000) };
+}
+
+function utcDate(value: string): Date | null {
+  if (!validLocalDateTime(value)) return null;
+  const date = new Date(`${value.replace(" ", "T")}Z`);
+  return Number.isNaN(date.getTime()) ? null : date;
+}
+
+function publicWorkoutPath(instant: EasternInstant): string {
+  const [date, time] = instant.local.split(" ");
+  const [hour, minute, second] = time.split(":");
+  return `${date}T${hour}-${minute}-${second}${formatOffsetPath(instant.offsetMinutes)}`;
+}
+
+function formatOffsetPath(offsetMinutes: number): string {
+  const absolute = Math.abs(offsetMinutes);
+  const hours = String(Math.floor(absolute / 60)).padStart(2, "0");
+  const minutes = String(absolute % 60).padStart(2, "0");
+  return `${offsetMinutes < 0 ? "-" : "+"}${hours}-${minutes}`;
 }
 
 async function listIds(env: FitnessEnv, url: URL): Promise<Response> {
@@ -487,9 +728,10 @@ async function importChunk(
   const statements: D1PreparedStatement[] = [];
   const workoutInsert = env.SITE_DB.prepare(
     `INSERT OR IGNORE INTO workouts
-       (id, title, raw_title, started_at_local, duration_seconds,
+       (id, title, raw_title, started_at_utc, started_at_local,
+        eastern_offset_minutes, duration_seconds,
         duration_suspicious, notes, description, source, imported_at)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, unixepoch())`,
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, unixepoch())`,
   );
   for (const workout of parsed.workouts) {
     statements.push(
@@ -497,7 +739,9 @@ async function importChunk(
         workout.id,
         workout.title,
         workout.raw_title,
+        workout.started_at_utc,
         workout.started_at_local,
+        workout.eastern_offset_minutes,
         workout.duration_seconds,
         workout.duration_suspicious ? 1 : 0,
         workout.notes,
@@ -866,7 +1110,7 @@ function parseWorkout(value: unknown): IncomingWorkout | string {
       "id",
       "title",
       "raw_title",
-      "started_at_local",
+      "started_at_utc",
       "duration_seconds",
       "duration_suspicious",
       "notes",
@@ -876,15 +1120,18 @@ function parseWorkout(value: unknown): IncomingWorkout | string {
   ) {
     return "contains unknown or missing fields";
   }
-  const { id, title, raw_title, started_at_local, duration_seconds, duration_suspicious } =
+  const { id, title, raw_title, started_at_utc, duration_seconds, duration_suspicious } =
     value;
   if (typeof id !== "string" || !ID_PATTERN.test(id)) return "bad id";
   if (!validText(title, 1, 240) || title.trim().length === 0) {
     return "title must be 1-240 non-whitespace characters";
   }
   if (!validText(raw_title, 1, 240)) return "raw_title must be 1-240 characters";
-  if (typeof started_at_local !== "string" || !validLocalDateTime(started_at_local)) {
-    return "started_at_local must be a real YYYY-MM-DD HH:MM:SS local time";
+  if (typeof started_at_utc !== "string" || !validLocalDateTime(started_at_utc)) {
+    return "started_at_utc must be a real YYYY-MM-DD HH:MM:SS UTC time";
+  }
+  if (id !== `${FITNESS_ID_PREFIX}${started_at_utc.replace(" ", "T")}`) {
+    return "id must be the UTC-derived fitness timestamp";
   }
   if (!validInteger(duration_seconds, 0, 604_800)) return "bad duration_seconds";
   if (typeof duration_suspicious !== "boolean") return "bad duration_suspicious";
@@ -896,11 +1143,14 @@ function parseWorkout(value: unknown): IncomingWorkout | string {
   const description = nullableText(value.description, 10_000);
   if (description === undefined) return "description must be null or 1-10000 characters";
   if (value.source !== "workout-data-csv") return "source must be workout-data-csv";
+  const eastern = easternInstant(started_at_utc);
   return {
     id,
     title,
     raw_title,
-    started_at_local,
+    started_at_utc,
+    started_at_local: eastern.local,
+    eastern_offset_minutes: eastern.offsetMinutes,
     duration_seconds,
     duration_suspicious,
     notes,

@@ -1,7 +1,7 @@
-//! Server-side reader for `/lifting`'s D1-backed fitness archive.
+//! Server-side reader for `/lifting` and its D1-backed fitness archive.
 //!
 //! The Worker owns filtering and validation. The site forwards the normalized
-//! `/lifting` query as repeated key/value pairs, then renders the typed JSON
+//! `/lifting/log` query as repeated key/value pairs, then renders the typed JSON
 //! response as HTML. Keeping the API boundary here makes the page useful with
 //! no browser runtime at all.
 
@@ -9,6 +9,8 @@ use std::{fmt, sync::OnceLock, time::Duration};
 
 use reqwest::StatusCode;
 use serde::Deserialize;
+
+use crate::util::urlencode;
 
 #[derive(Debug, Deserialize)]
 pub struct Facets {
@@ -41,8 +43,15 @@ pub struct SetPage {
 
 #[derive(Debug, Deserialize)]
 pub struct Workout {
+    /// The Worker-generated, canonical public path segment. The immutable ID
+    /// stays internal to the archive so importing and URL presentation can
+    /// evolve independently.
+    pub path: String,
     pub title: String,
     pub started_at_local: String,
+    pub ended_at_local: String,
+    pub eastern_offset_minutes: i32,
+    pub end_eastern_offset_minutes: i32,
     pub duration_seconds: u64,
     pub duration_suspicious: bool,
     pub notes: Option<String>,
@@ -71,11 +80,30 @@ pub struct Record {
     pub kind: String,
 }
 
+#[derive(Debug, Deserialize)]
+pub struct Calendar {
+    pub days: Vec<CalendarDay>,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct CalendarDay {
+    pub date: String,
+    pub volume_points: u32,
+}
+
+#[derive(Debug, Deserialize)]
+pub struct WorkoutDetail {
+    pub workout: Option<Workout>,
+    pub newer_workout_path: Option<String>,
+    pub older_workout_path: Option<String>,
+}
+
 /// A rejected filter is safe to show to the reader. Transport, upstream, and
 /// JSON failures are logged by the page but deliberately rendered generically.
 #[derive(Debug)]
 pub enum LoadError {
     Rejected(String),
+    NotFound(String),
     Unavailable(String),
 }
 
@@ -83,8 +111,12 @@ impl LoadError {
     pub fn rejected_message(&self) -> Option<&str> {
         match self {
             Self::Rejected(message) => Some(message),
-            Self::Unavailable(_) => None,
+            Self::NotFound(_) | Self::Unavailable(_) => None,
         }
+    }
+
+    pub fn is_not_found(&self) -> bool {
+        matches!(self, Self::NotFound(_))
     }
 }
 
@@ -92,6 +124,7 @@ impl fmt::Display for LoadError {
     fn fmt(&self, formatter: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self {
             Self::Rejected(message) => write!(formatter, "fitness filter rejected: {message}"),
+            Self::NotFound(message) => write!(formatter, "fitness resource not found: {message}"),
             Self::Unavailable(message) => write!(formatter, "fitness API unavailable: {message}"),
         }
     }
@@ -104,12 +137,40 @@ pub async fn load(
     tokio::join!(fetch_facets(), fetch_sets(filters))
 }
 
+/// The landing view has no filters: it needs one current workout and the
+/// archive-wide daily totals for its heatmap.
+pub async fn load_home() -> (
+    Result<Calendar, LoadError>,
+    Result<WorkoutDetail, LoadError>,
+) {
+    tokio::join!(fetch_calendar(), fetch_latest_workout())
+}
+
+/// Resolve a current, Worker-owned public path. Do not infer an importer ID
+/// from it: the path includes the Eastern UTC offset and is intentionally an
+/// API-level mapping rather than a client-side convention.
+pub async fn load_workout_by_path(path: &str) -> Result<WorkoutDetail, LoadError> {
+    fetch_public_workout(path).await
+}
+
 async fn fetch_facets() -> Result<Facets, LoadError> {
     fetch("facets", &[]).await
 }
 
 async fn fetch_sets(filters: &[(String, String)]) -> Result<SetPage, LoadError> {
     fetch("sets", filters).await
+}
+
+async fn fetch_calendar() -> Result<Calendar, LoadError> {
+    fetch("calendar", &[]).await
+}
+
+async fn fetch_latest_workout() -> Result<WorkoutDetail, LoadError> {
+    fetch("workouts/latest", &[]).await
+}
+
+async fn fetch_public_workout(path: &str) -> Result<WorkoutDetail, LoadError> {
+    fetch(&format!("workouts/by-path/{}", urlencode(path)), &[]).await
 }
 
 async fn fetch<T: for<'de> Deserialize<'de>>(
@@ -139,7 +200,9 @@ async fn fetch<T: for<'de> Deserialize<'de>>(
                     status.canonical_reason().unwrap_or("error")
                 )
             });
-        return if status.is_client_error() && status != StatusCode::NOT_FOUND {
+        return if status == StatusCode::NOT_FOUND {
+            Err(LoadError::NotFound(message))
+        } else if status.is_client_error() {
             Err(LoadError::Rejected(message))
         } else {
             Err(LoadError::Unavailable(message))
@@ -184,8 +247,12 @@ mod tests {
               "version": 4, "page": 1, "per_page": 10,
               "total_sets": 1, "total_workouts": 1,
               "workouts": [{
-                "id": "w1", "title": "Leg day", "raw_title": "Leg day",
+                "id": "w1", "path": "2026-07-21T17-03-00-04-00",
+                "title": "Leg day", "raw_title": "Leg day",
                 "started_at_local": "2026-07-21 17:03:00",
+                "ended_at_local": "2026-07-21 18:03:00",
+                "eastern_offset_minutes": -240,
+                "end_eastern_offset_minutes": -240,
                 "duration_seconds": 3600, "duration_suspicious": false,
                 "notes": null, "description": "hard",
                 "sets": [{
@@ -202,8 +269,35 @@ mod tests {
         .unwrap();
 
         assert_eq!(page.per_page, 10);
+        assert_eq!(page.workouts[0].path, "2026-07-21T17-03-00-04-00");
+        assert_eq!(page.workouts[0].eastern_offset_minutes, -240);
         assert_eq!(page.workouts[0].sets[0].weight_milli, Some(102_500));
         assert_eq!(page.workouts[0].sets[0].effort_hundredths, None);
         assert_eq!(page.workouts[0].sets[0].records[0].kind, "volume");
+    }
+
+    #[test]
+    fn parses_calendar_and_linkable_workout_envelopes() {
+        let calendar: Calendar = serde_json::from_str(
+            r#"{"version":4,"days":[{"date":"2026-07-21","volume_points":42}]}"#,
+        )
+        .unwrap();
+        assert_eq!(calendar.days[0].date, "2026-07-21");
+        assert_eq!(calendar.days[0].volume_points, 42);
+
+        let detail: WorkoutDetail = serde_json::from_str(
+            r#"{
+              "version":4,
+              "workout":null,
+              "newer_workout_path":null,
+              "older_workout_path":"2026-07-18T16-19-36-04-00"
+            }"#,
+        )
+        .unwrap();
+        assert!(detail.workout.is_none());
+        assert_eq!(
+            detail.older_workout_path.as_deref(),
+            Some("2026-07-18T16-19-36-04-00")
+        );
     }
 }

@@ -62,9 +62,13 @@ and static assets. Config in `deploy/wrangler.jsonc`; image in
 
 - `benjisponge-spire` is the existing shared site-data D1 database, bound as
   `SITE_DB`. The name is historical; changing the binding did not replace or
-  copy the database. From `deploy/`, both bootstrap schemas are idempotent:
+  copy the database. From `deploy/`, `spire-schema.sql` is idempotent and
+  `fitness-schema.sql` bootstraps an empty fitness archive:
   `npx wrangler d1 execute benjisponge-spire --remote --file=spire-schema.sql`
   `npx wrangler d1 execute benjisponge-spire --remote --file=fitness-schema.sql`
+  `fitness-schema.sql` is for an empty fitness archive. To replace an older
+  fitness archive, reset and resync its six fitness tables as documented in
+  `docs/fitness.md`; never drop the shared D1 database or its Spire tables.
 
 ### Spire runs
 
@@ -89,31 +93,60 @@ Cross-layer map, source invariants, taxonomy workflow, and manual-logging
 boundary: `docs/fitness.md`.
 
 `just dev [port]` owns the complete local fitness stack. It applies the
-idempotent fitness schema to Wrangler's persistent local D1, starts the Worker
-on `127.0.0.1:8791` with an ephemeral import token, syncs
-`/home/benji/Downloads/WorkoutData.csv`, and then starts Topcoat on the requested
+idempotent fresh fitness schema to Wrangler's persistent local D1, starts the
+Worker on `127.0.0.1:8791` with an ephemeral import token, syncs
+`/home/benji/Downloads/WorkoutData.csv`, and starts Topcoat on the requested
 port. Exiting Topcoat also stops Wrangler and removes the temporary token. Set
 `WORKOUT_DATA_CSV` to use another export path. Local D1 data remains under
-`deploy/.wrangler/state` so subsequent starts only upload new sets.
+`deploy/.wrangler/state`, so subsequent starts only upload new sets. It does
+not migrate or reset existing local data: remove that state once before this
+flow if it was created by the pre-UTC schema (this also clears local Spire
+fixtures, never production data).
 
 `fitness-schema.sql` creates six normalized STRICT tables: `workouts`,
 `exercises`, `exercise_tags`, `sets`, `set_records`, and `fitness_meta`.
-Workout starts remain local wall-clock strings (`YYYY-MM-DD HH:MM:SS`) because
-the Strong export has no timezone. Set ordinals remain 1-based within the
-workout. Numeric decimals are stored losslessly as scaled integers: load and
-distance in thousandths, effort in hundredths.
+Each workout keeps Strong's original UTC start as `started_at_utc`, its
+`America/New_York` wall-clock projection as `started_at_local`, and
+`eastern_offset_minutes` (`-240` for EDT or `-300` for EST). Strong's
+offset-less `Date` column is UTC; it is never interpreted in the Worker or
+developer machine's timezone. Set ordinals remain 1-based within the workout.
+Numeric decimals are stored losslessly as scaled integers: load and distance in
+thousandths, effort in hundredths.
+
+The UTC/Eastern archive is a fresh fitness schema, not an in-place upgrade.
+For the existing remote archive, use the fitness-only reset-and-resync procedure
+in `docs/fitness.md`. It drops only `set_records`, `sets`, `exercise_tags`,
+`exercises`, `workouts`, and `fitness_meta`, then recreates them from
+`fitness-schema.sql`; shared Spire tables remain intact.
 
 Public reads are `Cache-Control: no-store` and include
 `Access-Control-Allow-Origin: *`:
 
 - `GET /api/fitness/sets` returns a workout-grouped page of matching sets:
   `{version,page,per_page,total_sets,total_workouts,workouts}`. Each workout is
-  `{id,title,raw_title,started_at_local,duration_seconds,duration_suspicious,notes,description,sets}`;
+  `{id,path,title,raw_title,started_at_local,ended_at_local,eastern_offset_minutes,end_eastern_offset_minutes,duration_seconds,duration_suspicious,notes,description,sets}`.
+  `id` stays an opaque UTC-derived stable identifier; `path` is the canonical
+  public path segment. Reader responses do not expose a `started_at_utc`
+  field; all user-facing times are Eastern.
   each set is
   `{id,ordinal,exercise_name,raw_exercise_name,exercise_note,superset_id,weight_milli,reps,effort_hundredths,distance_milli,set_time_seconds,set_type,records}`;
   each record is `{level,kind}`. Pagination is by whole workout, so a workout's
   matching sets are never split across pages. `total_sets` and
   `total_workouts` cover the entire filtered result, not just the page.
+- `GET /api/fitness/calendar` accepts no query parameters and returns
+  `{version,days:[{date,volume_points}]}` for every `America/New_York` date
+  with at least one set, in ascending date order. `volume_points` follows the
+  site set-log score exactly: warm-up = 0, failure = 6, RIR/RPE 0/1/2 = 5/4/3,
+  and any other or missing effort = 2.
+- `GET /api/fitness/workouts/latest` accepts no query parameters and returns
+  `{version,workout,newer_workout_path,older_workout_path}` for the newest
+  workout by source instant. `workout` has the same shape as a
+  `sets`-response workout and is `null` for an empty archive; both neighbor
+  paths are then `null` too.
+- `GET /api/fitness/workouts/by-path/{path}` accepts one canonical public path
+  segment, such as `2026-07-11T20-33-27-04-00`, and returns the same detail
+  envelope or 404. The timestamp and offset are the `America/New_York`
+  projection, so the offset distinguishes the repeated hour when DST ends.
 - `GET /api/fitness/facets` accepts no query parameters and returns
   `{version,summary:{sets,workouts,min_date,max_date},exercises,tags,set_types}`.
   Exercise, tag, and set-type entries are `{value,count}`; `tags` has
@@ -130,7 +163,8 @@ Public reads are `Cache-Control: no-store` and include
   exercise names, raw exercise names, and exercise notes.
 - Dates: inclusive `from`/`to` (`YYYY-MM-DD`); `weekday` = `sun` through `sat`;
   `time_of_day` = `morning` (05:00-11:59), `afternoon` (12:00-16:59),
-  `evening` (17:00-20:59), or `night` (21:00-04:59).
+  `evening` (17:00-20:59), or `night` (21:00-04:59). All date, weekday, and
+  time-of-day filtering uses `America/New_York`, including DST transitions.
 - Numbers: `min_load`/`max_load` are decimal source units converted exactly to
   stored thousandths; `min_reps`/`max_reps` are integers; `max_effort` is a
   decimal converted exactly to stored hundredths.
@@ -151,7 +185,7 @@ sets, 50 workouts, 75 exercises, 300 tags, and 200 records. Its exact shape is:
 ```text
 {
   workouts: [{
-    id, title, raw_title, started_at_local, duration_seconds,
+    id, title, raw_title, started_at_utc, duration_seconds,
     duration_suspicious, notes, description, source: "workout-data-csv"
   }],
   exercises: [{
@@ -167,26 +201,32 @@ sets, 50 workouts, 75 exercises, 300 tags, and 200 records. Its exact shape is:
 }
 ```
 
-Nullable fields must be explicit JSON `null`. IDs, cross-references, local
+Nullable fields must be explicit JSON `null`. IDs, cross-references, UTC source
 dates, ordinals, scaled integers, enum values, unique record kinds, and every
-string/array bound are validated before any write. The response is
+string/array bound are validated before any write. The Worker derives the
+Eastern fields; callers never supply them. The response is
 `{received,added,skipped,version}`, where the counts refer to sets. Existing set
 IDs are skipped; a conflicting workout ordinal is an error rather than being
 silently ignored. Tags are replaced authoritatively for each exercise included
 in a chunk. The fitness version increments only when sets or taxonomy change.
 The CSV path is deliberately append-oriented: an already stored set ID is
 immutable. Editing, reordering, or deleting old rows in a later export requires
-an explicit replacement migration rather than silently rewriting history.
+an explicit replacement operation rather than silently rewriting history.
 The normal CLI only posts workouts containing a missing set, so taxonomy-only
 changes on a fully imported archive likewise need a deliberate re-import/API
 call (or will arrive when that exercise is included with a later missing set).
 
-`/lifting` fetches these public reads from the Topcoat server and returns
-complete HTML. Its small browser enhancement only debounces the native filter
-form and navigates to a new GET URL. The route returns `Cache-Control: no-store`,
-so the generic edge policy leaves its HTML unstored and an import is visible on
-the next request. `just dev` sets `FITNESS_DATA_ORIGIN` to the local Worker;
-production uses `SITE_ORIGIN`.
+`/lifting`, `/lifting/log`, and permanent `/lifting/{path}` pages fetch these
+public reads from the Topcoat server and return complete HTML. The landing page
+reads `calendar` and `workouts/latest`; the full log reads `facets` and `sets`;
+a permanent page resolves its canonical Eastern path through
+`workouts/by-path/{path}`. Canonical paths include the local timestamp and the
+offset, for example `/lifting/2026-07-11T20-33-27-04-00`. Raw importer IDs and
+earlier timestamp shapes are not public routes. The small browser enhancement
+only debounces the full log's native filter form and navigates to a new GET URL.
+These routes return `Cache-Control: no-store`, so the generic edge policy leaves
+their HTML unstored and an import is visible on the next request. `just dev`
+sets `FITNESS_DATA_ORIGIN` to the local Worker; production uses `SITE_ORIGIN`.
 
 Sync from the machine that has the export:
 
