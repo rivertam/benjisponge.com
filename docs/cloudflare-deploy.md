@@ -92,16 +92,13 @@ and static assets. Config in `deploy/wrangler.jsonc`; image in
 Cross-layer map, source invariants, taxonomy workflow, and manual-logging
 boundary: `docs/fitness.md`.
 
-`just dev [port]` owns the complete local fitness stack. It applies the
-idempotent fresh fitness schema to Wrangler's persistent local D1, starts the
-Worker on `127.0.0.1:8791` with an ephemeral import token, syncs
-`/home/benji/Downloads/WorkoutData.csv`, and starts Topcoat on the requested
-port. Exiting Topcoat also stops Wrangler and removes the temporary token. Set
-`WORKOUT_DATA_CSV` to use another export path. Local D1 data remains under
-`deploy/.wrangler/state`, so subsequent starts only upload new sets. It does
-not migrate or reset existing local data: remove that state once before this
-flow if it was created by the pre-UTC schema (this also clears local Spire
-fixtures, never production data).
+`just dev [port]` starts the Worker on `127.0.0.1:8791` with a fixed local-only
+import token, then starts Topcoat on the requested port. Exiting Topcoat also
+stops Wrangler. It does not initialize, migrate, or sync D1.
+`just reset-fitness-local [csv]`, run in another terminal while dev is active,
+drops only the six local fitness tables, recreates `fitness-schema.sql`, and
+imports the CSV (default `/home/benji/Downloads/WorkoutData.csv`). Local Spire
+tables in the shared persistent D1 database remain untouched.
 
 `fitness-schema.sql` creates six normalized STRICT tables: `workouts`,
 `exercises`, `exercise_tags`, `sets`, `set_records`, and `fitness_meta`.
@@ -111,7 +108,9 @@ Each workout keeps Strong's original UTC start as `started_at_utc`, its
 offset-less `Date` column is UTC; it is never interpreted in the Worker or
 developer machine's timezone. Set ordinals remain 1-based within the workout.
 Numeric decimals are stored losslessly as scaled integers: load and distance in
-thousandths, effort in hundredths.
+thousandths, effort in hundredths. Imported load is assumed to be pounds and
+stored with `weight_unit="lbs"`. Effort is stored as RPE: source values below 6
+are interpreted as RIR and converted with `RPE = 10 - RIR`.
 
 The UTC/Eastern archive is a fresh fitness schema, not an in-place upgrade.
 For the existing remote archive, use the fitness-only reset-and-resync procedure
@@ -129,14 +128,14 @@ Public reads are `Cache-Control: no-store` and include
   public path segment. Reader responses do not expose a `started_at_utc`
   field; all user-facing times are Eastern.
   each set is
-  `{id,ordinal,exercise_name,raw_exercise_name,exercise_note,superset_id,weight_milli,reps,effort_hundredths,distance_milli,set_time_seconds,set_type,records}`;
+  `{id,ordinal,exercise_name,raw_exercise_name,exercise_note,superset_id,weight_milli,weight_unit,reps,effort_hundredths,distance_milli,set_time_seconds,set_type,records}`;
   each record is `{level,kind}`. Pagination is by whole workout, so a workout's
   matching sets are never split across pages. `total_sets` and
   `total_workouts` cover the entire filtered result, not just the page.
 - `GET /api/fitness/calendar` accepts no query parameters and returns
   `{version,days:[{date,volume_points}]}` for every `America/New_York` date
   with at least one set, in ascending date order. `volume_points` follows the
-  site set-log score exactly: warm-up = 0, failure = 6, RIR/RPE 0/1/2 = 5/4/3,
+  site set-log score exactly: warm-up = 0, failure = 6, RPE 10/9/8 = 5/4/3,
   and any other or missing effort = 2.
 - `GET /api/fitness/workouts/latest` accepts no query parameters and returns
   `{version,workout,newer_workout_path,older_workout_path}` for the newest
@@ -165,7 +164,7 @@ Public reads are `Cache-Control: no-store` and include
   `time_of_day` = `morning` (05:00-11:59), `afternoon` (12:00-16:59),
   `evening` (17:00-20:59), or `night` (21:00-04:59). All date, weekday, and
   time-of-day filtering uses `America/New_York`, including DST transitions.
-- Numbers: `min_load`/`max_load` are decimal source units converted exactly to
+- Numbers: `min_load`/`max_load` are pounds converted exactly to
   stored thousandths; `min_reps`/`max_reps` are integers; `max_effort` is a
   decimal converted exactly to stored hundredths.
 - Flags: `has_record`, `has_superset`, `has_notes`, and `incomplete` accept
@@ -193,7 +192,7 @@ sets, 50 workouts, 75 exercises, 300 tags, and 200 records. Its exact shape is:
   }],
   sets: [{
     id, workout_id, ordinal, exercise_name, raw_exercise_name, exercise_note,
-    superset_id, weight_milli, reps, effort_hundredths, distance_milli,
+    superset_id, weight_milli, weight_unit: "lbs", reps, effort_hundredths, distance_milli,
     set_time_seconds, set_type,
     records: [{level: "gold"|"silver"|"bronze",
                kind: "1rm"|"max-weight"|"volume"|"reps"}]

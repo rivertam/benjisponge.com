@@ -6,9 +6,13 @@ install-hooks:
     proto install lefthook
     lefthook install
 
-# Seed local fitness data, start its Worker API, then run Topcoat with live reload
+# Start the local Worker API and Topcoat with live reload
 dev port="3000":
     bash scripts/dev.sh "{{port}}"
+
+# Replace local fitness tables and import a Strong CSV (run while `just dev` is active)
+reset-fitness-local csv="/home/benji/Downloads/WorkoutData.csv":
+    bash scripts/reset-fitness-local.sh "{{csv}}"
 
 # Build the debug binary and extract its assets
 build:

@@ -5,7 +5,7 @@ Rust SSR personal site on topcoat 0.3.0 — a niche framework; read
 
 ## Commands
 
-- `just dev [port]` — seed local fitness D1/API, then live-reload server (default 3000); details in `docs/fitness.md`
+- `just dev [port]` — start local fitness API + live-reload server (default 3000); run `just reset-fitness-local [csv]` separately to rebuild fitness data; details in `docs/fitness.md`
 - `just build` — cargo build + `topcoat asset bundle`; serving without the bundle step panics
 - `just check` — fmt + clippy -D warnings + tests; must pass before claiming done
 - `just deploy` — Cloudflare deploy (Worker + container); CI also deploys on push to main. Touching `deploy/` or caching? Read `docs/cloudflare-deploy.md` first

@@ -44,6 +44,7 @@ type IncomingSet = {
   exercise_note: string | null;
   superset_id: number | null;
   weight_milli: number | null;
+  weight_unit: "lbs";
   reps: number | null;
   effort_hundredths: number | null;
   distance_milli: number | null;
@@ -88,6 +89,7 @@ type SetRow = {
   exercise_note: string | null;
   superset_id: number | null;
   weight_milli: number | null;
+  weight_unit: "lbs";
   reps: number | null;
   effort_hundredths: number | null;
   distance_milli: number | null;
@@ -113,6 +115,7 @@ type ApiSet = {
   exercise_note: string | null;
   superset_id: number | null;
   weight_milli: number | null;
+  weight_unit: "lbs";
   reps: number | null;
   effort_hundredths: number | null;
   distance_milli: number | null;
@@ -167,11 +170,12 @@ const EASTERN_PARTS = new Intl.DateTimeFormat("en-US-u-ca-iso8601-nu-latn", {
 const VOLUME_POINTS_SQL = `CASE
   WHEN s.set_type = 'FAILURE_SET' THEN 6
   WHEN s.set_type = 'WARMUP_SET' THEN 0
-  WHEN s.effort_hundredths = 0 THEN 5
-  WHEN s.effort_hundredths = 100 THEN 4
-  WHEN s.effort_hundredths = 200 THEN 3
+  WHEN s.effort_hundredths = 1000 THEN 5
+  WHEN s.effort_hundredths = 900 THEN 4
+  WHEN s.effort_hundredths = 800 THEN 3
   ELSE 2
 END`;
+
 const ALLOWED_FILTERS = new Set([
   "q",
   "movement",
@@ -327,7 +331,7 @@ async function loadWorkouts(
             w.notes AS workout_notes, w.description AS workout_description,
             s.id AS set_id, s.ordinal, e.name AS exercise_name,
             s.raw_exercise_name, s.exercise_note, s.superset_id,
-            s.weight_milli, s.reps, s.effort_hundredths, s.distance_milli,
+            s.weight_milli, s.weight_unit, s.reps, s.effort_hundredths, s.distance_milli,
             s.set_time_seconds, s.set_type
        FROM sets s
        JOIN workouts w ON w.id = s.workout_id
@@ -391,6 +395,7 @@ async function loadWorkouts(
       exercise_note: row.exercise_note,
       superset_id: row.superset_id,
       weight_milli: row.weight_milli,
+      weight_unit: row.weight_unit,
       reps: row.reps,
       effort_hundredths: row.effort_hundredths,
       distance_milli: row.distance_milli,
@@ -774,9 +779,9 @@ async function importChunk(
   const setInsert = env.SITE_DB.prepare(
     `INSERT INTO sets
        (id, workout_id, exercise_name, raw_exercise_name, ordinal,
-        exercise_note, superset_id, weight_milli, reps, effort_hundredths,
+        exercise_note, superset_id, weight_milli, weight_unit, reps, effort_hundredths,
         distance_milli, set_time_seconds, set_type, incomplete)
-     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
      ON CONFLICT(id) DO NOTHING`,
   );
   const recordInsert = env.SITE_DB.prepare(
@@ -796,6 +801,7 @@ async function importChunk(
         set.exercise_note,
         set.superset_id,
         set.weight_milli,
+        set.weight_unit,
         set.reps,
         set.effort_hundredths,
         set.distance_milli,
@@ -1204,6 +1210,7 @@ function parseSet(value: unknown): IncomingSet | string {
       "exercise_note",
       "superset_id",
       "weight_milli",
+      "weight_unit",
       "reps",
       "effort_hundredths",
       "distance_milli",
@@ -1227,6 +1234,7 @@ function parseSet(value: unknown): IncomingSet | string {
   if (superset_id === undefined) return "bad superset_id";
   const weight_milli = nullableInteger(value.weight_milli, 0, 1_000_000_000);
   if (weight_milli === undefined) return "bad weight_milli";
+  if (value.weight_unit !== "lbs") return "bad weight_unit";
   const reps = nullableInteger(value.reps, 0, 1_000_000);
   if (reps === undefined) return "bad reps";
   const effort_hundredths = nullableInteger(value.effort_hundredths, 0, 100_000);
@@ -1257,6 +1265,7 @@ function parseSet(value: unknown): IncomingSet | string {
     exercise_note,
     superset_id,
     weight_milli,
+    weight_unit: value.weight_unit,
     reps,
     effort_hundredths,
     distance_milli,

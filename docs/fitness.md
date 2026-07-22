@@ -7,7 +7,8 @@ or local fitness startup. Exact API/filter/import contracts live in
 ## Data flow
 
 - Page, filter/query handling, API reader, and HTML rendering:
-  `src/app/interests/lifting/`; styles: `styles/lifting.css`. `/lifting` is the
+  `src/app/interests/lifting/`; styles are Tailwind utilities inline in those
+  views (no section stylesheet). `/lifting` is the
   no-JavaScript landing view (daily volume heatmap plus the newest lift),
   `/lifting/log` is the filterable full archive, and
   `/lifting/YYYY-MM-DDTHH-MM-SS-04-00` (or `-05-00`) is a complete permanent
@@ -19,9 +20,11 @@ or local fitness startup. Exact API/filter/import contracts live in
 - Public reads and authenticated imports: `deploy/src/fitness.ts`; fresh D1
   schema: `deploy/fitness-schema.sql`.
 - CSV parsing, stable IDs, taxonomy, chunking: `src/bin/fitness_sync.rs`.
-- `just dev [port]` delegates to `scripts/dev.sh`: fresh schema -> Worker on
-  8791 -> idempotent CSV sync -> Topcoat. It does not migrate or reset an
-  existing archive. Wrangler stops when Topcoat exits.
+- `just dev [port]` delegates to `scripts/dev.sh`: Worker on 8791 -> Topcoat.
+  Wrangler stops when Topcoat exits. It never initializes or mutates D1.
+- `just reset-fitness-local [csv]` runs while `just dev` is active. It drops
+  only the six local fitness tables, recreates the current schema, and imports
+  the CSV; local Spire tables in the shared D1 database remain untouched.
 
 ## Source invariants
 
@@ -38,7 +41,10 @@ or local fitness startup. Exact API/filter/import contracts live in
 - Stable workout and set IDs remain derived from the raw UTC start timestamp
   (and the whole-workout ordinal for sets). Timezone conversion must never
   change identity, deduplication, or import ordering.
-- Export omits load/distance units and labels effort `RIR/RPE`; never infer more.
+- Strong omits load and distance units. This archive assumes every imported
+  load is pounds and persists `weight_unit='lbs'`; distance remains unitless.
+- Strong labels effort `RIR/RPE`. On import, values below 6 are treated as RIR
+  and converted with `RPE = 10 - RIR`; values at or above 6 are stored as RPE.
 - Preserve apparent duplicate rows. Set identity is workout UTC start plus
   whole-workout ordinal; deduping or reordering changes IDs.
 - Duration `0` or at least four hours is suspicious, not invalid. Preserve it.
@@ -47,19 +53,18 @@ or local fitness startup. Exact API/filter/import contracts live in
 
 ## Local development
 
-- Default CSV: `/home/benji/Downloads/WorkoutData.csv`; override with
-  `WORKOUT_DATA_CSV=/path/export.csv just dev [port]`.
-- Local D1 persists under ignored `deploy/.wrangler/state`. Stop `just dev`
-  before deleting that directory for a clean rebuild. A local archive created
-  before `started_at_utc` existed must be reset once before using the simplified
-  startup flow:
+- Local D1 persists under ignored `deploy/.wrangler/state`. To initialize it or
+  adopt a fitness schema/import change, start `just dev` in one terminal and
+  reset from another. The CSV defaults to
+  `/home/benji/Downloads/WorkoutData.csv`; pass another path as the argument:
 
   ```sh
-  rm -rf deploy/.wrangler/state
+  just reset-fitness-local
+  just reset-fitness-local /path/to/WorkoutData.csv
   ```
 
-  This is local development state only. It also removes any local Spire fixtures
-  in that shared D1; it never affects production.
+  This replaces local fitness data only; it never affects production or local
+  Spire fixtures.
 - Port 8791 is reserved for Wrangler. `just dev` points `/lifting`'s server-side
   API reader at that local Worker.
 
@@ -115,9 +120,10 @@ just check
 just build
 node --check src/app/interests/lifting/auto-filter.js
 bash -n scripts/dev.sh
+bash -n scripts/reset-fitness-local.sh
 cd deploy && npx wrangler types --check && npx tsc --noEmit
 ```
 
 No committed Worker integration suite exists yet. For Worker/API changes, also
-exercise a fresh local import, filtered reads, idempotent second sync, and
-shutdown cleanup through `just dev`.
+exercise `just reset-fitness-local`, filtered reads, an idempotent second sync,
+and `just dev` shutdown cleanup.

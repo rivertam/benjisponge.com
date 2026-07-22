@@ -1,6 +1,7 @@
 //! View models for workouts, set markers, records, and archive pagination.
 
 use super::{
+    badge::effort_points,
     data as fitness,
     filters::{Filters, SET_TYPES, lookup},
     format::{format_duration, format_scaled, workout_datetime, workout_timing},
@@ -40,7 +41,7 @@ impl<'a> From<&'a fitness::Workout> for WorkoutCard<'a> {
             description: workout.description.as_deref(),
             notes: workout.notes.as_deref(),
             set_count: workout.sets.len(),
-            groups: exercise_groups(&workout.sets),
+            groups: exercise_groups(&workout.sets, &workout.path),
         }
     }
 }
@@ -56,91 +57,42 @@ pub(super) struct ExerciseGroup<'a> {
 }
 
 pub(super) struct SetRow<'a> {
-    pub(super) marker_class: &'static str,
-    pub(super) marker_text: Option<String>,
-    pub(super) marker_title: String,
-    pub(super) marker_label: String,
-    pub(super) point_styles: Vec<String>,
+    pub(super) set: &'a fitness::Set,
+    pub(super) effort_popover_id: String,
     pub(super) prescription: String,
     pub(super) details: String,
     pub(super) records: Vec<RecordBadge>,
     pub(super) note: Option<&'a str>,
 }
 
-impl<'a> From<&'a fitness::Set> for SetRow<'a> {
-    fn from(set: &'a fitness::Set) -> Self {
-        let ordinal = format!("{:02}", set.ordinal);
-        let (marker_class, marker_text, marker_title, marker_label, point_styles) =
-            match set.set_type.as_str() {
-                "WARMUP_SET" => (
-                    "fitness-set-marker fitness-set-marker-warmup",
-                    Some("W".to_string()),
-                    format!("Set {ordinal} · warm-up"),
-                    format!("Set {ordinal}, warm-up"),
-                    Vec::new(),
-                ),
-                "FAILURE_SET" => (
-                    "fitness-set-marker fitness-set-marker-failure",
-                    Some("F".to_string()),
-                    format!("Set {ordinal} · failure"),
-                    format!("Set {ordinal}, failure"),
-                    Vec::new(),
-                ),
-                _ => {
-                    let points = effort_points(set.effort_hundredths);
-                    let effort = set
-                        .effort_hundredths
-                        .map(|value| format!("RIR/RPE {}", format_scaled(value, 100)))
-                        .unwrap_or_else(|| "RIR/RPE not recorded".to_string());
-                    let styles = (0..points)
-                        .map(|index| format!("--point-angle: {}deg", index * 360 / points.max(1)))
-                        .collect();
-                    (
-                        "fitness-set-marker fitness-set-marker-points",
-                        set.effort_hundredths.is_none().then_some(ordinal.clone()),
-                        format!("Set {ordinal} · {effort} · {points} of 5 points"),
-                        format!("Set {ordinal}, {effort}, {points} of 5 points"),
-                        styles,
-                    )
-                }
-            };
-
-        Self {
-            marker_class,
-            marker_text,
-            marker_title,
-            marker_label,
-            point_styles,
-            prescription: prescription(set),
-            details: set_details(set),
-            records: set.records.iter().map(RecordBadge::from).collect(),
-            note: set.exercise_note.as_deref(),
-        }
-    }
-}
+const RECORD_GOLD: &str = "inline-flex items-center min-h-[1.3rem] px-[0.36rem] py-[0.18rem] \
+     border border-current rounded-[0.2rem] font-meta text-[0.56rem] leading-none uppercase \
+     text-brass bg-brass/7";
+const RECORD_SILVER: &str = "inline-flex items-center min-h-[1.3rem] px-[0.36rem] py-[0.18rem] \
+     border border-current rounded-[0.2rem] font-meta text-[0.56rem] leading-none uppercase \
+     text-steel bg-steel/6";
+const RECORD_BRONZE: &str = "inline-flex items-center min-h-[1.3rem] px-[0.36rem] py-[0.18rem] \
+     border border-current rounded-[0.2rem] font-meta text-[0.56rem] leading-none uppercase \
+     text-oxide bg-oxide/6";
 
 pub(super) struct RecordBadge {
-    pub(super) class: String,
+    pub(super) class: &'static str,
     pub(super) label: String,
 }
 
 impl From<&fitness::Record> for RecordBadge {
     fn from(record: &fitness::Record) -> Self {
-        let level = match record.level.as_str() {
-            "gold" | "silver" | "bronze" => record.level.as_str(),
-            _ => "bronze",
-        };
-        let rank = match level {
-            "gold" => "PR",
-            "silver" => "#2",
-            _ => "#3",
+        let (class, rank) = match record.level.as_str() {
+            "gold" => (RECORD_GOLD, "PR"),
+            "silver" => (RECORD_SILVER, "#2"),
+            _ => (RECORD_BRONZE, "#3"),
         };
         let kind = match record.kind.as_str() {
             "max-weight" => "max load".to_string(),
             value => value.to_uppercase(),
         };
         Self {
-            class: format!("fitness-record fitness-record-{level}"),
+            class,
             label: format!("{kind} {rank}"),
         }
     }
@@ -153,7 +105,7 @@ pub(super) struct Pager {
     pub(super) parts: Vec<Option<usize>>,
 }
 
-fn exercise_groups(sets: &[fitness::Set]) -> Vec<ExerciseGroup<'_>> {
+fn exercise_groups<'a>(sets: &'a [fitness::Set], workout_path: &str) -> Vec<ExerciseGroup<'a>> {
     let mut groups = Vec::new();
     let mut start = 0;
     while start < sets.len() {
@@ -166,11 +118,32 @@ fn exercise_groups(sets: &[fitness::Set]) -> Vec<ExerciseGroup<'_>> {
         groups.push(ExerciseGroup {
             name,
             volume_points: slice.iter().map(set_volume_points).sum(),
-            rows: slice.iter().map(SetRow::from).collect(),
+            rows: slice
+                .iter()
+                .map(|set| SetRow {
+                    set,
+                    effort_popover_id: effort_popover_id(workout_path, set.ordinal),
+                    prescription: prescription(set),
+                    details: set_details(set),
+                    records: set.records.iter().map(RecordBadge::from).collect(),
+                    note: set.exercise_note.as_deref(),
+                })
+                .collect(),
         });
         start = end;
     }
     groups
+}
+
+/// Encodes the permanent workout path into a CSS custom-ident-safe ID. Set
+/// ordinals are unique within a workout, so this stays unique across archive cards.
+fn effort_popover_id(workout_path: &str, ordinal: u32) -> String {
+    let path_hex: String = workout_path
+        .as_bytes()
+        .iter()
+        .map(|byte| format!("{byte:02x}"))
+        .collect();
+    format!("lifting-effort-{path_hex}-{ordinal}")
 }
 
 fn set_volume_points(set: &fitness::Set) -> u32 {
@@ -181,22 +154,17 @@ fn set_volume_points(set: &fitness::Set) -> u32 {
     }
 }
 
-/// Missing effort follows the intended low/default branch rather than
-/// JavaScript's surprising `Number(null) == 0` coercion.
-fn effort_points(effort: Option<u64>) -> u32 {
-    match effort {
-        Some(0) => 5,
-        Some(100) => 4,
-        Some(200) => 3,
-        Some(_) | None => 2,
-    }
-}
-
 fn prescription(set: &fitness::Set) -> String {
     match (set.weight_milli, set.reps) {
-        (Some(load), Some(reps)) => format!("{} × {reps}", format_scaled(load, 1_000)),
+        (Some(load), Some(reps)) => format!(
+            "{} {} × {reps}",
+            format_scaled(load, 1_000),
+            set.weight_unit
+        ),
+        (Some(load), None) => {
+            format!("{} {}", format_scaled(load, 1_000), set.weight_unit)
+        }
         (None, Some(reps)) => format!("{reps} reps"),
-        (Some(load), None) => format!("load {}", format_scaled(load, 1_000)),
         (None, None) => {
             if let Some(distance) = set.distance_milli {
                 format!("distance {}", format_scaled(distance, 1_000))
@@ -217,10 +185,6 @@ fn set_details(set: &fitness::Set) -> String {
     ) {
         details.push(set_type_label(&set.set_type));
     }
-    if let Some(effort) = set.effort_hundredths {
-        details.push(format!("RIR/RPE {}", format_scaled(effort, 100)));
-    }
-
     let load_or_reps_is_primary = set.weight_milli.is_some() || set.reps.is_some();
     if let Some(seconds) = set.set_time_seconds
         && (load_or_reps_is_primary || set.distance_milli.is_some())
@@ -297,6 +261,7 @@ mod tests {
             exercise_note: None,
             superset_id: None,
             weight_milli: None,
+            weight_unit: "lbs".to_string(),
             reps: None,
             effort_hundredths: None,
             distance_milli: None,
@@ -320,12 +285,6 @@ mod tests {
             description: None,
             sets: vec![set()],
         }
-    }
-
-    #[test]
-    fn missing_effort_is_not_coerced_to_zero() {
-        assert_eq!(effort_points(None), 2);
-        assert_eq!(effort_points(Some(0)), 5);
     }
 
     #[test]
@@ -363,6 +322,17 @@ mod tests {
         distance.set_time_seconds = Some(60);
         assert_eq!(prescription(&distance), "distance 2.5");
         assert_eq!(set_details(&distance), "1m 00s");
+    }
+
+    #[test]
+    fn weighted_sets_show_pounds_and_repetitions() {
+        let mut weighted = set();
+        weighted.weight_milli = Some(95_000);
+        weighted.reps = Some(5);
+        assert_eq!(prescription(&weighted), "95 lbs × 5");
+
+        weighted.reps = None;
+        assert_eq!(prescription(&weighted), "95 lbs");
     }
 
     #[test]
