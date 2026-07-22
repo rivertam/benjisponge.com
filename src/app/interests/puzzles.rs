@@ -15,11 +15,16 @@ async fn puzzles() -> Result {
     view! { shell(title: meta.title, active: "interests",
         page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
         rail_prose(stamp: "",
-            <p>
-                "puzuzu parses AcrossLite .puz files and gives you a solving TUI — in Rust, \
-                 published to npm, demo recording in the README."
-            </p>
-            <p>"It has three GitHub stars and I earned every one of them."</p>
+            <p>"
+                It's a Rust/wasm crate for parsing and manipulating .puz files,
+                and then a TypeScript wrapper that makes it a TUI.
+            "</p>
+            <p>"
+                To be abundantly clear, it doesn't solve the puzzles. It's just a
+                client to solve them. I think my brother made a puzzle and I wanted
+                to solve it on the TUI, so I built this before solving it.
+            "</p>
+
         )
         rail_section(class: "mt-6", stamp: "links",
             <p class="flex flex-wrap gap-x-4 gap-y-1 font-meta text-sm">

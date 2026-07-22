@@ -49,8 +49,7 @@ pub static INTERESTS: [Interest; 8] = [
     Interest {
         slug: "puzzles",
         title: "Crosswords",
-        teaser: "A Rust crossword engine, so .puz files open in the terminal. Nobody had asked \
-                 for this.",
+        teaser: "I built a little TUI to solve crosswords for fun once",
     },
     Interest {
         slug: "felix",
