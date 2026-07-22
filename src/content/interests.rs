@@ -14,9 +14,10 @@ pub struct Interest {
 
 pub static INTERESTS: [Interest; 8] = [
     Interest {
-        slug: "drums",
-        title: "Drums",
-        teaser: "Mediocre drummer. Recording turns out to be much harder than playing.",
+        slug: "felix",
+        title: "Felix",
+        teaser: "There is a dog. There is, accordingly, a website computing when we are the same \
+                 age.",
     },
     Interest {
         slug: "swing",
@@ -26,7 +27,7 @@ pub static INTERESTS: [Interest; 8] = [
     Interest {
         slug: "lifting",
         title: "Lifting",
-        teaser: "Deadlift PR 345 lbs, Squat PR 235 lbs, Bench PR like 165 but I never 1RM it",
+        teaser: "Every set I've logged since 2023, filterable from squat patterns down to the set.",
     },
     Interest {
         slug: "keyboards",
@@ -40,6 +41,11 @@ pub static INTERESTS: [Interest; 8] = [
         teaser: "I play a lot of Slay the Spire (currently, Slay the Spire 2)",
     },
     Interest {
+        slug: "drums",
+        title: "Drums",
+        teaser: "Mediocre drummer. Recording turns out to be much harder than playing.",
+    },
+    Interest {
         slug: "simulation",
         title: "Housing Market Simulation",
         teaser: "I once spent a bunch of time working on an ECS/actor framework for \
@@ -50,12 +56,6 @@ pub static INTERESTS: [Interest; 8] = [
         slug: "puzzles",
         title: "Crosswords",
         teaser: "I built a little TUI to solve crosswords for fun once",
-    },
-    Interest {
-        slug: "felix",
-        title: "Felix",
-        teaser: "There is a dog. There is, accordingly, a website computing when we are the same \
-                 age.",
     },
 ];
 

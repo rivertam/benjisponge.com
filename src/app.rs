@@ -255,7 +255,7 @@ async fn home(cx: &Cx) -> Result {
                         label: "digichem.com →"
                     )
                 )"
-                · I contain " <a href="./interests">"multitudes"</a>
+                · I contain " <a class="underline" href="./interests">"multitudes"</a>
                 <span class="log-caret text-oxide">"▍"</span>
             </p>
         </section>

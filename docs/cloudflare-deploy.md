@@ -55,11 +55,16 @@ and static assets. Config in `deploy/wrangler.jsonc`; image in
   uncached/POST hit after idle is accepted — don't add cron-warming without
   asking.
 
-## Spire run database (D1)
+## Site data database (D1)
 
-- `benjisponge-spire` D1 database, bound as `SPIRE_DB`; schema lives in
-  `spire-schema.sql` (idempotent):
+- `benjisponge-spire` is the existing shared site-data D1 database, bound as
+  `SITE_DB`. The name is historical; changing the binding did not replace or
+  copy the database. From `deploy/`, both bootstrap schemas are idempotent:
   `npx wrangler d1 execute benjisponge-spire --remote --file=spire-schema.sql`
+  `npx wrangler d1 execute benjisponge-spire --remote --file=fitness-schema.sql`
+
+### Spire runs
+
 - API in `src/spire.ts`: `GET /api/spire/runs` and `GET /api/spire/ids` are
   public; `POST /api/spire/runs` needs the `SPIRE_SYNC_TOKEN` Worker secret
   as a Bearer token. The local copy the CLI reads lives at
@@ -74,6 +79,118 @@ and static assets. Config in `deploy/wrangler.jsonc`; image in
   and those three paths embed the version in their edge-cache key
   (`DATA_VERSIONED` in `cache.ts`) — so a sync invalidates exactly those
   pages on the next request, with no deploy and no purge call.
+
+### Fitness archive
+
+Cross-layer map, source invariants, taxonomy workflow, and manual-logging
+boundary: `docs/fitness.md`.
+
+`just dev [port]` owns the complete local fitness stack. It applies the
+idempotent fitness schema to Wrangler's persistent local D1, starts the Worker
+on `127.0.0.1:8791` with an ephemeral import token, syncs
+`/home/benji/Downloads/WorkoutData.csv`, and then starts Topcoat on the requested
+port. Exiting Topcoat also stops Wrangler and removes the temporary token. Set
+`WORKOUT_DATA_CSV` to use another export path. Local D1 data remains under
+`deploy/.wrangler/state` so subsequent starts only upload new sets.
+
+`fitness-schema.sql` creates six normalized STRICT tables: `workouts`,
+`exercises`, `exercise_tags`, `sets`, `set_records`, and `fitness_meta`.
+Workout starts remain local wall-clock strings (`YYYY-MM-DD HH:MM:SS`) because
+the Strong export has no timezone. Set ordinals remain 1-based within the
+workout. Numeric decimals are stored losslessly as scaled integers: load and
+distance in thousandths, effort in hundredths.
+
+Public reads are `Cache-Control: no-store` and include
+`Access-Control-Allow-Origin: *`:
+
+- `GET /api/fitness/sets` returns a workout-grouped page of matching sets:
+  `{version,page,per_page,total_sets,total_workouts,workouts}`. Each workout is
+  `{id,title,raw_title,started_at_local,duration_seconds,duration_suspicious,notes,description,sets}`;
+  each set is
+  `{id,ordinal,exercise_name,raw_exercise_name,exercise_note,superset_id,weight_milli,reps,effort_hundredths,distance_milli,set_time_seconds,set_type,records}`;
+  each record is `{level,kind}`. Pagination is by whole workout, so a workout's
+  matching sets are never split across pages. `total_sets` and
+  `total_workouts` cover the entire filtered result, not just the page.
+- `GET /api/fitness/facets` accepts no query parameters and returns
+  `{version,summary:{sets,workouts,min_date,max_date},exercises,tags,set_types}`.
+  Exercise, tag, and set-type entries are `{value,count}`; `tags` has
+  `movement`, `muscle`, and `equipment` arrays. Counts cover the whole archive.
+- `GET /api/fitness/ids` accepts no query parameters and returns
+  `{ids:string[]}` containing set IDs. The sync command uses these to resume at
+  set granularity.
+
+`GET /api/fitness/sets` accepts only these query parameters:
+
+- Text/facets: `q`; exact `exercise`; repeated `movement`, `muscle`,
+  `equipment`, and `set_type`. Repeated choices are ORed within one facet and
+  different filters are ANDed. `q` searches workout titles/notes/description,
+  exercise names, raw exercise names, and exercise notes.
+- Dates: inclusive `from`/`to` (`YYYY-MM-DD`); `weekday` = `sun` through `sat`;
+  `time_of_day` = `morning` (05:00-11:59), `afternoon` (12:00-16:59),
+  `evening` (17:00-20:59), or `night` (21:00-04:59).
+- Numbers: `min_load`/`max_load` are decimal source units converted exactly to
+  stored thousandths; `min_reps`/`max_reps` are integers; `max_effort` is a
+  decimal converted exactly to stored hundredths.
+- Flags: `has_record`, `has_superset`, `has_notes`, and `incomplete` accept
+  `true` or `false`; `duration` is `normal` or `suspicious`. A set is
+  incomplete when reps, distance, and set duration are all absent.
+- Pagination: positive `page`; `per_page` is exactly `10`, `20`, or `40`
+  (default `20`).
+
+Unknown, duplicated singular, malformed, out-of-range, or contradictory
+filters return 400. Repeated facets are capped at eight values each. Search is
+also checked against D1's 50-byte escaped LIKE-pattern limit.
+
+The write path is `POST /api/fitness/import`, protected by the
+`FITNESS_SYNC_TOKEN` Worker secret. The body is capped at 1,000,000 bytes, 50
+sets, 50 workouts, 75 exercises, 300 tags, and 200 records. Its exact shape is:
+
+```text
+{
+  workouts: [{
+    id, title, raw_title, started_at_local, duration_seconds,
+    duration_suspicious, notes, description, source: "workout-data-csv"
+  }],
+  exercises: [{
+    name, tags: [{kind: "movement"|"muscle"|"equipment", value}]
+  }],
+  sets: [{
+    id, workout_id, ordinal, exercise_name, raw_exercise_name, exercise_note,
+    superset_id, weight_milli, reps, effort_hundredths, distance_milli,
+    set_time_seconds, set_type,
+    records: [{level: "gold"|"silver"|"bronze",
+               kind: "1rm"|"max-weight"|"volume"|"reps"}]
+  }]
+}
+```
+
+Nullable fields must be explicit JSON `null`. IDs, cross-references, local
+dates, ordinals, scaled integers, enum values, unique record kinds, and every
+string/array bound are validated before any write. The response is
+`{received,added,skipped,version}`, where the counts refer to sets. Existing set
+IDs are skipped; a conflicting workout ordinal is an error rather than being
+silently ignored. Tags are replaced authoritatively for each exercise included
+in a chunk. The fitness version increments only when sets or taxonomy change.
+The CSV path is deliberately append-oriented: an already stored set ID is
+immutable. Editing, reordering, or deleting old rows in a later export requires
+an explicit replacement migration rather than silently rewriting history.
+The normal CLI only posts workouts containing a missing set, so taxonomy-only
+changes on a fully imported archive likewise need a deliberate re-import/API
+call (or will arrive when that exercise is included with a later missing set).
+
+Sync from the machine that has the export:
+
+```sh
+just sync-fitness /home/benji/Downloads/WorkoutData.csv --dry-run
+just sync-fitness /home/benji/Downloads/WorkoutData.csv
+```
+
+The default token file is `~/.config/benjisponge/fitness.token`. From `deploy/`,
+install or rotate the matching Worker secret with:
+
+```sh
+npx wrangler secret put FITNESS_SYNC_TOKEN < ~/.config/benjisponge/fitness.token
+```
 
 ## One-time account setup (manual)
 

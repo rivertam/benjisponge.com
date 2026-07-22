@@ -80,8 +80,7 @@ pub static LOG: [Entry; 7] = [
     Entry::Essay {
         date: "2026-07-12",
         title: "How bad are planes?",
-        teaser: "The part of the fare you don't pay. An emissions receipt for any route you can \
-                 name, itemized like the fare should be.",
+        teaser: "Why I don't generally take planes for leisure",
         slug: "how-bad-are-planes",
         tags: &["climate", "planes"],
     },

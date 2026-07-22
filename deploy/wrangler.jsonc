@@ -4,6 +4,14 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-07-01",
 
+  // `just dev` exercises only the D1-backed APIs. Keep its fixed local
+  // endpoint fast and independent of Docker; Topcoat serves the site itself.
+  "dev": {
+    "ip": "127.0.0.1",
+    "port": 8791,
+    "enable_containers": false
+  },
+
   // Synced from the container image by `just deploy` / CI (only _headers is
   // committed). Asset hits are served before the Worker runs; misses fall
   // through to the Worker and ultimately the container, which also has the
@@ -27,11 +35,11 @@
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["BenjispongeContainer"] }],
 
-  // The Slay the Spire 2 run archive (schema: spire-schema.sql; API:
-  // src/spire.ts; writes need the SPIRE_SYNC_TOKEN secret).
+  // Shared site-data database: Spire (spire-schema.sql) and fitness
+  // (fitness-schema.sql). Their private import routes use separate secrets.
   "d1_databases": [
     {
-      "binding": "SPIRE_DB",
+      "binding": "SITE_DB",
       "database_name": "benjisponge-spire",
       "database_id": "2dd320a4-f70d-495f-a1cd-08f5582327c7"
     }

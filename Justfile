@@ -6,9 +6,9 @@ install-hooks:
     proto install lefthook
     lefthook install
 
-# Start the development server with live reload
+# Seed local fitness data, start its Worker API, then run Topcoat with live reload
 dev port="3000":
-    PORT={{port}} topcoat dev --bin benjisponge
+    bash scripts/dev.sh "{{port}}"
 
 # Build the debug binary and extract its assets
 build:
@@ -34,6 +34,10 @@ deploy:
 # Upload new Slay the Spire 2 runs to the site's database (see --help)
 sync-spire *args:
     cargo run --bin spire_sync -- {{args}}
+
+# Upload a Strong workout CSV export to the site's fitness database (see --help)
+sync-fitness csv *args:
+    cargo run --bin fitness_sync -- "{{csv}}" {{args}}
 
 # Run formatting, lint, and test checks
 check:

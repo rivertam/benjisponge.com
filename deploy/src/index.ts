@@ -7,6 +7,7 @@ import {
   refreshSpireData,
   storeInCache,
 } from "./cache";
+import { handleFitness } from "./fitness";
 import { handleSpire, spireDataVersion } from "./spire";
 
 export class BenjispongeContainer extends Container<Env> {
@@ -31,6 +32,12 @@ export default {
     // never touches the container (which is itself a GET-side consumer).
     if (url.pathname.startsWith("/api/spire")) {
       return handleSpire(request, env, url);
+    }
+
+    // Public fitness reads and the private bounded CSV import live in the
+    // shared site D1 database and never touch the container.
+    if (url.pathname.startsWith("/api/fitness")) {
+      return handleFitness(request, env, url);
     }
 
     const container = getContainer(env.SITE_CONTAINER, "site");
