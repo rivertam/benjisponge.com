@@ -267,7 +267,7 @@ fn active_filter_label(key: &str, value: &str) -> String {
                 "max_load" => "load \u{2264}",
                 "min_reps" => "reps \u{2265}",
                 "max_reps" => "reps \u{2264}",
-                "max_effort" => "RIR/RPE \u{2264}",
+                "max_effort" => "RPE \u{2264}",
                 _ => key,
             };
             format!("{key_label}: {}", filter_value_label(key, value))

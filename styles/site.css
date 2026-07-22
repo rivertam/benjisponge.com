@@ -45,6 +45,14 @@
   }
 }
 
+/* A rail row whose body is a card rather than prose: pin the stamp to the
+ * card's top edge instead of a first-baseline that would reach inside the
+ * card. (Lives here because utilities can't override the layered-vs-unlayered
+ * cascade of the rule above.) */
+.rail-row-top {
+  align-items: start;
+}
+
 /*
  * Oxidation hover: interactive ink corrodes toward oxide and the underline
  * thickens. The reduced-motion kill switch in input.css disables the

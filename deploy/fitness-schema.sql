@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS sets (
   exercise_note      TEXT,
   superset_id        INTEGER,
   weight_milli       INTEGER CHECK (weight_milli BETWEEN 0 AND 1000000000),
+  weight_unit        TEXT NOT NULL DEFAULT 'lbs' CHECK (weight_unit = 'lbs'),
   reps               INTEGER CHECK (reps BETWEEN 0 AND 1000000),
   effort_hundredths  INTEGER CHECK (effort_hundredths BETWEEN 0 AND 100000),
   distance_milli     INTEGER CHECK (distance_milli BETWEEN 0 AND 1000000000),

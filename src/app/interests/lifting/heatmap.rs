@@ -6,14 +6,33 @@ use std::collections::BTreeMap;
 
 use topcoat::{
     Result,
-    view::{component, view},
+    view::{class, component, view},
 };
 
-use super::data::CalendarDay;
+use super::{META_LABEL, data::CalendarDay};
 
 const WEEK_COUNT: usize = 53;
 const DAYS_PER_WEEK: usize = 7;
 const CELL_COUNT: usize = WEEK_COUNT * DAYS_PER_WEEK;
+
+// Tailwind vocab for the calendar. Utilities stay whole per line for the
+// build-time class scanner.
+const HEAT_NOTE: &str = "font-meta text-[0.7rem] leading-[1.55] text-muted";
+/// Day squares tint oxide by the `--fitness-heat-alpha` each cell sets inline.
+const HEAT_FILL: &str =
+    "bg-[color-mix(in_srgb,var(--color-oxide)_var(--fitness-heat-alpha,0%),var(--color-card))]";
+const LEGEND_CELL: &str = "w-[0.625rem] h-[0.625rem] sm:w-[0.72rem] sm:h-[0.72rem] \
+     rounded-[0.12rem] border border-hairline/88";
+const CELL: &str = "block rounded-[0.12rem] border \
+     transition-[background-color,border-color,box-shadow,transform] duration-[140ms] ease-[ease]";
+const CELL_BORDER: &str = "border-hairline/88";
+/// A logged day whose sets scored zero points keeps a visible dashed ring.
+const CELL_BORDER_ZERO: &str = "border-dashed \
+     border-[color-mix(in_srgb,var(--color-oxide)_55%,var(--color-hairline))]";
+const CELL_HOVER: &str = "hover:border-oxide \
+     hover:shadow-[0_0_0_1px_color-mix(in_srgb,var(--color-oxide)_25%,transparent)] \
+     hover:-translate-y-px focus-visible:z-[1] focus-visible:outline-solid \
+     focus-visible:outline-2 focus-visible:outline-oxide focus-visible:outline-offset-2";
 
 /// The volume calendar. It is deliberately an owned prop: callers can pass
 /// the successful calendar API payload straight through without adding a
@@ -22,10 +41,12 @@ const CELL_COUNT: usize = WEEK_COUNT * DAYS_PER_WEEK;
 pub(super) async fn calendar_heatmap(days: Vec<CalendarDay>) -> Result {
     let Some(calendar) = Calendar::from_days(&days) else {
         return view! {
-            <section class="fitness-heatmap" aria-labelledby="fitness-heatmap-title">
-                <header class="fitness-heatmap-head">
+            <section aria-labelledby="fitness-heatmap-title">
+                <header
+                    class="flex flex-wrap items-end justify-between gap-y-[0.8rem] gap-x-5"
+                >
                     <div>
-                        <p class="fitness-kicker">"training volume"</p>
+                        <p class=(META_LABEL)>"training volume"</p>
                         <h2
                             id="fitness-heatmap-title"
                             class="font-display text-2xl font-semibold"
@@ -34,7 +55,7 @@ pub(super) async fn calendar_heatmap(days: Vec<CalendarDay>) -> Result {
                         </h2>
                     </div>
                 </header>
-                <p class="fitness-heatmap-empty">
+                <p class=(class!(HEAT_NOTE, "mt-[0.8rem]"))>
                     "No lifting days are available yet."
                 </p>
             </section>
@@ -50,46 +71,68 @@ pub(super) async fn calendar_heatmap(days: Vec<CalendarDay>) -> Result {
     let legend_styles: Vec<String> = (0..=4).map(heat_style).collect();
 
     view! {
-        <section class="fitness-heatmap" aria-labelledby="fitness-heatmap-title">
-            <header class="fitness-heatmap-head">
+        <section aria-labelledby="fitness-heatmap-title">
+            <header class="flex flex-wrap items-end justify-between gap-y-[0.8rem] gap-x-5">
                 <div>
-                    <p class="fitness-kicker">"training volume"</p>
+                    <p class=(META_LABEL)>"training volume"</p>
                     <h2
                         id="fitness-heatmap-title"
                         class="font-display text-2xl font-semibold"
                     >
                         "Volume points"
                     </h2>
-                    <p class="fitness-heatmap-subtitle">(subtitle.as_str())</p>
+                    <p class=(class!(HEAT_NOTE, "mt-[0.3rem]"))>(subtitle.as_str())</p>
                 </div>
                 <div
-                    class="fitness-heatmap-legend"
+                    class="inline-flex items-center gap-[0.22rem] font-meta text-[0.61rem] \
+                         leading-none uppercase text-muted"
                     aria-label="Volume-point intensity: 1 to 24, 25 to 44, 45 to 64, and 65 or more"
                 >
-                    <span>"less"</span>
+                    <span class="mr-[0.12rem]">"less"</span>
                     for style in legend_styles.iter() {
                         <span
-                            class="fitness-heatmap-legend-cell"
+                            class=(class!(LEGEND_CELL, HEAT_FILL))
                             style=(style.as_str())
                             aria-hidden="true"
                         >
 
                         </span>
                     }
-                    <span>"more"</span>
+                    <span class="ml-[0.12rem]">"more"</span>
                 </div>
             </header>
 
-            <div class="fitness-heatmap-scroll">
-                <div class="fitness-heatmap-chart">
-                    <div class="fitness-heatmap-months" aria-hidden="true">
+            // When the chart's minimum width overflows a narrow screen, the
+            // rtl scroll direction starts the view at the newest (rightmost)
+            // days; the chart flips back to ltr so its dates still run
+            // normally.
+            <div
+                class="mt-[0.9rem] overflow-x-auto overscroll-x-contain pt-[0.1rem] \
+                     pb-[0.45rem] [direction:rtl]"
+            >
+                <div
+                    class="grid w-full min-w-[34rem] grid-cols-[1.45rem_minmax(0,1fr)] \
+                         grid-rows-[1.1rem_auto] gap-x-[0.4rem] [direction:ltr]"
+                >
+                    <div
+                        class="col-start-2 row-start-1 grid \
+                             grid-cols-[repeat(53,minmax(0,1fr))] gap-x-[0.16rem] items-end \
+                             font-meta text-[0.59rem] leading-none whitespace-nowrap \
+                             text-muted sm:gap-x-[0.2rem]"
+                        aria-hidden="true"
+                    >
                         for label in calendar.month_labels.iter() {
                             <span style=(label.style.as_str())>
                                 (label.label.as_str())
                             </span>
                         }
                     </div>
-                    <div class="fitness-heatmap-weekdays" aria-hidden="true">
+                    <div
+                        class="col-start-1 row-start-2 grid \
+                             grid-rows-[repeat(7,minmax(0,1fr))] items-center self-stretch \
+                             text-right font-meta text-[0.58rem] leading-none text-muted"
+                        aria-hidden="true"
+                    >
                         <span></span>
                         <span>"M"</span>
                         <span></span>
@@ -99,13 +142,16 @@ pub(super) async fn calendar_heatmap(days: Vec<CalendarDay>) -> Result {
                         <span></span>
                     </div>
                     <nav
-                        class="fitness-heatmap-grid"
+                        class="col-start-2 row-start-2 grid \
+                             grid-cols-[repeat(53,minmax(0,1fr))] \
+                             grid-rows-[repeat(7,minmax(0,1fr))] grid-flow-col \
+                             gap-[0.16rem] aspect-[53/7] sm:gap-[0.2rem]"
                         aria-label=(navigation_label.as_str())
                     >
                         for cell in calendar.cells.iter() {
                             if let Some(href) = &cell.href {
                                 <a
-                                    class=(cell.class.as_str())
+                                    class=(class!(CELL, HEAT_FILL, cell.border, CELL_HOVER))
                                     href=(href.as_str())
                                     title=(cell.label.as_str())
                                     aria-label=(cell.label.as_str())
@@ -115,7 +161,7 @@ pub(super) async fn calendar_heatmap(days: Vec<CalendarDay>) -> Result {
                                 </a>
                             } else {
                                 <span
-                                    class=(cell.class.as_str())
+                                    class=(class!(CELL, HEAT_FILL, cell.border))
                                     title=(cell.label.as_str())
                                     aria-hidden="true"
                                     style=(cell.style.as_str())
@@ -127,7 +173,7 @@ pub(super) async fn calendar_heatmap(days: Vec<CalendarDay>) -> Result {
                     </nav>
                 </div>
             </div>
-            <p class="fitness-heatmap-note">
+            <p class=(class!(HEAT_NOTE, "mt-[0.1rem]"))>
                 "Volume points use the same effort-point score as the set log. Hover a square for its exact total."
             </p>
         </section>
@@ -178,7 +224,7 @@ impl Calendar {
 
 struct HeatmapCell {
     date: Date,
-    class: String,
+    border: &'static str,
     href: Option<String>,
     label: String,
     style: String,
@@ -187,15 +233,11 @@ struct HeatmapCell {
 impl HeatmapCell {
     fn new(date: Date, points: u32, has_lift: bool) -> Self {
         let intensity = intensity(points);
-        let mut class = "fitness-heatmap-cell".to_string();
-        if has_lift {
-            class.push_str(" fitness-heatmap-cell-active");
-            if points == 0 {
-                class.push_str(" fitness-heatmap-cell-zero");
-            }
+        let border = if has_lift && points == 0 {
+            CELL_BORDER_ZERO
         } else {
-            class.push_str(" fitness-heatmap-cell-empty");
-        }
+            CELL_BORDER
+        };
         let date_label = date.format_long();
         let points_label = format!(
             "{points} volume {}",
@@ -208,7 +250,7 @@ impl HeatmapCell {
         };
         Self {
             date,
-            class,
+            border,
             href: has_lift.then(|| {
                 let iso = date.iso();
                 format!("/lifting/log?from={iso}&to={iso}#set-log")

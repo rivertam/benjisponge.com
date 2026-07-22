@@ -147,6 +147,7 @@ struct FitnessSet {
     exercise_note: Option<String>,
     superset_id: Option<i64>,
     weight_milli: Option<i64>,
+    weight_unit: String,
     reps: Option<i64>,
     effort_hundredths: Option<i64>,
     distance_milli: Option<i64>,
@@ -327,6 +328,16 @@ fn optional_decimal(value: &str, decimal_places: u32) -> Result<Option<i64>, Str
         } else {
             Ok(Some(parsed))
         }
+    }
+}
+
+/// Strong combines RIR and RPE in one column. This archive stores only RPE:
+/// values below 6 are interpreted as RIR and converted with RPE = 10 - RIR.
+fn normalize_effort_to_rpe(effort_hundredths: i64) -> i64 {
+    if effort_hundredths < 600 {
+        1_000 - effort_hundredths
+    } else {
+        effort_hundredths
     }
 }
 
@@ -786,7 +797,8 @@ fn parse_reader<R: Read>(reader: R) -> Result<Export, String> {
             optional_decimal(get(columns.effort, "RIR/RPE")?, 2),
             row,
             "RIR/RPE",
-        )?;
+        )?
+        .map(normalize_effort_to_rpe);
         let distance_milli = contextual(
             optional_decimal(get(columns.distance, "Distance")?, 3),
             row,
@@ -844,6 +856,7 @@ fn parse_reader<R: Read>(reader: R) -> Result<Export, String> {
                 "Superset id",
             )?,
             weight_milli,
+            weight_unit: "lbs".to_string(),
             reps,
             effort_hundredths,
             distance_milli,
@@ -1221,8 +1234,9 @@ mod tests {
         assert_eq!(first.sets[0].exercise_name, "Lever Seated Leg Press");
         assert_eq!(first.sets[0].raw_exercise_name, "Lever Seated Leg Press ");
         assert_eq!(first.sets[0].weight_milli, Some(45_125));
+        assert_eq!(first.sets[0].weight_unit, "lbs");
         assert_eq!(first.sets[0].superset_id, Some(1));
-        assert_eq!(first.sets[0].effort_hundredths, Some(50));
+        assert_eq!(first.sets[0].effort_hundredths, Some(950));
         assert_eq!(first.sets[0].set_time_seconds, Some(570));
         assert_eq!(first.sets[1].weight_milli, Some(135_000));
         assert_eq!(
@@ -1270,6 +1284,15 @@ mod tests {
         assert!(parse_scaled_decimal("1.234", 2).is_err());
         assert!(parse_scaled_decimal("1.2.3", 3).is_err());
         assert!(optional_decimal("-1", 3).is_err());
+    }
+
+    #[test]
+    fn mixed_effort_values_are_normalized_to_rpe() {
+        assert_eq!(normalize_effort_to_rpe(0), 1_000);
+        assert_eq!(normalize_effort_to_rpe(150), 850);
+        assert_eq!(normalize_effort_to_rpe(599), 401);
+        assert_eq!(normalize_effort_to_rpe(600), 600);
+        assert_eq!(normalize_effort_to_rpe(850), 850);
     }
 
     #[test]
@@ -1449,6 +1472,7 @@ mod tests {
                     exercise_note: None,
                     superset_id: None,
                     weight_milli: None,
+                    weight_unit: "lbs".to_string(),
                     reps: None,
                     effort_hundredths: None,
                     distance_milli: None,

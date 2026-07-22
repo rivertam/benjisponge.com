@@ -66,6 +66,7 @@ pub struct Set {
     pub exercise_note: Option<String>,
     pub superset_id: Option<u64>,
     pub weight_milli: Option<u64>,
+    pub weight_unit: String,
     pub reps: Option<u64>,
     pub effort_hundredths: Option<u64>,
     pub distance_milli: Option<u64>,
@@ -258,7 +259,7 @@ mod tests {
                 "sets": [{
                   "id": "s1", "ordinal": 1, "exercise_name": "Squat",
                   "raw_exercise_name": "Squat", "exercise_note": null,
-                  "superset_id": null, "weight_milli": 102500, "reps": 5,
+                  "superset_id": null, "weight_milli": 102500, "weight_unit": "lbs", "reps": 5,
                   "effort_hundredths": null, "distance_milli": null,
                   "set_time_seconds": null, "set_type": "NORMAL_SET",
                   "records": [{"level": "gold", "kind": "volume"}]
@@ -272,6 +273,7 @@ mod tests {
         assert_eq!(page.workouts[0].path, "2026-07-21T17-03-00-04-00");
         assert_eq!(page.workouts[0].eastern_offset_minutes, -240);
         assert_eq!(page.workouts[0].sets[0].weight_milli, Some(102_500));
+        assert_eq!(page.workouts[0].sets[0].weight_unit, "lbs");
         assert_eq!(page.workouts[0].sets[0].effort_hundredths, None);
         assert_eq!(page.workouts[0].sets[0].records[0].kind, "volume");
     }
