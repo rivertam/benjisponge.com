@@ -1012,9 +1012,15 @@ async fn upload_chunk(
     if response.status() == reqwest::StatusCode::UNAUTHORIZED {
         return Err("unauthorized — token rejected (see --help for token sources)".to_string());
     }
+    let status = response.status();
+    if !status.is_success() {
+        let body = response
+            .text()
+            .await
+            .unwrap_or_else(|error| format!("unable to read response: {error}"));
+        return Err(format!("POST {url}: HTTP {status}: {body}"));
+    }
     response
-        .error_for_status()
-        .map_err(|error| format!("POST {url}: {error}"))?
         .json()
         .await
         .map_err(|error| format!("POST {url}: bad response: {error}"))
