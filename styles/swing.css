@@ -1,0 +1,280 @@
+/* Swing's gallery borrows Felix's contact-sheet rhythm without the hero. */
+html.swing-lightbox-open,
+body.swing-lightbox-open {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
+
+.swing-gallery {
+  columns: 1;
+  column-gap: 1rem;
+}
+
+.swing-media {
+  break-inside: avoid;
+  margin: 0 0 1rem;
+  padding: 0.45rem;
+  background: var(--color-card);
+  border: 1px solid var(--color-hairline);
+}
+
+.swing-media-button {
+  position: relative;
+  display: block;
+  width: 100%;
+  padding: 0;
+  overflow: hidden;
+  color: inherit;
+  cursor: zoom-in;
+  background: var(--color-page);
+  border: 0;
+}
+
+.swing-media-button img {
+  display: block;
+  width: 100%;
+  height: auto;
+  background: #090b0d;
+  transition: transform 180ms ease;
+}
+
+.swing-media-kind,
+.swing-media-expand {
+  position: absolute;
+  padding: 0.3rem 0.45rem;
+  color: #fff;
+  font-family: var(--font-meta);
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  pointer-events: none;
+  background: rgb(9 11 13 / 78%);
+}
+
+.swing-media-kind {
+  top: 0.55rem;
+  left: 0.55rem;
+}
+
+.swing-media-play {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  display: grid;
+  width: 3.4rem;
+  height: 3.4rem;
+  place-items: center;
+  padding-left: 0.15rem;
+  color: #fff;
+  font-size: 1.25rem;
+  line-height: 1;
+  pointer-events: none;
+  background: rgb(9 11 13 / 70%);
+  border: 1px solid rgb(244 245 247 / 45%);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.swing-media-expand {
+  right: 0.55rem;
+  bottom: 0.55rem;
+  visibility: hidden;
+  opacity: 0;
+  transition:
+    visibility 180ms step-end,
+    opacity 180ms ease;
+}
+
+.swing-media-button:hover img,
+.swing-media-button:focus-visible img {
+  transform: scale(1.025);
+}
+
+.swing-media-button:hover .swing-media-expand,
+.swing-media-button:focus-visible .swing-media-expand {
+  visibility: visible;
+  opacity: 1;
+  transition-delay: 0s;
+}
+
+.swing-media-button:focus-visible {
+  outline: 3px solid var(--color-oxide);
+  outline-offset: -3px;
+}
+
+.swing-media figcaption {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.5rem;
+  padding: 0.55rem 0.15rem 0.1rem;
+  color: var(--color-ink2);
+  font-size: 0.875rem;
+  line-height: 1.35;
+}
+
+.swing-media-label {
+  color: var(--color-muted);
+  font-family: var(--font-meta);
+  font-size: 0.7rem;
+  line-height: 1.7;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.swing-lightbox {
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100svh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  color: var(--color-page);
+  background: #090b0d;
+  border: 0;
+}
+
+.swing-lightbox::backdrop {
+  background: rgb(9 11 13 / 82%);
+  backdrop-filter: blur(0.2rem);
+}
+
+.swing-lightbox-frame {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  grid-template-rows: minmax(0, 1fr) auto auto;
+}
+
+.swing-lightbox-stage {
+  display: grid;
+  min-height: 0;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+}
+
+.swing-lightbox-image,
+.swing-lightbox-video {
+  display: block;
+  width: 100%;
+  height: min(72svh, 42rem);
+  background: #090b0d;
+  object-fit: contain;
+}
+
+.swing-lightbox-close,
+.swing-lightbox-nav {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  color: #fff;
+  font-family: var(--font-meta);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+  background: rgb(9 11 13 / 78%);
+  border: 1px solid rgb(244 245 247 / 34%);
+}
+
+.swing-lightbox-close {
+  position: absolute;
+  z-index: 1;
+  top: 0.75rem;
+  right: 0.75rem;
+}
+
+.swing-lightbox-nav {
+  z-index: 1;
+  margin: 0.75rem;
+}
+
+.swing-lightbox-close:hover,
+.swing-lightbox-close:focus-visible,
+.swing-lightbox-nav:hover:not(:disabled),
+.swing-lightbox-nav:focus-visible:not(:disabled) {
+  color: #090b0d;
+  background: var(--color-page);
+  border-color: var(--color-page);
+}
+
+.swing-lightbox-close:focus-visible,
+.swing-lightbox-nav:focus-visible {
+  outline: 3px solid var(--color-oxide);
+  outline-offset: 2px;
+}
+
+.swing-lightbox-nav:disabled {
+  cursor: default;
+  opacity: 0.35;
+}
+
+.swing-lightbox-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.2rem 0.65rem;
+  align-items: baseline;
+  padding: 0.75rem 1rem 0;
+}
+
+.swing-lightbox-position,
+.swing-lightbox-caption,
+.swing-lightbox-help {
+  margin: 0;
+}
+
+.swing-lightbox-position {
+  font-family: var(--font-meta);
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  opacity: 0.75;
+}
+
+.swing-lightbox-caption {
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
+.swing-lightbox-help {
+  padding: 0.55rem 1rem 1rem;
+  font-family: var(--font-meta);
+  font-size: 0.7rem;
+  line-height: 1.4;
+  opacity: 0.7;
+}
+
+@media (min-width: 32rem) {
+  .swing-gallery {
+    columns: 2;
+  }
+}
+
+@media (min-width: 60rem) {
+  .swing-gallery {
+    columns: 3;
+  }
+}
+
+@media (max-width: 39.99rem) {
+  .swing-lightbox-image,
+  .swing-lightbox-video {
+    height: min(72svh, 38rem);
+  }
+
+  .swing-lightbox-nav {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-inline: 0.4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .swing-media-button img,
+  .swing-media-expand {
+    transition: none;
+  }
+}
