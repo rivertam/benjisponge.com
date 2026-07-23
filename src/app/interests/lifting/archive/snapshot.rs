@@ -10,13 +10,13 @@
 
 use std::collections::HashMap;
 
-use crate::data::models::{ExerciseTag, LiftSet, Workout};
-use crate::eastern::{self, EasternInstant, InvalidTimestamp};
-use crate::records::{self, SetSource};
-use crate::scoring;
+use benjisponge::data::fitness_models::{ExerciseTag, LiftSet, Workout};
 
 use super::api;
+use super::eastern::{self, EasternInstant, InvalidTimestamp};
 use super::filters::Filters;
+use super::records::{self, SetSource};
+use super::scoring;
 
 pub struct Snapshot {
     pub version: i64,
@@ -587,8 +587,8 @@ fn ascii_ci_contains(haystack: &str, needle: &str) -> bool {
 
 #[cfg(test)]
 mod tests {
+    use super::super::filters::parse_filters;
     use super::*;
-    use crate::fitness::filters::parse_filters;
 
     fn workout_row(id_stamp: &str, utc: &str, local: &str, offset: i64) -> Workout {
         Workout {

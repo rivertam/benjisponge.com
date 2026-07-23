@@ -4,10 +4,10 @@
 mod drums;
 mod felix;
 mod keyboards;
-mod lifting;
+pub(crate) mod lifting;
 mod puzzles;
 mod simulation;
-mod spire;
+pub(crate) mod spire;
 mod swing;
 
 use topcoat::{Result, router::page, view::view};

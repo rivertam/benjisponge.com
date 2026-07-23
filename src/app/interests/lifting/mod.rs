@@ -1,5 +1,6 @@
 //! Fitness feature map and cross-layer invariants: `docs/fitness.md`.
 
+pub(crate) mod archive;
 mod badge;
 mod data;
 mod filters;
@@ -7,7 +8,7 @@ mod format;
 mod heatmap;
 mod results;
 
-use benjisponge::fitness::store::FitnessStore;
+use self::archive::store::FitnessStore;
 use topcoat::{
     Result,
     asset::{Asset, asset},

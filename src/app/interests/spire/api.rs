@@ -14,9 +14,11 @@ use topcoat::{
     router::{Bytes, StatusCode, headers, route},
 };
 
-use crate::content::spire_runs;
 use benjisponge::auth::bearer_authorized;
-use benjisponge::data::{Data, models::SpireRun, spire};
+use benjisponge::data::{Data, spire_models::SpireRun};
+
+use super::db as spire;
+use super::runs as spire_runs;
 
 pub const SPIRE_SYNC_TOKEN_VAR: &str = "SPIRE_SYNC_TOKEN";
 

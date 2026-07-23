@@ -1,3 +1,7 @@
+pub(crate) mod api;
+pub(crate) mod db;
+pub(crate) mod runs;
+
 use benjisponge::data::Data;
 use topcoat::{
     Result,
@@ -6,12 +10,10 @@ use topcoat::{
     view::view,
 };
 
+use self::runs::{self as spire_runs, Run, fmt_duration};
 use crate::{
     components::{back_link, link_label, page_head, rail_section, shell},
-    content::{
-        interests::interest,
-        spire_runs::{self, Run, fmt_duration},
-    },
+    content::interests::interest,
 };
 
 /// The result cell's classes: wins in patina, deaths in body ink, abandons
