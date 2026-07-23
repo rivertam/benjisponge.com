@@ -11,7 +11,7 @@ use serde_json::Value;
 use toasty::Db;
 use toasty::stmt::{List, Query};
 
-use super::models::{SpireMeta, SpireRun, SpireRunRaw};
+use benjisponge::data::spire_models::{SpireMeta, SpireRun, SpireRunRaw};
 
 pub const MAX_RUNS_PER_CHUNK: usize = 50;
 

@@ -13,8 +13,8 @@ use topcoat::{
 
 use benjisponge::data::Data;
 
+use crate::app::interests::spire::runs::{self as spire_runs, Run, fmt_duration};
 use crate::content::logbook::{Entry, LOG};
-use crate::content::spire_runs::{self, Run, fmt_duration};
 
 /// Where absolute links point. `SITE_ORIGIN` overrides the default at
 /// runtime; the default is a placeholder until the real domain is wired up.

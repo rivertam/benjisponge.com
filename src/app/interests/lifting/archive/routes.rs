@@ -14,11 +14,13 @@ use topcoat::{
 };
 
 use benjisponge::auth::bearer_authorized;
-use benjisponge::data::{Data, fitness as db};
-use benjisponge::eastern;
-use benjisponge::fitness::filters::parse_filters;
-use benjisponge::fitness::import::{BODY_LIMIT_BYTES, parse_import_payload};
-use benjisponge::fitness::store::FitnessStore;
+use benjisponge::data::Data;
+
+use super::db;
+use super::eastern;
+use super::filters::parse_filters;
+use super::import::{BODY_LIMIT_BYTES, parse_import_payload};
+use super::store::FitnessStore;
 
 pub const FITNESS_SYNC_TOKEN_VAR: &str = "FITNESS_SYNC_TOKEN";
 
@@ -279,7 +281,7 @@ async fn import_chunk(cx: &Cx, body: Bytes) -> Result<PrivateResponse> {
             }
             private(
                 StatusCode::OK,
-                to_body(&benjisponge::fitness::api::ImportReceipt {
+                to_body(&super::api::ImportReceipt {
                     received: outcome.received,
                     added: outcome.added,
                     skipped: outcome.skipped,

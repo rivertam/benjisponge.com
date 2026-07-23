@@ -4,15 +4,22 @@
 //! It connects lazily so a missing/unreachable database never prevents the
 //! binary from starting or serving non-data pages — readers treat a failed
 //! `db()` like any other data-source error (stale cache or error card).
+//!
+//! The model files live with their interests (delete the interest folder
+//! and its schema declaration goes with it) but compile as part of THIS
+//! lib crate via `#[path]`: the migrations CLI and `toasty::models!`
+//! registration need every model here. Queries and import logic live with
+//! the interests too — this module is only the handle and the schema.
 
 use std::sync::Arc;
 
 use toasty::Db;
 use tokio::sync::OnceCell;
 
-pub mod fitness;
-pub mod models;
-pub mod spire;
+#[path = "app/interests/lifting/models.rs"]
+pub mod fitness_models;
+#[path = "app/interests/spire/models.rs"]
+pub mod spire_models;
 
 pub const POSTGRES_URL_VAR: &str = "POSTGRES_URL";
 

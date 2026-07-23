@@ -8,11 +8,11 @@
 
 use std::fmt;
 
-use benjisponge::eastern;
-use benjisponge::fitness::filters::parse_filters;
-use benjisponge::fitness::store::FitnessStore;
+use super::archive::eastern;
+use super::archive::filters::parse_filters;
+use super::archive::store::FitnessStore;
 
-pub use benjisponge::fitness::api::{
+pub use super::archive::api::{
     Calendar, CalendarDay, Facets, Record, Set, SetPage, Workout, WorkoutDetail,
 };
 
