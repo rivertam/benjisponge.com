@@ -6,7 +6,7 @@ install-hooks:
     proto install lefthook
     lefthook install
 
-# Start the local Worker API and Topcoat with live reload
+# Start local Postgres and Topcoat with live reload
 dev port="3000":
     bash scripts/dev.sh "{{port}}"
 

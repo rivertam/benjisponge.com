@@ -1,9 +1,9 @@
 import { Container, getContainer } from "@cloudflare/containers";
 import { cacheKey, cacheable, fromCache, storeInCache } from "./cache";
 
-// Secrets are not part of the generated Env type; handlers extend it locally
-// (same pattern as fitness.ts). POSTGRES_URL and the sync tokens exist so the
-// constructor below can forward them into the container process.
+// Secrets are not part of the generated Env type. POSTGRES_URL and the sync
+// tokens exist so the constructor below can forward them into the container
+// process.
 type ShellEnv = Env & {
   POSTGRES_URL?: string;
   SPIRE_SYNC_TOKEN?: string;

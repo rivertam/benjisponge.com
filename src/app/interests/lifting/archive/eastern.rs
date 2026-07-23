@@ -1,7 +1,7 @@
 //! America/New_York projection of UTC source instants.
 //!
 //! Port of the Worker's `easternInstant`/`publicWorkoutPath`/
-//! `parsePublicWorkoutPath` (`deploy/src/fitness.ts`). The source of truth
+//! `parsePublicWorkoutPath` (`fitness.ts`, since deleted). The source of truth
 //! for a workout is its UTC wall-clock string (`YYYY-MM-DD HH:MM:SS`,
 //! offset-less, always UTC); every reader-facing date, filter, calendar
 //! bucket, and permanent URL uses the Eastern projection computed here.
