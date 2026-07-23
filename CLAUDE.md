@@ -5,11 +5,11 @@ Rust SSR personal site on topcoat 0.3.0 — a niche framework; read
 
 ## Commands
 
-- `just dev [port]` — start local fitness API + live-reload server (default 3000); run `just reset-fitness-local [csv]` separately to rebuild fitness data; details in `docs/fitness.md`
+- `just dev [port]` — start local Postgres (docker) + live-reload server (default 3000); run `just reset-fitness-local [csv]` separately to rebuild fitness data; details in `docs/fitness.md`
 - `just build` — cargo build + `topcoat asset bundle`; serving without the bundle step panics
 - `just check` — fmt + clippy -D warnings + tests; must pass before claiming done
 - `just deploy` — Cloudflare deploy (Worker + container); CI also deploys on push to main. Touching `deploy/` or caching? Read `docs/cloudflare-deploy.md` first
-- `just sync-spire [--dry-run|--json]` — upload new Slay the Spire 2 runs from this machine's save files to the site's D1 database; idempotent; pipeline details in `docs/cloudflare-deploy.md`
+- `just sync-spire [--dry-run|--json]` — upload new Slay the Spire 2 runs from this machine's save files to the site's database; idempotent; pipeline details in `docs/cloudflare-deploy.md`
 - `just sync-fitness <csv> [--dry-run|--json]` — idempotent fitness CSV upload; read `docs/fitness.md` before changing its data flow or taxonomy
 
 ## Adding a page
@@ -30,4 +30,5 @@ Rust SSR personal site on topcoat 0.3.0 — a niche framework; read
 - `emissions.rs` deliberately models only the myclimate fuel curve; the missing aircraft-production and infrastructure terms are not an omission to complete
 - Units: kg CO₂e and km everywhere; number formatting mirrors Intl.NumberFormat half-away-from-zero — don't "fix" the rounding
 - Spire runs are data, not content: `/`, `/spire`, `/feed.xml` render them live from `/api/spire/runs` — publish runs with `just sync-spire`, never by editing the repo
-- Fitness sets are D1 data, not content: never hardcode the CSV; changes spanning `/lifting`, import, API, schema, tags, or local startup must preserve `docs/fitness.md` invariants
+- Fitness sets are database data, not content: never hardcode the CSV; changes spanning `/lifting`, import, API, schema, tags, or local startup must preserve `docs/fitness.md` invariants
+- Records (`/lifting` badges) are derived from set history at snapshot build (`src/records.rs`), never stored or imported — there is deliberately no records table

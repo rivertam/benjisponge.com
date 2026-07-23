@@ -1,6 +1,5 @@
 import { Container, getContainer } from "@cloudflare/containers";
 import { cacheKey, cacheable, fromCache, storeInCache } from "./cache";
-import { handleFitness } from "./fitness";
 
 // Secrets are not part of the generated Env type; handlers extend it locally
 // (same pattern as fitness.ts). POSTGRES_URL and the sync tokens exist so the
@@ -40,14 +39,6 @@ export default {
         `https://benjisponge.com${url.pathname}${url.search}`,
         301,
       );
-    }
-
-    // Public fitness reads and the private bounded CSV import live in the
-    // shared site D1 database and never touch the container. (The spire API
-    // moved into the container app — Rust + Postgres; fitness follows in the
-    // next migration phase.)
-    if (url.pathname.startsWith("/api/fitness")) {
-      return handleFitness(request, env, url);
     }
 
     const container = getContainer(env.SITE_CONTAINER, "site");

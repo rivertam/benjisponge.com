@@ -274,8 +274,10 @@ mod tests {
 
     fn set() -> fitness::Set {
         fitness::Set {
+            id: "fitness:2026-07-21T21:03:00:0001".to_string(),
             ordinal: 1,
             exercise_name: "Plank".to_string(),
+            raw_exercise_name: "Plank".to_string(),
             exercise_note: None,
             superset_id: None,
             weight_milli: None,
@@ -291,8 +293,10 @@ mod tests {
 
     fn workout() -> fitness::Workout {
         fitness::Workout {
+            id: "fitness:2026-07-21T21:03:00".to_string(),
             path: "2026-07-21T17-03-00-04-00".to_string(),
             title: "Lift".to_string(),
+            raw_title: "Lift".to_string(),
             started_at_local: "2026-07-21 17:03:00".to_string(),
             ended_at_local: "2026-07-21 18:03:00".to_string(),
             eastern_offset_minutes: -240,

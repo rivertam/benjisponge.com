@@ -10,6 +10,7 @@ use std::sync::Arc;
 use toasty::Db;
 use tokio::sync::OnceCell;
 
+pub mod fitness;
 pub mod models;
 pub mod spire;
 

@@ -3,7 +3,8 @@
 set -Eeuo pipefail
 
 workout_csv="${1:-/home/benji/Downloads/WorkoutData.csv}"
-fitness_api="http://127.0.0.1:8791"
+fitness_api="${FITNESS_API:-http://127.0.0.1:3000}"
+pg_container=benjisponge-pg
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 repo_root="$(cd -- "${script_dir}/.." && pwd)"
 
@@ -12,6 +13,8 @@ if [[ ! -r "${workout_csv}" ]]; then
     exit 1
 fi
 
+# Prove the local site is up and the local token works before destroying
+# anything: an authorized-but-empty import must come back 400.
 auth_status="$(
     curl --silent --output /dev/null --write-out '%{http_code}' \
         --request POST \
@@ -26,18 +29,10 @@ if [[ "${auth_status}" != 400 ]]; then
     exit 1
 fi
 
-printf 'reset-fitness-local: replacing the six local fitness tables\n'
-(
-    cd "${repo_root}/deploy"
-    npx wrangler d1 execute SITE_DB --local --yes --command \
-        "DROP TABLE IF EXISTS set_records;
-         DROP TABLE IF EXISTS sets;
-         DROP TABLE IF EXISTS exercise_tags;
-         DROP TABLE IF EXISTS exercises;
-         DROP TABLE IF EXISTS workouts;
-         DROP TABLE IF EXISTS fitness_meta;"
-    npx wrangler d1 execute SITE_DB --local --yes --file=fitness-schema.sql
-)
+printf 'reset-fitness-local: truncating the local fitness tables\n'
+docker exec "${pg_container}" psql -U postgres -d benjisponge -q \
+    -c "TRUNCATE TABLE sets, exercise_tags, exercises, workouts;" \
+    -c "UPDATE fitness_meta SET v = 0 WHERE k = 'version';"
 
 printf 'reset-fitness-local: importing %s\n' "${workout_csv}"
 cd "${repo_root}"

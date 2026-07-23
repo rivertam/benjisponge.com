@@ -180,8 +180,10 @@ mod tests {
 
     fn set(set_type: &str, effort_hundredths: Option<u64>) -> fitness::Set {
         fitness::Set {
+            id: "fitness:2026-07-21T21:03:00:0001".to_string(),
             ordinal: 1,
             exercise_name: "Bench".to_string(),
+            raw_exercise_name: "Bench".to_string(),
             exercise_note: None,
             superset_id: None,
             weight_milli: None,
