@@ -7,7 +7,3 @@
 
 pub mod auth;
 pub mod data;
-pub mod eastern;
-pub mod fitness;
-pub mod records;
-pub mod scoring;

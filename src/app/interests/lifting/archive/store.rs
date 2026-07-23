@@ -12,8 +12,9 @@ use std::time::{Duration, Instant};
 
 use tokio::sync::Mutex;
 
-use crate::data::{Data, fitness as db};
+use benjisponge::data::Data;
 
+use super::db;
 use super::snapshot::{self, Snapshot};
 
 /// How long a version check stays fresh.

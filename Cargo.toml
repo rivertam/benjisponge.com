@@ -2,9 +2,20 @@
 name = "benjisponge"
 version = "0.1.0"
 edition = "2024"
-# Three bins live here (the site + two sync CLIs); plain `cargo run` and
-# `topcoat dev` need to keep resolving to the site.
+# Four bins live here (the site, two sync CLIs, migrations); plain
+# `cargo run` and `topcoat dev` need to keep resolving to the site.
 default-run = "benjisponge"
+
+# The sync CLIs are standalone crates that live WITH their interests —
+# delete an interest folder and its importer goes too. They are not part
+# of the site binary's module tree.
+[[bin]]
+name = "fitness_sync"
+path = "src/app/interests/lifting/fitness_sync.rs"
+
+[[bin]]
+name = "spire_sync"
+path = "src/app/interests/spire/spire_sync.rs"
 
 [dependencies]
 anyhow = "1.0.104"

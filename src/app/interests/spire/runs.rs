@@ -9,7 +9,7 @@
 use std::sync::{Arc, Mutex};
 use std::time::{Duration, Instant};
 
-use benjisponge::data::{Data, models::SpireRun};
+use benjisponge::data::{Data, spire_models::SpireRun};
 
 /// One synced run — the fields the site renders. The database row carries
 /// more (seed, acts, build id); the conversion drops what pages don't use.
@@ -112,7 +112,7 @@ pub fn invalidate() {
 
 async fn query(data: &Data) -> Result<Vec<Run>, Box<dyn std::error::Error + Send + Sync>> {
     let db = data.db().await?;
-    let rows = benjisponge::data::spire::list_runs(&db).await?;
+    let rows = super::db::list_runs(&db).await?;
     Ok(from_rows(rows))
 }
 

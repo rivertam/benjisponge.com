@@ -172,7 +172,7 @@ fn effort_popover_id(workout_path: &str, ordinal: u32) -> String {
 }
 
 fn set_volume_points(set: &fitness::Set) -> u32 {
-    benjisponge::scoring::set_volume_points(&set.set_type, set.effort_hundredths)
+    super::archive::scoring::set_volume_points(&set.set_type, set.effort_hundredths)
 }
 
 fn prescription(set: &fitness::Set) -> String {

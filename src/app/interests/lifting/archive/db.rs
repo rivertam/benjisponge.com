@@ -13,8 +13,9 @@ use std::collections::{HashMap, HashSet};
 use toasty::Db;
 use toasty::stmt::{List, Query};
 
-use super::models::{Exercise, ExerciseTag, FitnessMeta, LiftSet, Workout};
-use crate::fitness::import::{IncomingTag, Payload, tag_signature};
+use benjisponge::data::fitness_models::{Exercise, ExerciseTag, FitnessMeta, LiftSet, Workout};
+
+use super::import::{IncomingTag, Payload, tag_signature};
 
 /// The data version; 0 when the row does not exist yet.
 pub async fn current_version(db: &Db) -> toasty::Result<i64> {

@@ -1,15 +1,15 @@
 mod emdash_layer;
 mod feed;
-mod fitness_api;
 mod interests;
 mod llms;
 mod not_found;
 mod resume;
-mod spire_api;
 mod thoughts;
 
 use benjisponge::data::Data;
-use benjisponge::fitness::store::FitnessStore;
+
+use self::interests::lifting::archive::store::FitnessStore;
+use self::interests::spire::runs::{self as spire_runs, Run, fmt_duration};
 use topcoat::{
     Result,
     asset::{AssetBundle, RouterBuilderAssetExt},
@@ -23,7 +23,6 @@ use crate::{
     content::{
         interests::INTERESTS,
         logbook::{Entry, FILTER_TAGS, Kind, LOG, serial},
-        spire_runs::{self, Run, fmt_duration},
     },
     util::urlencode,
 };
