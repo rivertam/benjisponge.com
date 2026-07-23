@@ -1,106 +1,23 @@
-//! Server-side reader for `/lifting` and its D1-backed fitness archive.
+//! Server-side reader for `/lifting` — in-process over the fitness
+//! snapshot (`benjisponge::fitness`), no HTTP hop.
 //!
-//! The Worker owns filtering and validation. The site forwards the normalized
-//! `/lifting/log` query as repeated key/value pairs, then renders the typed JSON
-//! response as HTML. Keeping the API boundary here makes the page useful with
-//! no browser runtime at all.
+//! The wire types are the lib's own API envelopes, so pages and the
+//! public JSON endpoints can never drift. `LoadError` keeps its old
+//! shape: `Rejected` messages are the filter validator's exact 400
+//! strings and stay reader-visible; everything else renders generically.
 
-use std::{fmt, sync::OnceLock, time::Duration};
+use std::fmt;
 
-use reqwest::StatusCode;
-use serde::Deserialize;
+use benjisponge::eastern;
+use benjisponge::fitness::filters::parse_filters;
+use benjisponge::fitness::store::FitnessStore;
 
-use crate::util::urlencode;
+pub use benjisponge::fitness::api::{
+    Calendar, CalendarDay, Facets, Record, Set, SetPage, Workout, WorkoutDetail,
+};
 
-#[derive(Debug, Deserialize)]
-pub struct Facets {
-    pub summary: Summary,
-    pub exercises: Vec<Facet>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Summary {
-    pub sets: u64,
-    pub workouts: u64,
-    pub min_date: Option<String>,
-    pub max_date: Option<String>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Facet {
-    pub value: String,
-    pub count: u64,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct SetPage {
-    pub page: usize,
-    pub per_page: usize,
-    pub total_sets: u64,
-    pub total_workouts: u64,
-    pub workouts: Vec<Workout>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Workout {
-    /// The Worker-generated, canonical public path segment. The immutable ID
-    /// stays internal to the archive so importing and URL presentation can
-    /// evolve independently.
-    pub path: String,
-    pub title: String,
-    pub started_at_local: String,
-    pub ended_at_local: String,
-    pub eastern_offset_minutes: i32,
-    pub end_eastern_offset_minutes: i32,
-    pub duration_seconds: u64,
-    pub duration_suspicious: bool,
-    pub notes: Option<String>,
-    pub description: Option<String>,
-    pub sets: Vec<Set>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Set {
-    pub ordinal: u32,
-    pub exercise_name: String,
-    pub exercise_note: Option<String>,
-    pub superset_id: Option<u64>,
-    pub weight_milli: Option<u64>,
-    pub weight_unit: String,
-    pub reps: Option<u64>,
-    pub effort_hundredths: Option<u64>,
-    pub distance_milli: Option<u64>,
-    pub set_time_seconds: Option<u64>,
-    pub set_type: String,
-    pub records: Vec<Record>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Record {
-    pub level: String,
-    pub kind: String,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct Calendar {
-    pub days: Vec<CalendarDay>,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct CalendarDay {
-    pub date: String,
-    pub volume_points: u32,
-}
-
-#[derive(Debug, Deserialize)]
-pub struct WorkoutDetail {
-    pub workout: Option<Workout>,
-    pub newer_workout_path: Option<String>,
-    pub older_workout_path: Option<String>,
-}
-
-/// A rejected filter is safe to show to the reader. Transport, upstream, and
-/// JSON failures are logged by the page but deliberately rendered generically.
+/// A rejected filter is safe to show to the reader. Snapshot failures are
+/// logged by the page but deliberately rendered generically.
 #[derive(Debug)]
 pub enum LoadError {
     Rejected(String),
@@ -126,115 +43,70 @@ impl fmt::Display for LoadError {
         match self {
             Self::Rejected(message) => write!(formatter, "fitness filter rejected: {message}"),
             Self::NotFound(message) => write!(formatter, "fitness resource not found: {message}"),
-            Self::Unavailable(message) => write!(formatter, "fitness API unavailable: {message}"),
+            Self::Unavailable(message) => {
+                write!(formatter, "fitness archive unavailable: {message}")
+            }
         }
     }
 }
 
-/// Both reads are independent D1 queries, so issue them concurrently.
+/// The full-log page's pair of reads. Both come from one snapshot, so the
+/// facet counts and the filtered page can never disagree about versions.
 pub async fn load(
+    store: &FitnessStore,
     filters: &[(String, String)],
 ) -> (Result<Facets, LoadError>, Result<SetPage, LoadError>) {
-    tokio::join!(fetch_facets(), fetch_sets(filters))
+    let snapshot = match store.snapshot().await {
+        Ok(snapshot) => snapshot,
+        Err(error) => {
+            let message = error.to_string();
+            return (
+                Err(LoadError::Unavailable(message.clone())),
+                Err(LoadError::Unavailable(message)),
+            );
+        }
+    };
+    let sets = match parse_filters(filters) {
+        Ok(parsed) => Ok(snapshot.sets_page(&parsed)),
+        Err(message) => Err(LoadError::Rejected(message)),
+    };
+    (Ok(snapshot.facets()), sets)
 }
 
-/// The landing view has no filters: it needs one current workout and the
-/// archive-wide daily totals for its heatmap.
-pub async fn load_home() -> (
+/// The landing view: archive-wide daily totals plus the newest workout.
+pub async fn load_home(
+    store: &FitnessStore,
+) -> (
     Result<Calendar, LoadError>,
     Result<WorkoutDetail, LoadError>,
 ) {
-    tokio::join!(fetch_calendar(), fetch_latest_workout())
-}
-
-/// Resolve a current, Worker-owned public path. Do not infer an importer ID
-/// from it: the path includes the Eastern UTC offset and is intentionally an
-/// API-level mapping rather than a client-side convention.
-pub async fn load_workout_by_path(path: &str) -> Result<WorkoutDetail, LoadError> {
-    fetch_public_workout(path).await
-}
-
-async fn fetch_facets() -> Result<Facets, LoadError> {
-    fetch("facets", &[]).await
-}
-
-async fn fetch_sets(filters: &[(String, String)]) -> Result<SetPage, LoadError> {
-    fetch("sets", filters).await
-}
-
-async fn fetch_calendar() -> Result<Calendar, LoadError> {
-    fetch("calendar", &[]).await
-}
-
-async fn fetch_latest_workout() -> Result<WorkoutDetail, LoadError> {
-    fetch("workouts/latest", &[]).await
-}
-
-async fn fetch_public_workout(path: &str) -> Result<WorkoutDetail, LoadError> {
-    fetch(&format!("workouts/by-path/{}", urlencode(path)), &[]).await
-}
-
-async fn fetch<T: for<'de> Deserialize<'de>>(
-    path: &str,
-    query: &[(String, String)],
-) -> Result<T, LoadError> {
-    let url = format!("{}/api/fitness/{path}", origin().trim_end_matches('/'));
-    let response = client()
-        .get(&url)
-        .query(query)
-        .send()
-        .await
-        .map_err(|error| LoadError::Unavailable(error.to_string()))?;
-    let status = response.status();
-    let body = response
-        .text()
-        .await
-        .map_err(|error| LoadError::Unavailable(error.to_string()))?;
-
-    if !status.is_success() {
-        let message = serde_json::from_str::<ApiError>(&body)
-            .map(|error| error.error)
-            .unwrap_or_else(|_| {
-                format!(
-                    "{} {}",
-                    status.as_u16(),
-                    status.canonical_reason().unwrap_or("error")
-                )
-            });
-        return if status == StatusCode::NOT_FOUND {
-            Err(LoadError::NotFound(message))
-        } else if status.is_client_error() {
-            Err(LoadError::Rejected(message))
-        } else {
-            Err(LoadError::Unavailable(message))
-        };
+    match store.snapshot().await {
+        Ok(snapshot) => (Ok(snapshot.calendar()), Ok(snapshot.latest())),
+        Err(error) => {
+            let message = error.to_string();
+            (
+                Err(LoadError::Unavailable(message.clone())),
+                Err(LoadError::Unavailable(message)),
+            )
+        }
     }
-
-    serde_json::from_str(&body).map_err(|error| LoadError::Unavailable(error.to_string()))
 }
 
-#[derive(Deserialize)]
-struct ApiError {
-    error: String,
-}
-
-/// `just dev` points this at its local Worker. The production container gets
-/// `SITE_ORIGIN`; a direct binary run falls back to the public archive.
-fn origin() -> String {
-    std::env::var("FITNESS_DATA_ORIGIN")
-        .or_else(|_| std::env::var("SITE_ORIGIN"))
-        .unwrap_or_else(|_| "https://benjisponge.com".to_string())
-}
-
-fn client() -> &'static reqwest::Client {
-    static CLIENT: OnceLock<reqwest::Client> = OnceLock::new();
-    CLIENT.get_or_init(|| {
-        reqwest::Client::builder()
-            .timeout(Duration::from_secs(6))
-            .user_agent("benjisponge-site (+https://benjisponge.com/lifting)")
-            .build()
-            .expect("reqwest client")
-    })
+/// Resolve a canonical public path. Rejections mirror the API's 404s.
+pub async fn load_workout_by_path(
+    store: &FitnessStore,
+    path: &str,
+) -> Result<WorkoutDetail, LoadError> {
+    let Some(instant) = eastern::parse_public_path(path) else {
+        return Err(LoadError::NotFound("not found".to_string()));
+    };
+    let snapshot = store
+        .snapshot()
+        .await
+        .map_err(|error| LoadError::Unavailable(error.to_string()))?;
+    snapshot
+        .by_path(&instant)
+        .ok_or_else(|| LoadError::NotFound("not found".to_string()))
 }
 
 #[cfg(test)]

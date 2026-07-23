@@ -7,10 +7,11 @@ mod format;
 mod heatmap;
 mod results;
 
+use benjisponge::fitness::store::FitnessStore;
 use topcoat::{
     Result,
     asset::{Asset, asset},
-    context::Cx,
+    context::{Cx, app_context},
     router::{HeaderValue, header, not_found, page, parse_query_params, path_param, redirect, uri},
     view::{class, component, view},
 };
@@ -98,7 +99,7 @@ async fn lifting(cx: &Cx) -> Result {
     }
 
     let meta = interest("lifting");
-    let (calendar, latest) = fitness::load_home().await;
+    let (calendar, latest) = fitness::load_home(app_context::<FitnessStore>(cx)).await;
     if let Err(error) = &calendar {
         eprintln!("fitness calendar fetch failed: {error}");
     }
@@ -209,7 +210,7 @@ async fn lifting_log(cx: &Cx) -> Result {
 
     let meta = interest("lifting");
     let api_pairs = filters.api_pairs();
-    let (facets, sets) = fitness::load(&api_pairs).await;
+    let (facets, sets) = fitness::load(app_context::<FitnessStore>(cx), &api_pairs).await;
     if let Err(error) = &facets {
         eprintln!("fitness facets fetch failed: {error}");
     }
@@ -924,7 +925,7 @@ async fn lift_detail(cx: &Cx) -> Result {
         return Err(redirect(&workout_url(workout_path)).into());
     }
 
-    let detail = fitness::load_workout_by_path(workout_path).await;
+    let detail = fitness::load_workout_by_path(app_context::<FitnessStore>(cx), workout_path).await;
     if matches!(&detail, Err(error) if error.is_not_found()) {
         return Err(not_found().into());
     }
