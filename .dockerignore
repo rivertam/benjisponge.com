@@ -2,3 +2,4 @@ target/
 .git/
 deploy/
 docs/
+.env
