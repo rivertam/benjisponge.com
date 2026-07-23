@@ -1,5 +1,6 @@
 mod emdash_layer;
 mod feed;
+mod fitness_api;
 mod interests;
 mod llms;
 mod not_found;
@@ -8,6 +9,7 @@ mod spire_api;
 mod thoughts;
 
 use benjisponge::data::Data;
+use benjisponge::fitness::store::FitnessStore;
 use topcoat::{
     Result,
     asset::{AssetBundle, RouterBuilderAssetExt},
@@ -27,10 +29,12 @@ use crate::{
 };
 
 pub fn router() -> Router {
+    let data = Data::from_env();
     Router::builder()
         .assets(AssetBundle::load().unwrap())
         .discover()
-        .app_context(Data::from_env())
+        .app_context(data.clone())
+        .app_context(FitnessStore::new(data))
         .build()
 }
 

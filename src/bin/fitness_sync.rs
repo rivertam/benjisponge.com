@@ -153,6 +153,10 @@ struct FitnessSet {
     distance_milli: Option<i64>,
     set_time_seconds: Option<i64>,
     set_type: String,
+    /// Parsed and validated from the CSV as a corruption tripwire, but
+    /// never sent: records are derived server-side from set history
+    /// (import contract v2), not imported from Lyfta's medal columns.
+    #[serde(skip_serializing)]
     records: Vec<PersonalRecord>,
 }
 
@@ -1330,6 +1334,10 @@ mod tests {
         assert!(imported_workout.get("started_at_local").is_none());
         assert_eq!(workout.workout.id, "fitness:2026-07-12T00:33:27");
         assert_eq!(workout.sets[0].id, "fitness:2026-07-12T00:33:27:0001");
+        assert!(
+            serialized["sets"][0].get("records").is_none(),
+            "contract v2: records are derived server-side, never sent",
+        );
     }
 
     #[test]
