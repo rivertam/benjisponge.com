@@ -1,5 +1,5 @@
-//! The fitness archive engine — the Rust replacement for
-//! `deploy/src/fitness.ts`.
+//! The fitness archive engine — the Rust replacement for the old
+//! D1-backed Worker implementation (`fitness.ts`, since deleted).
 //!
 //! Reads are served from an in-memory [`snapshot`] of the whole archive
 //! rather than per-request SQL: records are derived-not-stored (a

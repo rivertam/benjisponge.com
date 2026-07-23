@@ -1,5 +1,6 @@
 //! `/api/fitness/*` — the public fitness archive and private bounded
-//! import path, ported from `deploy/src/fitness.ts`. Bodies, error
+//! import path, ported from the old Worker's `fitness.ts` (since
+//! deleted). Bodies, error
 //! messages, status codes, and headers are contract (golden fixtures in
 //! `tests/fixtures/api`). Public GET reads carry `Access-Control-Allow-
 //! Origin: *`; import responses never did and still don't.

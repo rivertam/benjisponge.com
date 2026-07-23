@@ -1,5 +1,5 @@
-//! `/api/spire/*` — the run database's JSON API, ported from
-//! `deploy/src/spire.ts` (now deleted from the Worker). The GET endpoints
+//! `/api/spire/*` — the run database's JSON API, ported from the old
+//! Worker's `spire.ts` (since deleted). The GET endpoints
 //! are public; POST is the sync CLI's bearer-authed write path. Bodies,
 //! error messages, and headers are contract — the golden fixtures under
 //! `tests/fixtures/api` capture the Worker originals verbatim. Spire

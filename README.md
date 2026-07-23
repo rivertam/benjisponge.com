@@ -17,9 +17,9 @@ The site is available at <http://127.0.0.1:3000>. To use another port:
 just dev 4610
 ```
 
-`just dev` also starts the local fitness API on port 8791 and idempotently
-imports `/home/benji/Downloads/WorkoutData.csv`. Override its path with
-`WORKOUT_DATA_CSV=/path/export.csv just dev`. See `docs/fitness.md`.
+`just dev` also starts the local Postgres container and applies migrations.
+Seed fitness data separately with `just reset-fitness-local [csv]` (default
+`/home/benji/Downloads/WorkoutData.csv`). See `docs/fitness.md`.
 
 ## Commands
 

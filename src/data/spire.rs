@@ -1,6 +1,7 @@
 //! Spire run queries and the import write path.
 //!
-//! Port of `deploy/src/spire.ts`. Validation messages are contract — the
+//! Port of the old Worker's `spire.ts` (since deleted). Validation messages
+//! are contract — the
 //! golden fixtures in `tests/fixtures/api` capture them verbatim (note the
 //! en dash in the runs-array message). Unknown keys on a run object are
 //! ignored, exactly like the TS destructuring did.
