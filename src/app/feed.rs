@@ -7,12 +7,14 @@
 
 use topcoat::{
     Result,
-    context::Cx,
-    router::{headers, route},
+    context::{Cx, app_context},
+    router::route,
 };
 
+use benjisponge::data::Data;
+
 use crate::content::logbook::{Entry, LOG};
-use crate::content::spire_runs::{self, Run, SPIRE_CACHE_REFRESH_HEADER, fmt_duration};
+use crate::content::spire_runs::{self, Run, fmt_duration};
 
 /// Where absolute links point. `SITE_ORIGIN` overrides the default at
 /// runtime; the default is a placeholder until the real domain is wired up.
@@ -21,10 +23,14 @@ fn origin() -> String {
 }
 
 #[route(GET "/feed.xml")]
-async fn feed(cx: &Cx) -> Result<([(&'static str, &'static str); 1], String)> {
-    let log = spire_runs::load(headers(cx).contains_key(SPIRE_CACHE_REFRESH_HEADER)).await;
+async fn feed(cx: &Cx) -> Result<([(&'static str, &'static str); 2], String)> {
+    let log = spire_runs::load(app_context::<Data>(cx)).await;
     Ok((
-        [("Content-Type", "application/rss+xml; charset=utf-8")],
+        [
+            ("Content-Type", "application/rss+xml; charset=utf-8"),
+            // Fresh runs appear within a minute; see cache.ts for the edge side.
+            ("Cache-Control", "public, max-age=0, s-maxage=60"),
+        ],
         rss_xml(&origin(), &log.runs),
     ))
 }
@@ -215,14 +221,20 @@ mod tests {
     const ORIGIN: &str = "https://example.test";
 
     fn run(id: &str, date: &str, win: bool) -> Run {
-        serde_json::from_str(&format!(
-            r#"{{"id": "{id}", "date": "{date}", "start_time": {id},
-                "character": "Necrobinder & <Friends>", "win": {win},
-                "abandoned": false, "ascension": 3, "acts": 3, "floors": 34,
-                "killed_by": null, "kill_kind": null, "run_time": 7534,
-                "seed": "SEED", "game_mode": "standard", "build_id": "v0.1"}}"#
-        ))
-        .unwrap()
+        Run {
+            id: id.to_string(),
+            date: date.to_string(),
+            start_time: id.parse().unwrap(),
+            character: "Necrobinder & <Friends>".to_string(),
+            win,
+            abandoned: false,
+            ascension: 3,
+            floors: 34,
+            killed_by: None,
+            kill_kind: None,
+            run_time: 7534,
+            game_mode: "standard".to_string(),
+        }
     }
 
     #[test]

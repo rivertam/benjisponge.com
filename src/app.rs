@@ -4,13 +4,15 @@ mod interests;
 mod llms;
 mod not_found;
 mod resume;
+mod spire_api;
 mod thoughts;
 
+use benjisponge::data::Data;
 use topcoat::{
     Result,
     asset::{AssetBundle, RouterBuilderAssetExt},
-    context::Cx,
-    router::{Router, RouterBuilderDiscoverExt, headers, page, query_params},
+    context::{Cx, app_context},
+    router::{HeaderValue, Router, RouterBuilderDiscoverExt, header, page, query_params},
     view::view,
 };
 
@@ -19,7 +21,7 @@ use crate::{
     content::{
         interests::INTERESTS,
         logbook::{Entry, FILTER_TAGS, Kind, LOG, serial},
-        spire_runs::{self, Run, SPIRE_CACHE_REFRESH_HEADER, fmt_duration},
+        spire_runs::{self, Run, fmt_duration},
     },
     util::urlencode,
 };
@@ -28,6 +30,7 @@ pub fn router() -> Router {
     Router::builder()
         .assets(AssetBundle::load().unwrap())
         .discover()
+        .app_context(Data::from_env())
         .build()
 }
 
@@ -183,7 +186,7 @@ async fn home(cx: &Cx) -> Result {
 
     // Curated entries and synced spire wins interleave into one timeline.
     // Wins behave like updates tagged "games" for the filter row.
-    let spire = spire_runs::load(headers(cx).contains_key(SPIRE_CACHE_REFRESH_HEADER)).await;
+    let spire = spire_runs::load(app_context::<Data>(cx)).await;
     let mut items: Vec<Item> = Vec::new();
     for (index, entry) in LOG.iter().enumerate() {
         if kind.is_some_and(|k| entry.kind() != k)
@@ -218,7 +221,10 @@ async fn home(cx: &Cx) -> Result {
         rows.push(Row { year_mark, item });
     }
 
-    view! { shell(title: "", active: "log",
+    view! {
+        // Fresh runs appear within a minute; see cache.ts for the edge side.
+        ((header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=0, s-maxage=60")))
+        shell(title: "", active: "log",
         // Hero: "I like {interest}", cycling the interest registry. Pure CSS
         // — see .log-hero-* in logbook.css. Each word links to its page; only
         // the currently visible one is hoverable (visibility + pause-on-hover).
