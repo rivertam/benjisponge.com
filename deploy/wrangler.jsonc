@@ -4,6 +4,16 @@
   "main": "src/index.ts",
   "compatibility_date": "2026-07-01",
 
+  // Workers Logs (dash → benjisponge → Logs, or `wrangler tail`). The
+  // container's stdout/stderr feed the same pipeline, so the Rust app's
+  // structured error lines land here too.
+  "observability": {
+    "logs": {
+      "enabled": true,
+      "invocation_logs": true
+    }
+  },
+
   // `just dev` exercises only the D1-backed APIs. Keep its fixed local
   // endpoint fast and independent of Docker; Topcoat serves the site itself.
   "dev": {
