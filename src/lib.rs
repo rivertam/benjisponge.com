@@ -5,6 +5,8 @@
 //! CLIs, and the migrations CLI as the data layer moves in-process
 //! (TypeScript Worker + D1 -> toasty + Postgres).
 
+pub mod auth;
+pub mod data;
 pub mod eastern;
 pub mod records;
 pub mod scoring;

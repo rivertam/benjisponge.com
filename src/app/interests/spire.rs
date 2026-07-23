@@ -1,7 +1,8 @@
+use benjisponge::data::Data;
 use topcoat::{
     Result,
-    context::Cx,
-    router::{headers, page, query_params, redirect_permanent, route},
+    context::{Cx, app_context},
+    router::{HeaderValue, header, page, query_params, redirect_permanent, route},
     view::view,
 };
 
@@ -9,7 +10,7 @@ use crate::{
     components::{back_link, link_label, page_head, rail_section, shell},
     content::{
         interests::interest,
-        spire_runs::{self, Run, SPIRE_CACHE_REFRESH_HEADER, fmt_duration},
+        spire_runs::{self, Run, fmt_duration},
     },
 };
 
@@ -58,7 +59,7 @@ async fn spire(cx: &Cx) -> Result {
     let q = query_params::<SpireQuery>(cx)?;
     let requested = q.page.as_deref().and_then(|p| p.parse().ok()).unwrap_or(1);
     let meta = interest("spire");
-    let log = spire_runs::load(headers(cx).contains_key(SPIRE_CACHE_REFRESH_HEADER)).await;
+    let log = spire_runs::load(app_context::<Data>(cx)).await;
     let (page, pages, range) = page_slice(log.runs.len(), requested);
     let visible = &log.runs[range];
     let page_numbers: Vec<usize> = (1..=pages).collect();
@@ -78,6 +79,8 @@ async fn spire(cx: &Cx) -> Result {
     };
 
     view! {
+        // Fresh runs appear within a minute; see cache.ts for the edge side.
+        ((header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=0, s-maxage=60")))
         shell(
             title: meta.title,
             active: "interests",

@@ -1,19 +1,33 @@
 import { Container, getContainer } from "@cloudflare/containers";
-import {
-  DATA_VERSIONED,
-  cacheKey,
-  cacheable,
-  fromCache,
-  refreshSpireData,
-  storeInCache,
-} from "./cache";
+import { cacheKey, cacheable, fromCache, storeInCache } from "./cache";
 import { handleFitness } from "./fitness";
-import { handleSpire, spireDataVersion } from "./spire";
 
-export class BenjispongeContainer extends Container<Env> {
+// Secrets are not part of the generated Env type; handlers extend it locally
+// (same pattern as fitness.ts). POSTGRES_URL and the sync tokens exist so the
+// constructor below can forward them into the container process.
+type ShellEnv = Env & {
+  POSTGRES_URL?: string;
+  SPIRE_SYNC_TOKEN?: string;
+  FITNESS_SYNC_TOKEN?: string;
+};
+
+export class BenjispongeContainer extends Container<ShellEnv> {
   defaultPort = 8080;
   sleepAfter = "15m";
-  envVars = { SITE_ORIGIN: "https://benjisponge.com" };
+
+  constructor(ctx: BenjispongeContainer["ctx"], env: ShellEnv) {
+    super(ctx, env);
+    // envVars is the only channel into the container process, and it is read
+    // at instance start — rotating a secret needs a container restart.
+    // Unset secrets become empty strings, which the Rust side treats as
+    // "closed" (auth) or "unconfigured" (database).
+    this.envVars = {
+      SITE_ORIGIN: "https://benjisponge.com",
+      POSTGRES_URL: env.POSTGRES_URL ?? "",
+      SPIRE_SYNC_TOKEN: env.SPIRE_SYNC_TOKEN ?? "",
+      FITNESS_SYNC_TOKEN: env.FITNESS_SYNC_TOKEN ?? "",
+    };
+  }
 }
 
 export default {
@@ -28,37 +42,27 @@ export default {
       );
     }
 
-    // The spire run database API — served from D1 right here; never cached,
-    // never touches the container (which is itself a GET-side consumer).
-    if (url.pathname.startsWith("/api/spire")) {
-      return handleSpire(request, env, url);
-    }
-
     // Public fitness reads and the private bounded CSV import live in the
-    // shared site D1 database and never touch the container.
+    // shared site D1 database and never touch the container. (The spire API
+    // moved into the container app — Rust + Postgres; fitness follows in the
+    // next migration phase.)
     if (url.pathname.startsWith("/api/fitness")) {
       return handleFitness(request, env, url);
     }
 
     const container = getContainer(env.SITE_CONTAINER, "site");
 
-    if (!cacheable(request)) {
-      // Shard POSTs (/_topcoat/shards/*) and any future mutating routes.
+    // API responses are never edge-cached, whatever their method — the
+    // container marks them no-store, but don't even consult the cache.
+    if (url.pathname.startsWith("/api/") || !cacheable(request)) {
       return container.fetch(request);
     }
 
-    const dataVersion = DATA_VERSIONED.has(url.pathname)
-      ? await spireDataVersion(env)
-      : null;
-    const key = cacheKey(url, env.RELEASE_ID, dataVersion);
+    const key = cacheKey(url, env.RELEASE_ID);
     const hit = await fromCache(key);
     if (hit) return hit;
 
-    // A versioned cache miss can be caused by a sync while the container's
-    // in-process run cache is still warm. Mark it so the renderer fetches the
-    // new data before this response is stored under the new versioned key.
-    const originRequest = dataVersion === null ? request : refreshSpireData(request);
-    const response = await container.fetch(originRequest);
+    const response = await container.fetch(request);
     if (!response.ok) return response; // 404s stay uncached — cheap and deterministic
     return storeInCache(ctx, key, response);
   },
