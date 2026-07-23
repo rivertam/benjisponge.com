@@ -44,7 +44,11 @@ must diff clean, byte-for-byte where possible**:
 5. **Volatile headers** — `date`, `cf-ray`, `server`, `alt-svc`, timing
    headers. Contract headers that must MATCH: `content-type`,
    `cache-control: no-store`, `access-control-allow-origin: *` on public
-   GET reads (absent on import/POST responses).
+   GET reads (absent on import/POST responses; spire responses never had
+   CORS).
+6. **`/api/*/ids` array order** — `SELECT id FROM ...` with no ORDER BY;
+   storage order differs between D1 and Postgres. Compare as sets (the
+   sync CLIs already do).
 
 Statuses in `manifest.tsv` must match exactly, including the 400/401/404
 split and the exact `{"error": "..."}` message bodies (note

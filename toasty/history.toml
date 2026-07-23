@@ -1,0 +1,6 @@
+version = 1
+
+[[migrations]]
+id = 8447594227695919011
+name = "0000_spire_tables.sql"
+snapshot_name = "0000_snapshot.toml"
