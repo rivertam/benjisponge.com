@@ -1,0 +1,2544 @@
+[
+  {
+    "results": [
+      {
+        "started_at_utc": "2023-09-27 18:47:38",
+        "started_at_local": "2023-09-27 14:47:38",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3275,
+        "id": "fitness:2023-09-27T18:47:38"
+      },
+      {
+        "started_at_utc": "2023-09-28 19:06:31",
+        "started_at_local": "2023-09-28 15:06:31",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3076,
+        "id": "fitness:2023-09-28T19:06:31"
+      },
+      {
+        "started_at_utc": "2023-09-30 03:27:26",
+        "started_at_local": "2023-09-29 23:27:26",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1800,
+        "id": "fitness:2023-09-30T03:27:26"
+      },
+      {
+        "started_at_utc": "2023-11-03 16:25:38",
+        "started_at_local": "2023-11-03 12:25:38",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 862,
+        "id": "fitness:2023-11-03T16:25:38"
+      },
+      {
+        "started_at_utc": "2024-01-02 18:44:16",
+        "started_at_local": "2024-01-02 13:44:16",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 5940,
+        "id": "fitness:2024-01-02T18:44:16"
+      },
+      {
+        "started_at_utc": "2024-01-03 16:32:57",
+        "started_at_local": "2024-01-03 11:32:57",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1488,
+        "id": "fitness:2024-01-03T16:32:57"
+      },
+      {
+        "started_at_utc": "2024-01-04 17:23:34",
+        "started_at_local": "2024-01-04 12:23:34",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4144,
+        "id": "fitness:2024-01-04T17:23:34"
+      },
+      {
+        "started_at_utc": "2024-01-05 19:00:22",
+        "started_at_local": "2024-01-05 14:00:22",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2735,
+        "id": "fitness:2024-01-05T19:00:22"
+      },
+      {
+        "started_at_utc": "2024-01-08 19:09:52",
+        "started_at_local": "2024-01-08 14:09:52",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 6577,
+        "id": "fitness:2024-01-08T19:09:52"
+      },
+      {
+        "started_at_utc": "2024-01-11 18:13:29",
+        "started_at_local": "2024-01-11 13:13:29",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3056,
+        "id": "fitness:2024-01-11T18:13:29"
+      },
+      {
+        "started_at_utc": "2024-01-12 19:20:46",
+        "started_at_local": "2024-01-12 14:20:46",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3858,
+        "id": "fitness:2024-01-12T19:20:46"
+      },
+      {
+        "started_at_utc": "2024-01-17 18:40:56",
+        "started_at_local": "2024-01-17 13:40:56",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 5103,
+        "id": "fitness:2024-01-17T18:40:56"
+      },
+      {
+        "started_at_utc": "2024-01-18 18:50:07",
+        "started_at_local": "2024-01-18 13:50:07",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 6180,
+        "id": "fitness:2024-01-18T18:50:07"
+      },
+      {
+        "started_at_utc": "2024-01-19 17:11:35",
+        "started_at_local": "2024-01-19 12:11:35",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4457,
+        "id": "fitness:2024-01-19T17:11:35"
+      },
+      {
+        "started_at_utc": "2024-01-23 22:06:29",
+        "started_at_local": "2024-01-23 17:06:29",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3980,
+        "id": "fitness:2024-01-23T22:06:29"
+      },
+      {
+        "started_at_utc": "2024-01-24 19:10:31",
+        "started_at_local": "2024-01-24 14:10:31",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 5374,
+        "id": "fitness:2024-01-24T19:10:31"
+      },
+      {
+        "started_at_utc": "2024-01-25 23:31:31",
+        "started_at_local": "2024-01-25 18:31:31",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 8905,
+        "id": "fitness:2024-01-25T23:31:31"
+      },
+      {
+        "started_at_utc": "2024-01-26 17:39:26",
+        "started_at_local": "2024-01-26 12:39:26",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4872,
+        "id": "fitness:2024-01-26T17:39:26"
+      },
+      {
+        "started_at_utc": "2024-01-28 03:23:24",
+        "started_at_local": "2024-01-27 22:23:24",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1800,
+        "id": "fitness:2024-01-28T03:23:24"
+      },
+      {
+        "started_at_utc": "2024-01-29 21:23:38",
+        "started_at_local": "2024-01-29 16:23:38",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4041,
+        "id": "fitness:2024-01-29T21:23:38"
+      },
+      {
+        "started_at_utc": "2024-01-31 21:21:47",
+        "started_at_local": "2024-01-31 16:21:47",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 7215,
+        "id": "fitness:2024-01-31T21:21:47"
+      },
+      {
+        "started_at_utc": "2024-02-01 18:58:58",
+        "started_at_local": "2024-02-01 13:58:58",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4175,
+        "id": "fitness:2024-02-01T18:58:58"
+      },
+      {
+        "started_at_utc": "2024-02-02 19:50:16",
+        "started_at_local": "2024-02-02 14:50:16",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4645,
+        "id": "fitness:2024-02-02T19:50:16"
+      },
+      {
+        "started_at_utc": "2024-02-03 21:18:16",
+        "started_at_local": "2024-02-03 16:18:16",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 427,
+        "id": "fitness:2024-02-03T21:18:16"
+      },
+      {
+        "started_at_utc": "2024-02-06 16:11:59",
+        "started_at_local": "2024-02-06 11:11:59",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4667,
+        "id": "fitness:2024-02-06T16:11:59"
+      },
+      {
+        "started_at_utc": "2024-02-07 20:44:16",
+        "started_at_local": "2024-02-07 15:44:16",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1938,
+        "id": "fitness:2024-02-07T20:44:16"
+      },
+      {
+        "started_at_utc": "2024-02-08 15:22:02",
+        "started_at_local": "2024-02-08 10:22:02",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3601,
+        "id": "fitness:2024-02-08T15:22:02"
+      },
+      {
+        "started_at_utc": "2024-02-09 19:37:44",
+        "started_at_local": "2024-02-09 14:37:44",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4880,
+        "id": "fitness:2024-02-09T19:37:44"
+      },
+      {
+        "started_at_utc": "2024-02-10 20:11:06",
+        "started_at_local": "2024-02-10 15:11:06",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3517,
+        "id": "fitness:2024-02-10T20:11:06"
+      },
+      {
+        "started_at_utc": "2024-02-11 18:23:09",
+        "started_at_local": "2024-02-11 13:23:09",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 65,
+        "id": "fitness:2024-02-11T18:23:09"
+      },
+      {
+        "started_at_utc": "2024-02-12 19:23:46",
+        "started_at_local": "2024-02-12 14:23:46",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1679,
+        "id": "fitness:2024-02-12T19:23:46"
+      },
+      {
+        "started_at_utc": "2024-02-14 21:28:18",
+        "started_at_local": "2024-02-14 16:28:18",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1456,
+        "id": "fitness:2024-02-14T21:28:18"
+      },
+      {
+        "started_at_utc": "2024-02-22 20:18:51",
+        "started_at_local": "2024-02-22 15:18:51",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2912,
+        "id": "fitness:2024-02-22T20:18:51"
+      },
+      {
+        "started_at_utc": "2024-02-23 17:32:55",
+        "started_at_local": "2024-02-23 12:32:55",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3006,
+        "id": "fitness:2024-02-23T17:32:55"
+      },
+      {
+        "started_at_utc": "2024-02-27 18:07:33",
+        "started_at_local": "2024-02-27 13:07:33",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3266,
+        "id": "fitness:2024-02-27T18:07:33"
+      },
+      {
+        "started_at_utc": "2024-02-28 19:40:46",
+        "started_at_local": "2024-02-28 14:40:46",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4311,
+        "id": "fitness:2024-02-28T19:40:46"
+      },
+      {
+        "started_at_utc": "2024-03-02 01:04:15",
+        "started_at_local": "2024-03-01 20:04:15",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1800,
+        "id": "fitness:2024-03-02T01:04:15"
+      },
+      {
+        "started_at_utc": "2024-03-06 21:07:39",
+        "started_at_local": "2024-03-06 16:07:39",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1786,
+        "id": "fitness:2024-03-06T21:07:39"
+      },
+      {
+        "started_at_utc": "2024-03-09 03:44:06",
+        "started_at_local": "2024-03-08 22:44:06",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 5264,
+        "id": "fitness:2024-03-09T03:44:06"
+      },
+      {
+        "started_at_utc": "2024-03-09 19:56:47",
+        "started_at_local": "2024-03-09 14:56:47",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 5264,
+        "id": "fitness:2024-03-09T19:56:47"
+      },
+      {
+        "started_at_utc": "2024-03-13 21:28:58",
+        "started_at_local": "2024-03-13 17:28:58",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 605,
+        "id": "fitness:2024-03-13T21:28:58"
+      },
+      {
+        "started_at_utc": "2024-03-14 17:26:13",
+        "started_at_local": "2024-03-14 13:26:13",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1090,
+        "id": "fitness:2024-03-14T17:26:13"
+      },
+      {
+        "started_at_utc": "2024-03-15 21:27:41",
+        "started_at_local": "2024-03-15 17:27:41",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1652,
+        "id": "fitness:2024-03-15T21:27:41"
+      },
+      {
+        "started_at_utc": "2024-03-19 03:25:06",
+        "started_at_local": "2024-03-18 23:25:06",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3004,
+        "id": "fitness:2024-03-19T03:25:06"
+      },
+      {
+        "started_at_utc": "2024-03-19 18:50:52",
+        "started_at_local": "2024-03-19 14:50:52",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3004,
+        "id": "fitness:2024-03-19T18:50:52"
+      },
+      {
+        "started_at_utc": "2024-03-20 15:45:14",
+        "started_at_local": "2024-03-20 11:45:14",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2959,
+        "id": "fitness:2024-03-20T15:45:14"
+      },
+      {
+        "started_at_utc": "2024-03-21 22:08:31",
+        "started_at_local": "2024-03-21 18:08:31",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 29,
+        "id": "fitness:2024-03-21T22:08:31"
+      },
+      {
+        "started_at_utc": "2024-03-24 18:59:30",
+        "started_at_local": "2024-03-24 14:59:30",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2300,
+        "id": "fitness:2024-03-24T18:59:30"
+      },
+      {
+        "started_at_utc": "2024-03-25 16:31:06",
+        "started_at_local": "2024-03-25 12:31:06",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4546,
+        "id": "fitness:2024-03-25T16:31:06"
+      },
+      {
+        "started_at_utc": "2024-03-27 17:38:36",
+        "started_at_local": "2024-03-27 13:38:36",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2790,
+        "id": "fitness:2024-03-27T17:38:36"
+      },
+      {
+        "started_at_utc": "2024-03-28 19:50:45",
+        "started_at_local": "2024-03-28 15:50:45",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1580,
+        "id": "fitness:2024-03-28T19:50:45"
+      },
+      {
+        "started_at_utc": "2024-04-02 18:43:59",
+        "started_at_local": "2024-04-02 14:43:59",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2883,
+        "id": "fitness:2024-04-02T18:43:59"
+      },
+      {
+        "started_at_utc": "2024-04-03 21:48:13",
+        "started_at_local": "2024-04-03 17:48:13",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3047,
+        "id": "fitness:2024-04-03T21:48:13"
+      },
+      {
+        "started_at_utc": "2024-04-04 18:47:38",
+        "started_at_local": "2024-04-04 14:47:38",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5563,
+        "id": "fitness:2024-04-04T18:47:38"
+      },
+      {
+        "started_at_utc": "2024-04-05 19:30:15",
+        "started_at_local": "2024-04-05 15:30:15",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2397,
+        "id": "fitness:2024-04-05T19:30:15"
+      },
+      {
+        "started_at_utc": "2024-04-07 21:17:50",
+        "started_at_local": "2024-04-07 17:17:50",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3106,
+        "id": "fitness:2024-04-07T21:17:50"
+      },
+      {
+        "started_at_utc": "2024-04-09 01:10:12",
+        "started_at_local": "2024-04-08 21:10:12",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 16180,
+        "id": "fitness:2024-04-09T01:10:12"
+      },
+      {
+        "started_at_utc": "2024-04-09 16:45:19",
+        "started_at_local": "2024-04-09 12:45:19",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5704,
+        "id": "fitness:2024-04-09T16:45:19"
+      },
+      {
+        "started_at_utc": "2024-04-15 03:53:19",
+        "started_at_local": "2024-04-14 23:53:19",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5770,
+        "id": "fitness:2024-04-15T03:53:19"
+      },
+      {
+        "started_at_utc": "2024-04-15 17:22:29",
+        "started_at_local": "2024-04-15 13:22:29",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5770,
+        "id": "fitness:2024-04-15T17:22:29"
+      },
+      {
+        "started_at_utc": "2024-04-16 18:14:34",
+        "started_at_local": "2024-04-16 14:14:34",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4527,
+        "id": "fitness:2024-04-16T18:14:34"
+      },
+      {
+        "started_at_utc": "2024-04-17 18:25:06",
+        "started_at_local": "2024-04-17 14:25:06",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 250,
+        "id": "fitness:2024-04-17T18:25:06"
+      },
+      {
+        "started_at_utc": "2024-04-18 00:09:02",
+        "started_at_local": "2024-04-17 20:09:02",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 250,
+        "id": "fitness:2024-04-18T00:09:02"
+      },
+      {
+        "started_at_utc": "2024-04-19 17:13:57",
+        "started_at_local": "2024-04-19 13:13:57",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4916,
+        "id": "fitness:2024-04-19T17:13:57"
+      },
+      {
+        "started_at_utc": "2024-04-22 17:37:43",
+        "started_at_local": "2024-04-22 13:37:43",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4501,
+        "id": "fitness:2024-04-22T17:37:43"
+      },
+      {
+        "started_at_utc": "2024-04-24 17:31:54",
+        "started_at_local": "2024-04-24 13:31:54",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 304,
+        "id": "fitness:2024-04-24T17:31:54"
+      },
+      {
+        "started_at_utc": "2024-04-25 16:30:01",
+        "started_at_local": "2024-04-25 12:30:01",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4896,
+        "id": "fitness:2024-04-25T16:30:01"
+      },
+      {
+        "started_at_utc": "2024-04-26 16:57:01",
+        "started_at_local": "2024-04-26 12:57:01",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4803,
+        "id": "fitness:2024-04-26T16:57:01"
+      },
+      {
+        "started_at_utc": "2024-04-29 17:09:00",
+        "started_at_local": "2024-04-29 13:09:00",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 6089,
+        "id": "fitness:2024-04-29T17:09:00"
+      },
+      {
+        "started_at_utc": "2024-04-30 18:09:04",
+        "started_at_local": "2024-04-30 14:09:04",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 6657,
+        "id": "fitness:2024-04-30T18:09:04"
+      },
+      {
+        "started_at_utc": "2024-05-01 16:08:02",
+        "started_at_local": "2024-05-01 12:08:02",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5255,
+        "id": "fitness:2024-05-01T16:08:02"
+      },
+      {
+        "started_at_utc": "2024-05-03 15:55:03",
+        "started_at_local": "2024-05-03 11:55:03",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 7039,
+        "id": "fitness:2024-05-03T15:55:03"
+      },
+      {
+        "started_at_utc": "2024-05-06 17:32:00",
+        "started_at_local": "2024-05-06 13:32:00",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4562,
+        "id": "fitness:2024-05-06T17:32:00"
+      },
+      {
+        "started_at_utc": "2024-05-07 17:11:58",
+        "started_at_local": "2024-05-07 13:11:58",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3228,
+        "id": "fitness:2024-05-07T17:11:58"
+      },
+      {
+        "started_at_utc": "2024-05-08 17:33:18",
+        "started_at_local": "2024-05-08 13:33:18",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2118,
+        "id": "fitness:2024-05-08T17:33:18"
+      },
+      {
+        "started_at_utc": "2024-05-09 18:41:13",
+        "started_at_local": "2024-05-09 14:41:13",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5484,
+        "id": "fitness:2024-05-09T18:41:13"
+      },
+      {
+        "started_at_utc": "2024-05-12 04:54:52",
+        "started_at_local": "2024-05-12 00:54:52",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1800,
+        "id": "fitness:2024-05-12T04:54:52"
+      },
+      {
+        "started_at_utc": "2024-05-13 17:41:08",
+        "started_at_local": "2024-05-13 13:41:08",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 6993,
+        "id": "fitness:2024-05-13T17:41:08"
+      },
+      {
+        "started_at_utc": "2024-05-15 15:59:28",
+        "started_at_local": "2024-05-15 11:59:28",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 7420,
+        "id": "fitness:2024-05-15T15:59:28"
+      },
+      {
+        "started_at_utc": "2024-05-16 17:45:54",
+        "started_at_local": "2024-05-16 13:45:54",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5787,
+        "id": "fitness:2024-05-16T17:45:54"
+      },
+      {
+        "started_at_utc": "2024-05-17 16:43:49",
+        "started_at_local": "2024-05-17 12:43:49",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4766,
+        "id": "fitness:2024-05-17T16:43:49"
+      },
+      {
+        "started_at_utc": "2024-05-18 16:56:19",
+        "started_at_local": "2024-05-18 12:56:19",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3455,
+        "id": "fitness:2024-05-18T16:56:19"
+      },
+      {
+        "started_at_utc": "2024-05-19 18:07:48",
+        "started_at_local": "2024-05-19 14:07:48",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4365,
+        "id": "fitness:2024-05-19T18:07:48"
+      },
+      {
+        "started_at_utc": "2024-05-20 18:59:14",
+        "started_at_local": "2024-05-20 14:59:14",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3005,
+        "id": "fitness:2024-05-20T18:59:14"
+      },
+      {
+        "started_at_utc": "2024-05-25 21:23:16",
+        "started_at_local": "2024-05-25 17:23:16",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1613,
+        "id": "fitness:2024-05-25T21:23:16"
+      },
+      {
+        "started_at_utc": "2024-05-28 17:41:57",
+        "started_at_local": "2024-05-28 13:41:57",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4536,
+        "id": "fitness:2024-05-28T17:41:57"
+      },
+      {
+        "started_at_utc": "2024-05-29 19:25:25",
+        "started_at_local": "2024-05-29 15:25:25",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4059,
+        "id": "fitness:2024-05-29T19:25:25"
+      },
+      {
+        "started_at_utc": "2024-05-31 18:14:01",
+        "started_at_local": "2024-05-31 14:14:01",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4275,
+        "id": "fitness:2024-05-31T18:14:01"
+      },
+      {
+        "started_at_utc": "2024-06-03 19:43:55",
+        "started_at_local": "2024-06-03 15:43:55",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2249,
+        "id": "fitness:2024-06-03T19:43:55"
+      },
+      {
+        "started_at_utc": "2024-06-04 20:04:08",
+        "started_at_local": "2024-06-04 16:04:08",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2888,
+        "id": "fitness:2024-06-04T20:04:08"
+      },
+      {
+        "started_at_utc": "2024-06-08 14:48:52",
+        "started_at_local": "2024-06-08 10:48:52",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1049,
+        "id": "fitness:2024-06-08T14:48:52"
+      },
+      {
+        "started_at_utc": "2024-06-13 23:04:05",
+        "started_at_local": "2024-06-13 19:04:05",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2146,
+        "id": "fitness:2024-06-13T23:04:05"
+      },
+      {
+        "started_at_utc": "2024-06-14 16:54:01",
+        "started_at_local": "2024-06-14 12:54:01",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4457,
+        "id": "fitness:2024-06-14T16:54:01"
+      },
+      {
+        "started_at_utc": "2024-06-15 19:33:51",
+        "started_at_local": "2024-06-15 15:33:51",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 17801,
+        "id": "fitness:2024-06-15T19:33:51"
+      },
+      {
+        "started_at_utc": "2024-06-16 21:21:30",
+        "started_at_local": "2024-06-16 17:21:30",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2628,
+        "id": "fitness:2024-06-16T21:21:30"
+      },
+      {
+        "started_at_utc": "2024-07-06 16:24:22",
+        "started_at_local": "2024-07-06 12:24:22",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2485,
+        "id": "fitness:2024-07-06T16:24:22"
+      },
+      {
+        "started_at_utc": "2024-07-08 16:57:20",
+        "started_at_local": "2024-07-08 12:57:20",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3965,
+        "id": "fitness:2024-07-08T16:57:20"
+      },
+      {
+        "started_at_utc": "2024-07-10 16:03:07",
+        "started_at_local": "2024-07-10 12:03:07",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2958,
+        "id": "fitness:2024-07-10T16:03:07"
+      },
+      {
+        "started_at_utc": "2024-07-12 16:07:46",
+        "started_at_local": "2024-07-12 12:07:46",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3170,
+        "id": "fitness:2024-07-12T16:07:46"
+      },
+      {
+        "started_at_utc": "2024-07-14 20:26:58",
+        "started_at_local": "2024-07-14 16:26:58",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2675,
+        "id": "fitness:2024-07-14T20:26:58"
+      },
+      {
+        "started_at_utc": "2024-07-17 20:27:52",
+        "started_at_local": "2024-07-17 16:27:52",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2693,
+        "id": "fitness:2024-07-17T20:27:52"
+      },
+      {
+        "started_at_utc": "2024-07-22 17:36:38",
+        "started_at_local": "2024-07-22 13:36:38",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2814,
+        "id": "fitness:2024-07-22T17:36:38"
+      },
+      {
+        "started_at_utc": "2024-07-24 16:36:29",
+        "started_at_local": "2024-07-24 12:36:29",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4300,
+        "id": "fitness:2024-07-24T16:36:29"
+      },
+      {
+        "started_at_utc": "2024-07-26 19:56:24",
+        "started_at_local": "2024-07-26 15:56:24",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3101,
+        "id": "fitness:2024-07-26T19:56:24"
+      },
+      {
+        "started_at_utc": "2024-07-27 23:07:15",
+        "started_at_local": "2024-07-27 19:07:15",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 233,
+        "id": "fitness:2024-07-27T23:07:15"
+      },
+      {
+        "started_at_utc": "2024-07-30 20:48:24",
+        "started_at_local": "2024-07-30 16:48:24",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 922,
+        "id": "fitness:2024-07-30T20:48:24"
+      },
+      {
+        "started_at_utc": "2024-08-10 21:53:35",
+        "started_at_local": "2024-08-10 17:53:35",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2829,
+        "id": "fitness:2024-08-10T21:53:35"
+      },
+      {
+        "started_at_utc": "2024-08-13 19:05:13",
+        "started_at_local": "2024-08-13 15:05:13",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 10122,
+        "id": "fitness:2024-08-13T19:05:13"
+      },
+      {
+        "started_at_utc": "2024-08-24 17:21:15",
+        "started_at_local": "2024-08-24 13:21:15",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2562,
+        "id": "fitness:2024-08-24T17:21:15"
+      },
+      {
+        "started_at_utc": "2024-09-05 16:59:23",
+        "started_at_local": "2024-09-05 12:59:23",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2111,
+        "id": "fitness:2024-09-05T16:59:23"
+      },
+      {
+        "started_at_utc": "2024-09-10 20:16:50",
+        "started_at_local": "2024-09-10 16:16:50",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1564,
+        "id": "fitness:2024-09-10T20:16:50"
+      },
+      {
+        "started_at_utc": "2024-09-12 20:42:50",
+        "started_at_local": "2024-09-12 16:42:50",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1595,
+        "id": "fitness:2024-09-12T20:42:50"
+      },
+      {
+        "started_at_utc": "2024-09-15 16:17:28",
+        "started_at_local": "2024-09-15 12:17:28",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3515,
+        "id": "fitness:2024-09-15T16:17:28"
+      },
+      {
+        "started_at_utc": "2024-09-16 20:44:51",
+        "started_at_local": "2024-09-16 16:44:51",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1851,
+        "id": "fitness:2024-09-16T20:44:51"
+      },
+      {
+        "started_at_utc": "2024-09-19 20:40:51",
+        "started_at_local": "2024-09-19 16:40:51",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3572,
+        "id": "fitness:2024-09-19T20:40:51"
+      },
+      {
+        "started_at_utc": "2024-09-29 21:40:45",
+        "started_at_local": "2024-09-29 17:40:45",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3727,
+        "id": "fitness:2024-09-29T21:40:45"
+      },
+      {
+        "started_at_utc": "2024-10-03 21:18:13",
+        "started_at_local": "2024-10-03 17:18:13",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 999,
+        "id": "fitness:2024-10-03T21:18:13"
+      },
+      {
+        "started_at_utc": "2024-10-06 00:28:21",
+        "started_at_local": "2024-10-05 20:28:21",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2639,
+        "id": "fitness:2024-10-06T00:28:21"
+      },
+      {
+        "started_at_utc": "2024-10-09 17:51:13",
+        "started_at_local": "2024-10-09 13:51:13",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1586,
+        "id": "fitness:2024-10-09T17:51:13"
+      },
+      {
+        "started_at_utc": "2024-10-22 21:10:22",
+        "started_at_local": "2024-10-22 17:10:22",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2197,
+        "id": "fitness:2024-10-22T21:10:22"
+      },
+      {
+        "started_at_utc": "2024-10-28 20:46:50",
+        "started_at_local": "2024-10-28 16:46:50",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1857,
+        "id": "fitness:2024-10-28T20:46:50"
+      },
+      {
+        "started_at_utc": "2024-11-02 15:31:53",
+        "started_at_local": "2024-11-02 11:31:53",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2675,
+        "id": "fitness:2024-11-02T15:31:53"
+      },
+      {
+        "started_at_utc": "2024-11-06 19:30:24",
+        "started_at_local": "2024-11-06 14:30:24",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3195,
+        "id": "fitness:2024-11-06T19:30:24"
+      },
+      {
+        "started_at_utc": "2024-11-11 22:17:12",
+        "started_at_local": "2024-11-11 17:17:12",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2784,
+        "id": "fitness:2024-11-11T22:17:12"
+      },
+      {
+        "started_at_utc": "2024-11-13 22:37:49",
+        "started_at_local": "2024-11-13 17:37:49",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1845,
+        "id": "fitness:2024-11-13T22:37:49"
+      },
+      {
+        "started_at_utc": "2024-11-14 18:17:53",
+        "started_at_local": "2024-11-14 13:17:53",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3087,
+        "id": "fitness:2024-11-14T18:17:53"
+      },
+      {
+        "started_at_utc": "2024-11-17 18:51:41",
+        "started_at_local": "2024-11-17 13:51:41",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2723,
+        "id": "fitness:2024-11-17T18:51:41"
+      },
+      {
+        "started_at_utc": "2024-11-18 20:04:26",
+        "started_at_local": "2024-11-18 15:04:26",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1416,
+        "id": "fitness:2024-11-18T20:04:26"
+      },
+      {
+        "started_at_utc": "2024-11-23 17:26:34",
+        "started_at_local": "2024-11-23 12:26:34",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1683,
+        "id": "fitness:2024-11-23T17:26:34"
+      },
+      {
+        "started_at_utc": "2024-11-25 21:05:49",
+        "started_at_local": "2024-11-25 16:05:49",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3241,
+        "id": "fitness:2024-11-25T21:05:49"
+      },
+      {
+        "started_at_utc": "2024-12-02 01:47:49",
+        "started_at_local": "2024-12-01 20:47:49",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 48047,
+        "id": "fitness:2024-12-02T01:47:49"
+      },
+      {
+        "started_at_utc": "2024-12-02 14:56:52",
+        "started_at_local": "2024-12-02 09:56:52",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 48047,
+        "id": "fitness:2024-12-02T14:56:52"
+      },
+      {
+        "started_at_utc": "2024-12-03 19:18:48",
+        "started_at_local": "2024-12-03 14:18:48",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 28006,
+        "id": "fitness:2024-12-03T19:18:48"
+      },
+      {
+        "started_at_utc": "2024-12-04 19:15:41",
+        "started_at_local": "2024-12-04 14:15:41",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 34816,
+        "id": "fitness:2024-12-04T19:15:41"
+      },
+      {
+        "started_at_utc": "2024-12-06 15:30:45",
+        "started_at_local": "2024-12-06 10:30:45",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 53512,
+        "id": "fitness:2024-12-06T15:30:45"
+      },
+      {
+        "started_at_utc": "2024-12-07 15:19:43",
+        "started_at_local": "2024-12-07 10:19:43",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 58762,
+        "id": "fitness:2024-12-07T15:19:43"
+      },
+      {
+        "started_at_utc": "2024-12-08 22:24:19",
+        "started_at_local": "2024-12-08 17:24:19",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 23370,
+        "id": "fitness:2024-12-08T22:24:19"
+      },
+      {
+        "started_at_utc": "2024-12-09 16:21:47",
+        "started_at_local": "2024-12-09 11:21:47",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 44347,
+        "id": "fitness:2024-12-09T16:21:47"
+      },
+      {
+        "started_at_utc": "2024-12-12 20:28:15",
+        "started_at_local": "2024-12-12 15:28:15",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 77635,
+        "id": "fitness:2024-12-12T20:28:15"
+      },
+      {
+        "started_at_utc": "2024-12-13 18:02:21",
+        "started_at_local": "2024-12-13 13:02:21",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 45359,
+        "id": "fitness:2024-12-13T18:02:21"
+      },
+      {
+        "started_at_utc": "2024-12-14 22:22:49",
+        "started_at_local": "2024-12-14 17:22:49",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 30049,
+        "id": "fitness:2024-12-14T22:22:49"
+      },
+      {
+        "started_at_utc": "2024-12-15 19:00:09",
+        "started_at_local": "2024-12-15 14:00:09",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 35985,
+        "id": "fitness:2024-12-15T19:00:09"
+      },
+      {
+        "started_at_utc": "2024-12-16 21:36:43",
+        "started_at_local": "2024-12-16 16:36:43",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 59155,
+        "id": "fitness:2024-12-16T21:36:43"
+      },
+      {
+        "started_at_utc": "2024-12-18 17:28:44",
+        "started_at_local": "2024-12-18 12:28:44",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 45340,
+        "id": "fitness:2024-12-18T17:28:44"
+      },
+      {
+        "started_at_utc": "2024-12-19 21:20:02",
+        "started_at_local": "2024-12-19 16:20:02",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 62051,
+        "id": "fitness:2024-12-19T21:20:02"
+      },
+      {
+        "started_at_utc": "2024-12-22 01:47:22",
+        "started_at_local": "2024-12-21 20:47:22",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1800,
+        "id": "fitness:2024-12-22T01:47:22"
+      },
+      {
+        "started_at_utc": "2024-12-24 20:58:57",
+        "started_at_local": "2024-12-24 15:58:57",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 417,
+        "id": "fitness:2024-12-24T20:58:57"
+      },
+      {
+        "started_at_utc": "2024-12-25 05:50:51",
+        "started_at_local": "2024-12-25 00:50:51",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1800,
+        "id": "fitness:2024-12-25T05:50:51"
+      },
+      {
+        "started_at_utc": "2024-12-28 16:12:43",
+        "started_at_local": "2024-12-28 11:12:43",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 21869,
+        "id": "fitness:2024-12-28T16:12:43"
+      },
+      {
+        "started_at_utc": "2024-12-29 22:17:24",
+        "started_at_local": "2024-12-29 17:17:24",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3557,
+        "id": "fitness:2024-12-29T22:17:24"
+      },
+      {
+        "started_at_utc": "2025-01-01 00:01:48",
+        "started_at_local": "2024-12-31 19:01:48",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 66026,
+        "id": "fitness:2025-01-01T00:01:48"
+      },
+      {
+        "started_at_utc": "2025-01-07 14:13:31",
+        "started_at_local": "2025-01-07 09:13:31",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3662,
+        "id": "fitness:2025-01-07T14:13:31"
+      },
+      {
+        "started_at_utc": "2025-01-07 20:01:18",
+        "started_at_local": "2025-01-07 15:01:18",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3662,
+        "id": "fitness:2025-01-07T20:01:18"
+      },
+      {
+        "started_at_utc": "2025-01-08 20:23:33",
+        "started_at_local": "2025-01-08 15:23:33",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3061,
+        "id": "fitness:2025-01-08T20:23:33"
+      },
+      {
+        "started_at_utc": "2025-01-10 19:52:34",
+        "started_at_local": "2025-01-10 14:52:34",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2762,
+        "id": "fitness:2025-01-10T19:52:34"
+      },
+      {
+        "started_at_utc": "2025-01-13 18:28:02",
+        "started_at_local": "2025-01-13 13:28:02",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2721,
+        "id": "fitness:2025-01-13T18:28:02"
+      },
+      {
+        "started_at_utc": "2025-01-14 20:15:11",
+        "started_at_local": "2025-01-14 15:15:11",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3415,
+        "id": "fitness:2025-01-14T20:15:11"
+      },
+      {
+        "started_at_utc": "2025-01-16 14:48:24",
+        "started_at_local": "2025-01-16 09:48:24",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3058,
+        "id": "fitness:2025-01-16T14:48:24"
+      },
+      {
+        "started_at_utc": "2025-01-17 18:52:29",
+        "started_at_local": "2025-01-17 13:52:29",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 6178,
+        "id": "fitness:2025-01-17T18:52:29"
+      },
+      {
+        "started_at_utc": "2025-01-30 17:52:28",
+        "started_at_local": "2025-01-30 12:52:28",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3021,
+        "id": "fitness:2025-01-30T17:52:28"
+      },
+      {
+        "started_at_utc": "2025-02-02 16:32:38",
+        "started_at_local": "2025-02-02 11:32:38",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4505,
+        "id": "fitness:2025-02-02T16:32:38"
+      },
+      {
+        "started_at_utc": "2025-02-05 19:01:59",
+        "started_at_local": "2025-02-05 14:01:59",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2657,
+        "id": "fitness:2025-02-05T19:01:59"
+      },
+      {
+        "started_at_utc": "2025-02-08 20:27:11",
+        "started_at_local": "2025-02-08 15:27:11",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2457,
+        "id": "fitness:2025-02-08T20:27:11"
+      },
+      {
+        "started_at_utc": "2025-02-10 20:43:35",
+        "started_at_local": "2025-02-10 15:43:35",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1621,
+        "id": "fitness:2025-02-10T20:43:35"
+      },
+      {
+        "started_at_utc": "2025-02-11 17:35:48",
+        "started_at_local": "2025-02-11 12:35:48",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4053,
+        "id": "fitness:2025-02-11T17:35:48"
+      },
+      {
+        "started_at_utc": "2025-02-13 20:12:17",
+        "started_at_local": "2025-02-13 15:12:17",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3618,
+        "id": "fitness:2025-02-13T20:12:17"
+      },
+      {
+        "started_at_utc": "2025-02-14 19:18:47",
+        "started_at_local": "2025-02-14 14:18:47",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1950,
+        "id": "fitness:2025-02-14T19:18:47"
+      },
+      {
+        "started_at_utc": "2025-02-15 19:43:12",
+        "started_at_local": "2025-02-15 14:43:12",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1706,
+        "id": "fitness:2025-02-15T19:43:12"
+      },
+      {
+        "started_at_utc": "2025-02-16 18:42:48",
+        "started_at_local": "2025-02-16 13:42:48",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1383,
+        "id": "fitness:2025-02-16T18:42:48"
+      },
+      {
+        "started_at_utc": "2025-02-20 19:41:20",
+        "started_at_local": "2025-02-20 14:41:20",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1420,
+        "id": "fitness:2025-02-20T19:41:20"
+      },
+      {
+        "started_at_utc": "2025-02-23 15:58:19",
+        "started_at_local": "2025-02-23 10:58:19",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4235,
+        "id": "fitness:2025-02-23T15:58:19"
+      },
+      {
+        "started_at_utc": "2025-02-24 18:49:57",
+        "started_at_local": "2025-02-24 13:49:57",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3134,
+        "id": "fitness:2025-02-24T18:49:57"
+      },
+      {
+        "started_at_utc": "2025-02-27 17:50:51",
+        "started_at_local": "2025-02-27 12:50:51",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1882,
+        "id": "fitness:2025-02-27T17:50:51"
+      },
+      {
+        "started_at_utc": "2025-02-28 21:28:51",
+        "started_at_local": "2025-02-28 16:28:51",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2659,
+        "id": "fitness:2025-02-28T21:28:51"
+      },
+      {
+        "started_at_utc": "2025-03-02 17:49:53",
+        "started_at_local": "2025-03-02 12:49:53",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4847,
+        "id": "fitness:2025-03-02T17:49:53"
+      },
+      {
+        "started_at_utc": "2025-03-03 19:20:45",
+        "started_at_local": "2025-03-03 14:20:45",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1450,
+        "id": "fitness:2025-03-03T19:20:45"
+      },
+      {
+        "started_at_utc": "2025-03-04 20:56:06",
+        "started_at_local": "2025-03-04 15:56:06",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1846,
+        "id": "fitness:2025-03-04T20:56:06"
+      },
+      {
+        "started_at_utc": "2025-03-05 20:46:27",
+        "started_at_local": "2025-03-05 15:46:27",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3730,
+        "id": "fitness:2025-03-05T20:46:27"
+      },
+      {
+        "started_at_utc": "2025-03-06 20:34:30",
+        "started_at_local": "2025-03-06 15:34:30",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1642,
+        "id": "fitness:2025-03-06T20:34:30"
+      },
+      {
+        "started_at_utc": "2025-03-14 20:59:33",
+        "started_at_local": "2025-03-14 16:59:33",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1899,
+        "id": "fitness:2025-03-14T20:59:33"
+      },
+      {
+        "started_at_utc": "2025-03-15 18:03:17",
+        "started_at_local": "2025-03-15 14:03:17",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2035,
+        "id": "fitness:2025-03-15T18:03:17"
+      },
+      {
+        "started_at_utc": "2025-03-17 22:03:10",
+        "started_at_local": "2025-03-17 18:03:10",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2699,
+        "id": "fitness:2025-03-17T22:03:10"
+      },
+      {
+        "started_at_utc": "2025-03-18 20:44:38",
+        "started_at_local": "2025-03-18 16:44:38",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2660,
+        "id": "fitness:2025-03-18T20:44:38"
+      },
+      {
+        "started_at_utc": "2025-03-19 20:47:36",
+        "started_at_local": "2025-03-19 16:47:36",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1983,
+        "id": "fitness:2025-03-19T20:47:36"
+      },
+      {
+        "started_at_utc": "2025-03-22 23:25:12",
+        "started_at_local": "2025-03-22 19:25:12",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5293,
+        "id": "fitness:2025-03-22T23:25:12"
+      },
+      {
+        "started_at_utc": "2025-03-24 19:51:27",
+        "started_at_local": "2025-03-24 15:51:27",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5854,
+        "id": "fitness:2025-03-24T19:51:27"
+      },
+      {
+        "started_at_utc": "2025-03-25 17:26:13",
+        "started_at_local": "2025-03-25 13:26:13",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3341,
+        "id": "fitness:2025-03-25T17:26:13"
+      },
+      {
+        "started_at_utc": "2025-03-26 16:33:18",
+        "started_at_local": "2025-03-26 12:33:18",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2461,
+        "id": "fitness:2025-03-26T16:33:18"
+      },
+      {
+        "started_at_utc": "2025-03-28 18:45:07",
+        "started_at_local": "2025-03-28 14:45:07",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2243,
+        "id": "fitness:2025-03-28T18:45:07"
+      },
+      {
+        "started_at_utc": "2025-03-29 15:40:47",
+        "started_at_local": "2025-03-29 11:40:47",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4377,
+        "id": "fitness:2025-03-29T15:40:47"
+      },
+      {
+        "started_at_utc": "2025-03-30 17:44:08",
+        "started_at_local": "2025-03-30 13:44:08",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 37,
+        "id": "fitness:2025-03-30T17:44:08"
+      },
+      {
+        "started_at_utc": "2025-03-31 21:56:18",
+        "started_at_local": "2025-03-31 17:56:18",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3922,
+        "id": "fitness:2025-03-31T21:56:18"
+      },
+      {
+        "started_at_utc": "2025-04-01 19:46:41",
+        "started_at_local": "2025-04-01 15:46:41",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2965,
+        "id": "fitness:2025-04-01T19:46:41"
+      },
+      {
+        "started_at_utc": "2025-04-03 21:30:38",
+        "started_at_local": "2025-04-03 17:30:38",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2072,
+        "id": "fitness:2025-04-03T21:30:38"
+      },
+      {
+        "started_at_utc": "2025-04-08 21:32:40",
+        "started_at_local": "2025-04-08 17:32:40",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 6018,
+        "id": "fitness:2025-04-08T21:32:40"
+      },
+      {
+        "started_at_utc": "2025-04-10 20:10:56",
+        "started_at_local": "2025-04-10 16:10:56",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1661,
+        "id": "fitness:2025-04-10T20:10:56"
+      },
+      {
+        "started_at_utc": "2025-04-12 00:22:45",
+        "started_at_local": "2025-04-11 20:22:45",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 6593,
+        "id": "fitness:2025-04-12T00:22:45"
+      },
+      {
+        "started_at_utc": "2025-04-12 17:37:03",
+        "started_at_local": "2025-04-12 13:37:03",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 8538,
+        "id": "fitness:2025-04-12T17:37:03"
+      },
+      {
+        "started_at_utc": "2025-04-16 04:45:07",
+        "started_at_local": "2025-04-16 00:45:07",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1800,
+        "id": "fitness:2025-04-16T04:45:07"
+      },
+      {
+        "started_at_utc": "2025-04-19 15:31:19",
+        "started_at_local": "2025-04-19 11:31:19",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3142,
+        "id": "fitness:2025-04-19T15:31:19"
+      },
+      {
+        "started_at_utc": "2025-04-22 21:20:23",
+        "started_at_local": "2025-04-22 17:20:23",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3810,
+        "id": "fitness:2025-04-22T21:20:23"
+      },
+      {
+        "started_at_utc": "2025-04-23 22:20:04",
+        "started_at_local": "2025-04-23 18:20:04",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1406,
+        "id": "fitness:2025-04-23T22:20:04"
+      },
+      {
+        "started_at_utc": "2025-04-24 23:14:22",
+        "started_at_local": "2025-04-24 19:14:22",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 6322,
+        "id": "fitness:2025-04-24T23:14:22"
+      },
+      {
+        "started_at_utc": "2025-04-26 17:28:29",
+        "started_at_local": "2025-04-26 13:28:29",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3267,
+        "id": "fitness:2025-04-26T17:28:29"
+      },
+      {
+        "started_at_utc": "2025-04-28 20:41:36",
+        "started_at_local": "2025-04-28 16:41:36",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1800,
+        "id": "fitness:2025-04-28T20:41:36"
+      },
+      {
+        "started_at_utc": "2025-04-29 19:11:52",
+        "started_at_local": "2025-04-29 15:11:52",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 6171,
+        "id": "fitness:2025-04-29T19:11:52"
+      },
+      {
+        "started_at_utc": "2025-05-01 21:09:46",
+        "started_at_local": "2025-05-01 17:09:46",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2622,
+        "id": "fitness:2025-05-01T21:09:46"
+      },
+      {
+        "started_at_utc": "2025-05-03 21:27:37",
+        "started_at_local": "2025-05-03 17:27:37",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2511,
+        "id": "fitness:2025-05-03T21:27:37"
+      },
+      {
+        "started_at_utc": "2025-05-05 21:42:54",
+        "started_at_local": "2025-05-05 17:42:54",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1325,
+        "id": "fitness:2025-05-05T21:42:54"
+      },
+      {
+        "started_at_utc": "2025-05-06 21:58:58",
+        "started_at_local": "2025-05-06 17:58:58",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3597,
+        "id": "fitness:2025-05-06T21:58:58"
+      },
+      {
+        "started_at_utc": "2025-05-11 16:36:14",
+        "started_at_local": "2025-05-11 12:36:14",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2564,
+        "id": "fitness:2025-05-11T16:36:14"
+      },
+      {
+        "started_at_utc": "2025-05-18 17:24:21",
+        "started_at_local": "2025-05-18 13:24:21",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2631,
+        "id": "fitness:2025-05-18T17:24:21"
+      },
+      {
+        "started_at_utc": "2025-05-20 21:34:58",
+        "started_at_local": "2025-05-20 17:34:58",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1093,
+        "id": "fitness:2025-05-20T21:34:58"
+      },
+      {
+        "started_at_utc": "2025-05-26 18:05:50",
+        "started_at_local": "2025-05-26 14:05:50",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4983,
+        "id": "fitness:2025-05-26T18:05:50"
+      },
+      {
+        "started_at_utc": "2025-05-29 02:48:11",
+        "started_at_local": "2025-05-28 22:48:11",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1800,
+        "id": "fitness:2025-05-29T02:48:11"
+      },
+      {
+        "started_at_utc": "2025-06-03 21:58:35",
+        "started_at_local": "2025-06-03 17:58:35",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5686,
+        "id": "fitness:2025-06-03T21:58:35"
+      },
+      {
+        "started_at_utc": "2025-06-06 23:26:20",
+        "started_at_local": "2025-06-06 19:26:20",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1930,
+        "id": "fitness:2025-06-06T23:26:20"
+      },
+      {
+        "started_at_utc": "2025-06-10 20:04:57",
+        "started_at_local": "2025-06-10 16:04:57",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5284,
+        "id": "fitness:2025-06-10T20:04:57"
+      },
+      {
+        "started_at_utc": "2025-06-14 14:48:33",
+        "started_at_local": "2025-06-14 10:48:33",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3190,
+        "id": "fitness:2025-06-14T14:48:33"
+      },
+      {
+        "started_at_utc": "2025-06-16 20:49:40",
+        "started_at_local": "2025-06-16 16:49:40",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2056,
+        "id": "fitness:2025-06-16T20:49:40"
+      },
+      {
+        "started_at_utc": "2025-06-17 20:40:23",
+        "started_at_local": "2025-06-17 16:40:23",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4332,
+        "id": "fitness:2025-06-17T20:40:23"
+      },
+      {
+        "started_at_utc": "2025-06-26 18:42:24",
+        "started_at_local": "2025-06-26 14:42:24",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1844,
+        "id": "fitness:2025-06-26T18:42:24"
+      },
+      {
+        "started_at_utc": "2025-06-27 19:01:52",
+        "started_at_local": "2025-06-27 15:01:52",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1251,
+        "id": "fitness:2025-06-27T19:01:52"
+      },
+      {
+        "started_at_utc": "2025-06-29 16:40:31",
+        "started_at_local": "2025-06-29 12:40:31",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2375,
+        "id": "fitness:2025-06-29T16:40:31"
+      },
+      {
+        "started_at_utc": "2025-07-01 20:54:16",
+        "started_at_local": "2025-07-01 16:54:16",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2396,
+        "id": "fitness:2025-07-01T20:54:16"
+      },
+      {
+        "started_at_utc": "2025-07-10 18:27:21",
+        "started_at_local": "2025-07-10 14:27:21",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2824,
+        "id": "fitness:2025-07-10T18:27:21"
+      },
+      {
+        "started_at_utc": "2025-07-15 22:34:36",
+        "started_at_local": "2025-07-15 18:34:36",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1958,
+        "id": "fitness:2025-07-15T22:34:36"
+      },
+      {
+        "started_at_utc": "2025-07-17 16:18:31",
+        "started_at_local": "2025-07-17 12:18:31",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5867,
+        "id": "fitness:2025-07-17T16:18:31"
+      },
+      {
+        "started_at_utc": "2025-07-18 22:02:18",
+        "started_at_local": "2025-07-18 18:02:18",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1022,
+        "id": "fitness:2025-07-18T22:02:18"
+      },
+      {
+        "started_at_utc": "2025-07-21 18:32:02",
+        "started_at_local": "2025-07-21 14:32:02",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4519,
+        "id": "fitness:2025-07-21T18:32:02"
+      },
+      {
+        "started_at_utc": "2025-07-24 17:25:21",
+        "started_at_local": "2025-07-24 13:25:21",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1162,
+        "id": "fitness:2025-07-24T17:25:21"
+      },
+      {
+        "started_at_utc": "2025-07-26 20:05:36",
+        "started_at_local": "2025-07-26 16:05:36",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1534,
+        "id": "fitness:2025-07-26T20:05:36"
+      },
+      {
+        "started_at_utc": "2025-08-01 18:03:28",
+        "started_at_local": "2025-08-01 14:03:28",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2513,
+        "id": "fitness:2025-08-01T18:03:28"
+      },
+      {
+        "started_at_utc": "2025-08-03 19:21:33",
+        "started_at_local": "2025-08-03 15:21:33",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2906,
+        "id": "fitness:2025-08-03T19:21:33"
+      },
+      {
+        "started_at_utc": "2025-08-04 18:33:48",
+        "started_at_local": "2025-08-04 14:33:48",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1421,
+        "id": "fitness:2025-08-04T18:33:48"
+      },
+      {
+        "started_at_utc": "2025-08-08 20:59:45",
+        "started_at_local": "2025-08-08 16:59:45",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1955,
+        "id": "fitness:2025-08-08T20:59:45"
+      },
+      {
+        "started_at_utc": "2025-08-09 20:55:28",
+        "started_at_local": "2025-08-09 16:55:28",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4344,
+        "id": "fitness:2025-08-09T20:55:28"
+      },
+      {
+        "started_at_utc": "2025-08-10 21:59:36",
+        "started_at_local": "2025-08-10 17:59:36",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1041,
+        "id": "fitness:2025-08-10T21:59:36"
+      },
+      {
+        "started_at_utc": "2025-08-15 19:15:58",
+        "started_at_local": "2025-08-15 15:15:58",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2555,
+        "id": "fitness:2025-08-15T19:15:58"
+      },
+      {
+        "started_at_utc": "2025-08-18 02:16:01",
+        "started_at_local": "2025-08-17 22:16:01",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1800,
+        "id": "fitness:2025-08-18T02:16:01"
+      },
+      {
+        "started_at_utc": "2025-08-21 22:00:08",
+        "started_at_local": "2025-08-21 18:00:08",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1729,
+        "id": "fitness:2025-08-21T22:00:08"
+      },
+      {
+        "started_at_utc": "2025-08-22 19:41:40",
+        "started_at_local": "2025-08-22 15:41:40",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4449,
+        "id": "fitness:2025-08-22T19:41:40"
+      },
+      {
+        "started_at_utc": "2025-08-23 17:12:08",
+        "started_at_local": "2025-08-23 13:12:08",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 678,
+        "id": "fitness:2025-08-23T17:12:08"
+      },
+      {
+        "started_at_utc": "2025-09-04 17:48:47",
+        "started_at_local": "2025-09-04 13:48:47",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3791,
+        "id": "fitness:2025-09-04T17:48:47"
+      },
+      {
+        "started_at_utc": "2025-09-05 17:14:23",
+        "started_at_local": "2025-09-05 13:14:23",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2842,
+        "id": "fitness:2025-09-05T17:14:23"
+      },
+      {
+        "started_at_utc": "2025-09-06 19:34:33",
+        "started_at_local": "2025-09-06 15:34:33",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4271,
+        "id": "fitness:2025-09-06T19:34:33"
+      },
+      {
+        "started_at_utc": "2025-09-08 22:28:32",
+        "started_at_local": "2025-09-08 18:28:32",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2574,
+        "id": "fitness:2025-09-08T22:28:32"
+      },
+      {
+        "started_at_utc": "2025-09-09 18:02:21",
+        "started_at_local": "2025-09-09 14:02:21",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 13633,
+        "id": "fitness:2025-09-09T18:02:21"
+      },
+      {
+        "started_at_utc": "2025-09-15 20:10:37",
+        "started_at_local": "2025-09-15 16:10:37",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2354,
+        "id": "fitness:2025-09-15T20:10:37"
+      },
+      {
+        "started_at_utc": "2025-09-17 20:00:11",
+        "started_at_local": "2025-09-17 16:00:11",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1498,
+        "id": "fitness:2025-09-17T20:00:11"
+      },
+      {
+        "started_at_utc": "2025-09-19 21:34:05",
+        "started_at_local": "2025-09-19 17:34:05",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 0,
+        "id": "fitness:2025-09-19T21:34:05"
+      },
+      {
+        "started_at_utc": "2025-09-20 17:27:35",
+        "started_at_local": "2025-09-20 13:27:35",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2809,
+        "id": "fitness:2025-09-20T17:27:35"
+      },
+      {
+        "started_at_utc": "2025-09-22 18:01:06",
+        "started_at_local": "2025-09-22 14:01:06",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1590,
+        "id": "fitness:2025-09-22T18:01:06"
+      },
+      {
+        "started_at_utc": "2025-09-23 23:00:44",
+        "started_at_local": "2025-09-23 19:00:44",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 900,
+        "id": "fitness:2025-09-23T23:00:44"
+      },
+      {
+        "started_at_utc": "2025-09-27 20:34:47",
+        "started_at_local": "2025-09-27 16:34:47",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3497,
+        "id": "fitness:2025-09-27T20:34:47"
+      },
+      {
+        "started_at_utc": "2025-10-01 16:43:50",
+        "started_at_local": "2025-10-01 12:43:50",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 562,
+        "id": "fitness:2025-10-01T16:43:50"
+      },
+      {
+        "started_at_utc": "2025-10-02 19:25:37",
+        "started_at_local": "2025-10-02 15:25:37",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2609,
+        "id": "fitness:2025-10-02T19:25:37"
+      },
+      {
+        "started_at_utc": "2025-10-13 20:32:17",
+        "started_at_local": "2025-10-13 16:32:17",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2395,
+        "id": "fitness:2025-10-13T20:32:17"
+      },
+      {
+        "started_at_utc": "2025-10-20 18:18:49",
+        "started_at_local": "2025-10-20 14:18:49",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2078,
+        "id": "fitness:2025-10-20T18:18:49"
+      },
+      {
+        "started_at_utc": "2025-10-22 17:21:51",
+        "started_at_local": "2025-10-22 13:21:51",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1489,
+        "id": "fitness:2025-10-22T17:21:51"
+      },
+      {
+        "started_at_utc": "2025-10-28 15:14:49",
+        "started_at_local": "2025-10-28 11:14:49",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 147,
+        "id": "fitness:2025-10-28T15:14:49"
+      },
+      {
+        "started_at_utc": "2025-11-07 23:09:05",
+        "started_at_local": "2025-11-07 18:09:05",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1449,
+        "id": "fitness:2025-11-07T23:09:05"
+      },
+      {
+        "started_at_utc": "2025-11-08 22:56:02",
+        "started_at_local": "2025-11-08 17:56:02",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3806,
+        "id": "fitness:2025-11-08T22:56:02"
+      },
+      {
+        "started_at_utc": "2025-11-11 18:24:22",
+        "started_at_local": "2025-11-11 13:24:22",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3802,
+        "id": "fitness:2025-11-11T18:24:22"
+      },
+      {
+        "started_at_utc": "2025-11-13 21:19:48",
+        "started_at_local": "2025-11-13 16:19:48",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2204,
+        "id": "fitness:2025-11-13T21:19:48"
+      },
+      {
+        "started_at_utc": "2025-11-19 00:10:25",
+        "started_at_local": "2025-11-18 19:10:25",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 949,
+        "id": "fitness:2025-11-19T00:10:25"
+      },
+      {
+        "started_at_utc": "2025-11-20 17:19:49",
+        "started_at_local": "2025-11-20 12:19:49",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2442,
+        "id": "fitness:2025-11-20T17:19:49"
+      },
+      {
+        "started_at_utc": "2025-11-22 18:03:39",
+        "started_at_local": "2025-11-22 13:03:39",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2313,
+        "id": "fitness:2025-11-22T18:03:39"
+      },
+      {
+        "started_at_utc": "2025-11-25 18:00:11",
+        "started_at_local": "2025-11-25 13:00:11",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1310,
+        "id": "fitness:2025-11-25T18:00:11"
+      },
+      {
+        "started_at_utc": "2025-11-26 18:52:52",
+        "started_at_local": "2025-11-26 13:52:52",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2847,
+        "id": "fitness:2025-11-26T18:52:52"
+      },
+      {
+        "started_at_utc": "2025-11-27 19:08:51",
+        "started_at_local": "2025-11-27 14:08:51",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2148,
+        "id": "fitness:2025-11-27T19:08:51"
+      },
+      {
+        "started_at_utc": "2025-11-28 18:18:32",
+        "started_at_local": "2025-11-28 13:18:32",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2468,
+        "id": "fitness:2025-11-28T18:18:32"
+      },
+      {
+        "started_at_utc": "2025-11-29 18:00:50",
+        "started_at_local": "2025-11-29 13:00:50",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3045,
+        "id": "fitness:2025-11-29T18:00:50"
+      },
+      {
+        "started_at_utc": "2025-11-30 20:58:19",
+        "started_at_local": "2025-11-30 15:58:19",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2186,
+        "id": "fitness:2025-11-30T20:58:19"
+      },
+      {
+        "started_at_utc": "2025-12-01 18:13:42",
+        "started_at_local": "2025-12-01 13:13:42",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1311,
+        "id": "fitness:2025-12-01T18:13:42"
+      },
+      {
+        "started_at_utc": "2025-12-02 23:20:34",
+        "started_at_local": "2025-12-02 18:20:34",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1161,
+        "id": "fitness:2025-12-02T23:20:34"
+      },
+      {
+        "started_at_utc": "2025-12-05 02:54:15",
+        "started_at_local": "2025-12-04 21:54:15",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1630,
+        "id": "fitness:2025-12-05T02:54:15"
+      },
+      {
+        "started_at_utc": "2025-12-06 20:55:42",
+        "started_at_local": "2025-12-06 15:55:42",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2815,
+        "id": "fitness:2025-12-06T20:55:42"
+      },
+      {
+        "started_at_utc": "2025-12-07 22:47:42",
+        "started_at_local": "2025-12-07 17:47:42",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2687,
+        "id": "fitness:2025-12-07T22:47:42"
+      },
+      {
+        "started_at_utc": "2025-12-08 21:44:07",
+        "started_at_local": "2025-12-08 16:44:07",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1623,
+        "id": "fitness:2025-12-08T21:44:07"
+      },
+      {
+        "started_at_utc": "2025-12-12 18:47:21",
+        "started_at_local": "2025-12-12 13:47:21",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1035,
+        "id": "fitness:2025-12-12T18:47:21"
+      },
+      {
+        "started_at_utc": "2025-12-14 01:43:10",
+        "started_at_local": "2025-12-13 20:43:10",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4668,
+        "id": "fitness:2025-12-14T01:43:10"
+      },
+      {
+        "started_at_utc": "2025-12-27 22:27:46",
+        "started_at_local": "2025-12-27 17:27:46",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3299,
+        "id": "fitness:2025-12-27T22:27:46"
+      },
+      {
+        "started_at_utc": "2025-12-28 19:39:55",
+        "started_at_local": "2025-12-28 14:39:55",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1531,
+        "id": "fitness:2025-12-28T19:39:55"
+      },
+      {
+        "started_at_utc": "2025-12-30 23:07:28",
+        "started_at_local": "2025-12-30 18:07:28",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1700,
+        "id": "fitness:2025-12-30T23:07:28"
+      },
+      {
+        "started_at_utc": "2026-01-07 16:55:45",
+        "started_at_local": "2026-01-07 11:55:45",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2189,
+        "id": "fitness:2026-01-07T16:55:45"
+      },
+      {
+        "started_at_utc": "2026-01-09 03:04:08",
+        "started_at_local": "2026-01-08 22:04:08",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4118,
+        "id": "fitness:2026-01-09T03:04:08"
+      },
+      {
+        "started_at_utc": "2026-01-10 21:33:09",
+        "started_at_local": "2026-01-10 16:33:09",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3484,
+        "id": "fitness:2026-01-10T21:33:09"
+      },
+      {
+        "started_at_utc": "2026-01-12 20:24:13",
+        "started_at_local": "2026-01-12 15:24:13",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1743,
+        "id": "fitness:2026-01-12T20:24:13"
+      },
+      {
+        "started_at_utc": "2026-01-17 00:26:31",
+        "started_at_local": "2026-01-16 19:26:31",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4819,
+        "id": "fitness:2026-01-17T00:26:31"
+      },
+      {
+        "started_at_utc": "2026-01-17 23:23:05",
+        "started_at_local": "2026-01-17 18:23:05",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1994,
+        "id": "fitness:2026-01-17T23:23:05"
+      },
+      {
+        "started_at_utc": "2026-02-01 18:49:58",
+        "started_at_local": "2026-02-01 13:49:58",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1867,
+        "id": "fitness:2026-02-01T18:49:58"
+      },
+      {
+        "started_at_utc": "2026-02-04 00:22:02",
+        "started_at_local": "2026-02-03 19:22:02",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1839,
+        "id": "fitness:2026-02-04T00:22:02"
+      },
+      {
+        "started_at_utc": "2026-02-04 22:36:14",
+        "started_at_local": "2026-02-04 17:36:14",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3482,
+        "id": "fitness:2026-02-04T22:36:14"
+      },
+      {
+        "started_at_utc": "2026-02-05 23:09:14",
+        "started_at_local": "2026-02-05 18:09:14",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2168,
+        "id": "fitness:2026-02-05T23:09:14"
+      },
+      {
+        "started_at_utc": "2026-02-08 20:10:45",
+        "started_at_local": "2026-02-08 15:10:45",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3329,
+        "id": "fitness:2026-02-08T20:10:45"
+      },
+      {
+        "started_at_utc": "2026-02-10 18:11:06",
+        "started_at_local": "2026-02-10 13:11:06",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1742,
+        "id": "fitness:2026-02-10T18:11:06"
+      },
+      {
+        "started_at_utc": "2026-02-11 23:06:44",
+        "started_at_local": "2026-02-11 18:06:44",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1988,
+        "id": "fitness:2026-02-11T23:06:44"
+      },
+      {
+        "started_at_utc": "2026-02-12 21:22:17",
+        "started_at_local": "2026-02-12 16:22:17",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 4108,
+        "id": "fitness:2026-02-12T21:22:17"
+      },
+      {
+        "started_at_utc": "2026-02-16 20:48:11",
+        "started_at_local": "2026-02-16 15:48:11",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3804,
+        "id": "fitness:2026-02-16T20:48:11"
+      },
+      {
+        "started_at_utc": "2026-02-17 22:07:02",
+        "started_at_local": "2026-02-17 17:07:02",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2012,
+        "id": "fitness:2026-02-17T22:07:02"
+      },
+      {
+        "started_at_utc": "2026-02-21 00:58:56",
+        "started_at_local": "2026-02-20 19:58:56",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2355,
+        "id": "fitness:2026-02-21T00:58:56"
+      },
+      {
+        "started_at_utc": "2026-02-22 21:07:56",
+        "started_at_local": "2026-02-22 16:07:56",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3232,
+        "id": "fitness:2026-02-22T21:07:56"
+      },
+      {
+        "started_at_utc": "2026-02-24 21:01:04",
+        "started_at_local": "2026-02-24 16:01:04",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 7303,
+        "id": "fitness:2026-02-24T21:01:04"
+      },
+      {
+        "started_at_utc": "2026-02-26 23:35:03",
+        "started_at_local": "2026-02-26 18:35:03",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2242,
+        "id": "fitness:2026-02-26T23:35:03"
+      },
+      {
+        "started_at_utc": "2026-02-28 02:30:28",
+        "started_at_local": "2026-02-27 21:30:28",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2183,
+        "id": "fitness:2026-02-28T02:30:28"
+      },
+      {
+        "started_at_utc": "2026-03-01 22:21:35",
+        "started_at_local": "2026-03-01 17:21:35",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 1620,
+        "id": "fitness:2026-03-01T22:21:35"
+      },
+      {
+        "started_at_utc": "2026-03-02 23:07:49",
+        "started_at_local": "2026-03-02 18:07:49",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2170,
+        "id": "fitness:2026-03-02T23:07:49"
+      },
+      {
+        "started_at_utc": "2026-03-03 22:27:17",
+        "started_at_local": "2026-03-03 17:27:17",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 3372,
+        "id": "fitness:2026-03-03T22:27:17"
+      },
+      {
+        "started_at_utc": "2026-03-06 22:10:24",
+        "started_at_local": "2026-03-06 17:10:24",
+        "eastern_offset_minutes": -300,
+        "duration_seconds": 2058,
+        "id": "fitness:2026-03-06T22:10:24"
+      },
+      {
+        "started_at_utc": "2026-03-08 23:22:37",
+        "started_at_local": "2026-03-08 19:22:37",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2771,
+        "id": "fitness:2026-03-08T23:22:37"
+      },
+      {
+        "started_at_utc": "2026-03-10 16:09:19",
+        "started_at_local": "2026-03-10 12:09:19",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2055,
+        "id": "fitness:2026-03-10T16:09:19"
+      },
+      {
+        "started_at_utc": "2026-03-11 20:39:06",
+        "started_at_local": "2026-03-11 16:39:06",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2851,
+        "id": "fitness:2026-03-11T20:39:06"
+      },
+      {
+        "started_at_utc": "2026-03-14 19:18:00",
+        "started_at_local": "2026-03-14 15:18:00",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 5023,
+        "id": "fitness:2026-03-14T19:18:00"
+      },
+      {
+        "started_at_utc": "2026-03-15 20:17:13",
+        "started_at_local": "2026-03-15 16:17:13",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3494,
+        "id": "fitness:2026-03-15T20:17:13"
+      },
+      {
+        "started_at_utc": "2026-03-17 21:56:49",
+        "started_at_local": "2026-03-17 17:56:49",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3132,
+        "id": "fitness:2026-03-17T21:56:49"
+      },
+      {
+        "started_at_utc": "2026-03-18 22:36:41",
+        "started_at_local": "2026-03-18 18:36:41",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1433,
+        "id": "fitness:2026-03-18T22:36:41"
+      },
+      {
+        "started_at_utc": "2026-03-19 16:30:18",
+        "started_at_local": "2026-03-19 12:30:18",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 912,
+        "id": "fitness:2026-03-19T16:30:18"
+      },
+      {
+        "started_at_utc": "2026-03-21 23:37:06",
+        "started_at_local": "2026-03-21 19:37:06",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 4285,
+        "id": "fitness:2026-03-21T23:37:06"
+      },
+      {
+        "started_at_utc": "2026-03-22 22:24:29",
+        "started_at_local": "2026-03-22 18:24:29",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2218,
+        "id": "fitness:2026-03-22T22:24:29"
+      },
+      {
+        "started_at_utc": "2026-03-24 00:54:04",
+        "started_at_local": "2026-03-23 20:54:04",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2322,
+        "id": "fitness:2026-03-24T00:54:04"
+      },
+      {
+        "started_at_utc": "2026-03-25 19:58:38",
+        "started_at_local": "2026-03-25 15:58:38",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1874,
+        "id": "fitness:2026-03-25T19:58:38"
+      },
+      {
+        "started_at_utc": "2026-03-28 00:16:21",
+        "started_at_local": "2026-03-27 20:16:21",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3984,
+        "id": "fitness:2026-03-28T00:16:21"
+      },
+      {
+        "started_at_utc": "2026-03-29 21:51:11",
+        "started_at_local": "2026-03-29 17:51:11",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1723,
+        "id": "fitness:2026-03-29T21:51:11"
+      },
+      {
+        "started_at_utc": "2026-03-31 18:04:24",
+        "started_at_local": "2026-03-31 14:04:24",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 633,
+        "id": "fitness:2026-03-31T18:04:24"
+      },
+      {
+        "started_at_utc": "2026-04-04 20:04:40",
+        "started_at_local": "2026-04-04 16:04:40",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1804,
+        "id": "fitness:2026-04-04T20:04:40"
+      },
+      {
+        "started_at_utc": "2026-04-07 01:07:49",
+        "started_at_local": "2026-04-06 21:07:49",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3724,
+        "id": "fitness:2026-04-07T01:07:49"
+      },
+      {
+        "started_at_utc": "2026-04-28 22:32:56",
+        "started_at_local": "2026-04-28 18:32:56",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 999,
+        "id": "fitness:2026-04-28T22:32:56"
+      },
+      {
+        "started_at_utc": "2026-04-30 02:05:42",
+        "started_at_local": "2026-04-29 22:05:42",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3424,
+        "id": "fitness:2026-04-30T02:05:42"
+      },
+      {
+        "started_at_utc": "2026-05-04 21:16:43",
+        "started_at_local": "2026-05-04 17:16:43",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3916,
+        "id": "fitness:2026-05-04T21:16:43"
+      },
+      {
+        "started_at_utc": "2026-05-08 03:40:27",
+        "started_at_local": "2026-05-07 23:40:27",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1754,
+        "id": "fitness:2026-05-08T03:40:27"
+      },
+      {
+        "started_at_utc": "2026-05-09 23:44:35",
+        "started_at_local": "2026-05-09 19:44:35",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3228,
+        "id": "fitness:2026-05-09T23:44:35"
+      },
+      {
+        "started_at_utc": "2026-05-10 19:58:17",
+        "started_at_local": "2026-05-10 15:58:17",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2930,
+        "id": "fitness:2026-05-10T19:58:17"
+      },
+      {
+        "started_at_utc": "2026-05-14 22:37:57",
+        "started_at_local": "2026-05-14 18:37:57",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1210,
+        "id": "fitness:2026-05-14T22:37:57"
+      },
+      {
+        "started_at_utc": "2026-05-16 18:34:54",
+        "started_at_local": "2026-05-16 14:34:54",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2758,
+        "id": "fitness:2026-05-16T18:34:54"
+      },
+      {
+        "started_at_utc": "2026-05-18 21:48:35",
+        "started_at_local": "2026-05-18 17:48:35",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1149,
+        "id": "fitness:2026-05-18T21:48:35"
+      },
+      {
+        "started_at_utc": "2026-05-20 17:14:14",
+        "started_at_local": "2026-05-20 13:14:14",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2223,
+        "id": "fitness:2026-05-20T17:14:14"
+      },
+      {
+        "started_at_utc": "2026-05-23 22:17:25",
+        "started_at_local": "2026-05-23 18:17:25",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2864,
+        "id": "fitness:2026-05-23T22:17:25"
+      },
+      {
+        "started_at_utc": "2026-05-25 16:25:58",
+        "started_at_local": "2026-05-25 12:25:58",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3925,
+        "id": "fitness:2026-05-25T16:25:58"
+      },
+      {
+        "started_at_utc": "2026-05-27 03:17:04",
+        "started_at_local": "2026-05-26 23:17:04",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1355,
+        "id": "fitness:2026-05-27T03:17:04"
+      },
+      {
+        "started_at_utc": "2026-05-29 03:34:03",
+        "started_at_local": "2026-05-28 23:34:03",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2832,
+        "id": "fitness:2026-05-29T03:34:03"
+      },
+      {
+        "started_at_utc": "2026-05-30 22:30:20",
+        "started_at_local": "2026-05-30 18:30:20",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3713,
+        "id": "fitness:2026-05-30T22:30:20"
+      },
+      {
+        "started_at_utc": "2026-06-03 04:19:53",
+        "started_at_local": "2026-06-03 00:19:53",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1354,
+        "id": "fitness:2026-06-03T04:19:53"
+      },
+      {
+        "started_at_utc": "2026-06-04 22:40:02",
+        "started_at_local": "2026-06-04 18:40:02",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1974,
+        "id": "fitness:2026-06-04T22:40:02"
+      },
+      {
+        "started_at_utc": "2026-06-05 15:51:56",
+        "started_at_local": "2026-06-05 11:51:56",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 18565,
+        "id": "fitness:2026-06-05T15:51:56"
+      },
+      {
+        "started_at_utc": "2026-06-11 17:59:53",
+        "started_at_local": "2026-06-11 13:59:53",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2445,
+        "id": "fitness:2026-06-11T17:59:53"
+      },
+      {
+        "started_at_utc": "2026-06-17 18:30:21",
+        "started_at_local": "2026-06-17 14:30:21",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1586,
+        "id": "fitness:2026-06-17T18:30:21"
+      },
+      {
+        "started_at_utc": "2026-06-19 02:40:11",
+        "started_at_local": "2026-06-18 22:40:11",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3080,
+        "id": "fitness:2026-06-19T02:40:11"
+      },
+      {
+        "started_at_utc": "2026-06-23 22:46:34",
+        "started_at_local": "2026-06-23 18:46:34",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1231,
+        "id": "fitness:2026-06-23T22:46:34"
+      },
+      {
+        "started_at_utc": "2026-06-27 01:30:33",
+        "started_at_local": "2026-06-26 21:30:33",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1560,
+        "id": "fitness:2026-06-27T01:30:33"
+      },
+      {
+        "started_at_utc": "2026-06-27 19:32:42",
+        "started_at_local": "2026-06-27 15:32:42",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2230,
+        "id": "fitness:2026-06-27T19:32:42"
+      },
+      {
+        "started_at_utc": "2026-06-30 02:08:13",
+        "started_at_local": "2026-06-29 22:08:13",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1485,
+        "id": "fitness:2026-06-30T02:08:13"
+      },
+      {
+        "started_at_utc": "2026-07-03 01:31:10",
+        "started_at_local": "2026-07-02 21:31:10",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2837,
+        "id": "fitness:2026-07-03T01:31:10"
+      },
+      {
+        "started_at_utc": "2026-07-03 19:21:31",
+        "started_at_local": "2026-07-03 15:21:31",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2302,
+        "id": "fitness:2026-07-03T19:21:31"
+      },
+      {
+        "started_at_utc": "2026-07-07 01:44:20",
+        "started_at_local": "2026-07-06 21:44:20",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 1827,
+        "id": "fitness:2026-07-07T01:44:20"
+      },
+      {
+        "started_at_utc": "2026-07-07 18:37:08",
+        "started_at_local": "2026-07-07 14:37:08",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2333,
+        "id": "fitness:2026-07-07T18:37:08"
+      },
+      {
+        "started_at_utc": "2026-07-12 00:33:27",
+        "started_at_local": "2026-07-11 20:33:27",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2767,
+        "id": "fitness:2026-07-12T00:33:27"
+      },
+      {
+        "started_at_utc": "2026-07-12 16:45:08",
+        "started_at_local": "2026-07-12 12:45:08",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 3231,
+        "id": "fitness:2026-07-12T16:45:08"
+      },
+      {
+        "started_at_utc": "2026-07-18 16:19:36",
+        "started_at_local": "2026-07-18 12:19:36",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2130,
+        "id": "fitness:2026-07-18T16:19:36"
+      },
+      {
+        "started_at_utc": "2026-07-21 14:39:04",
+        "started_at_local": "2026-07-21 10:39:04",
+        "eastern_offset_minutes": -240,
+        "duration_seconds": 2110,
+        "id": "fitness:2026-07-21T14:39:04"
+      }
+    ],
+    "success": true,
+    "meta": {
+      "served_by": "v3-prod",
+      "served_by_region": "ENAM",
+      "served_by_colo": "EWR",
+      "served_by_primary": true,
+      "timings": {
+        "sql_duration_ms": 1.2073
+      },
+      "duration": 1.2073,
+      "changes": 0,
+      "last_row_id": 0,
+      "changed_db": false,
+      "size_after": 11730944,
+      "rows_read": 360,
+      "rows_written": 0,
+      "total_attempts": 1
+    }
+  }
+]

@@ -35,14 +35,7 @@ fn badge_for(set: &fitness::Set) -> Badge {
 
 /// Missing effort follows the intended low/default branch rather than
 /// JavaScript's surprising `Number(null) == 0` coercion.
-pub(super) fn effort_points(effort: Option<u64>) -> u32 {
-    match effort {
-        Some(1_000) => 5,
-        Some(900) => 4,
-        Some(800) => 3,
-        Some(_) | None => 2,
-    }
-}
+pub(super) use benjisponge::scoring::effort_points;
 
 fn star_angles(points: u32) -> Vec<String> {
     (0..points)

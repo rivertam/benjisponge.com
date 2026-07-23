@@ -1,7 +1,6 @@
 //! View models for workouts, set markers, records, and archive pagination.
 
 use super::{
-    badge::effort_points,
     data as fitness,
     filters::{Filters, SET_TYPES, lookup},
     format::{format_duration, format_scaled, workout_datetime, workout_timing},
@@ -173,11 +172,7 @@ fn effort_popover_id(workout_path: &str, ordinal: u32) -> String {
 }
 
 fn set_volume_points(set: &fitness::Set) -> u32 {
-    match set.set_type.as_str() {
-        "FAILURE_SET" => 6,
-        "WARMUP_SET" => 0,
-        _ => effort_points(set.effort_hundredths),
-    }
+    benjisponge::scoring::set_volume_points(&set.set_type, set.effort_hundredths)
 }
 
 fn prescription(set: &fitness::Set) -> String {
