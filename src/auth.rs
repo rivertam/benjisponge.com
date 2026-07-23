@@ -1,6 +1,6 @@
 //! Bearer-token check for the private write endpoints.
 //!
-//! Port of `deploy/src/auth.ts`: the header must match `^Bearer ([^\s]+)$`,
+//! Port of the old Worker's `auth.ts` (since deleted): the header must match `^Bearer ([^\s]+)$`,
 //! an unset/empty secret closes the write path, and both sides are SHA-256
 //! hashed before a constant-time comparison so neither mismatch position nor
 //! length leaks timing.

@@ -1,8 +1,8 @@
 # Fitness archive
 
 Read this before changing `/lifting`, workout import, fitness API/schema, tags,
-or local fitness startup. Exact API/filter/import contracts live in
-`docs/cloudflare-deploy.md#fitness-archive`.
+or local fitness startup. The exact API/filter/import contracts are in this
+file under "API contract".
 
 ## Data flow
 
@@ -17,14 +17,22 @@ or local fitness startup. Exact API/filter/import contracts live in
   repeated fall DST hour distinct without exposing importer IDs.
   `auto-filter.js` only debounces full-log form changes and navigates to the
   canonical GET URL; the Apply button remains the no-JavaScript path.
-- Public reads and authenticated imports: `deploy/src/fitness.ts`; fresh D1
-  schema: `deploy/fitness-schema.sql`.
-- CSV parsing, stable IDs, taxonomy, chunking: `src/bin/fitness_sync.rs`.
-- `just dev [port]` delegates to `scripts/dev.sh`: Worker on 8791 -> Topcoat.
-  Wrangler stops when Topcoat exits. It never initializes or mutates D1.
-- `just reset-fitness-local [csv]` runs while `just dev` is active. It drops
-  only the six local fitness tables, recreates the current schema, and imports
-  the CSV; local Spire tables in the shared D1 database remain untouched.
+- Public reads and the authenticated import:
+  `src/app/interests/lifting/archive/` — `routes.rs` over the engine
+  (filters, import validation, in-memory snapshot, store) and `db.rs`
+  (Postgres). Records are derived in `archive/records.rs` at snapshot build —
+  there is deliberately no records table and no records field in the import
+  payload.
+- Schema: `toasty/migrations/0001_fitness_tables.sql` — five tables:
+  `workouts`, `exercises`, `exercise_tags`, `sets`, and `fitness_meta`.
+- CSV parsing, stable IDs, taxonomy, chunking:
+  `src/app/interests/lifting/fitness_sync.rs`.
+- `just dev [port]` delegates to `scripts/dev.sh`: it starts the local
+  Postgres container, applies toasty migrations, then runs Topcoat with
+  local-only sync tokens. It never imports data.
+- `just reset-fitness-local [csv]` runs while `just dev` is active. It
+  truncates only the local fitness tables, resets the fitness version, and
+  imports the CSV; local Spire tables in the shared database remain untouched.
 
 ## Source invariants
 
@@ -48,12 +56,133 @@ or local fitness startup. Exact API/filter/import contracts live in
 - Preserve apparent duplicate rows. Set identity is workout UTC start plus
   whole-workout ordinal; deduping or reordering changes IDs.
 - Duration `0` or at least four hours is suspicious, not invalid. Preserve it.
-- D1 stores load/distance in thousandths and effort in hundredths. Keep integer
-  scaling and explicit JSON nulls across importer, API, and UI.
+- Load/distance are stored in thousandths and effort in hundredths. Keep
+  integer scaling and explicit JSON nulls across importer, API, and UI.
+- Records (`/lifting` badges) are derived from full set history when the
+  in-memory snapshot is rebuilt, never stored or imported.
+
+## API contract
+
+Read endpoints are served from an immutable in-memory snapshot
+(`src/app/interests/lifting/archive/snapshot.rs`), rebuilt when the fitness
+version changes. Filter
+semantics deliberately mirror the original Worker SQL (ASCII-only case
+folding, byte-order sorts, NULL-excluding comparisons); the golden fixtures
+under `tests/fixtures/api` are the contract.
+
+Public reads are `Cache-Control: no-store` and include
+`Access-Control-Allow-Origin: *`:
+
+- `GET /api/fitness/sets` returns a workout-grouped page of matching sets:
+  `{version,page,per_page,total_sets,total_workouts,workouts}`. Each workout is
+  `{id,path,title,raw_title,started_at_local,ended_at_local,eastern_offset_minutes,end_eastern_offset_minutes,duration_seconds,duration_suspicious,notes,description,sets}`.
+  `id` stays an opaque UTC-derived stable identifier; `path` is the canonical
+  public path segment. Reader responses do not expose a `started_at_utc`
+  field; all user-facing times are Eastern.
+  each set is
+  `{id,ordinal,exercise_name,raw_exercise_name,exercise_note,superset_id,weight_milli,weight_unit,reps,effort_hundredths,distance_milli,set_time_seconds,set_type,records}`;
+  each record is `{level,kind}` (derived, see above). Pagination is by whole
+  workout, so a workout's matching sets are never split across pages.
+  `total_sets` and `total_workouts` cover the entire filtered result, not just
+  the page.
+- `GET /api/fitness/calendar` accepts no query parameters and returns
+  `{version,days:[{date,volume_points}]}` for every `America/New_York` date
+  with at least one set, in ascending date order. `volume_points` follows the
+  site set-log score exactly: warm-up = 0, failure = 6, RPE 10/9/8 = 5/4/3,
+  and any other or missing effort = 2.
+- `GET /api/fitness/workouts/latest` accepts no query parameters and returns
+  `{version,workout,newer_workout_path,older_workout_path}` for the newest
+  workout by source instant. `workout` has the same shape as a
+  `sets`-response workout and is `null` for an empty archive; both neighbor
+  paths are then `null` too.
+- `GET /api/fitness/workouts/by-path/{path}` accepts one canonical public path
+  segment, such as `2026-07-11T20-33-27-04-00`, and returns the same detail
+  envelope or 404. The timestamp and offset are the `America/New_York`
+  projection, so the offset distinguishes the repeated hour when DST ends.
+- `GET /api/fitness/facets` accepts no query parameters and returns
+  `{version,summary:{sets,workouts,min_date,max_date},exercises,tags,set_types}`.
+  Exercise, tag, and set-type entries are `{value,count}`; `tags` has
+  `movement`, `muscle`, and `equipment` arrays. Counts cover the whole archive.
+- `GET /api/fitness/ids` accepts no query parameters and returns
+  `{ids:string[]}` containing set IDs. The sync command uses these to resume at
+  set granularity.
+
+`GET /api/fitness/sets` accepts only these query parameters:
+
+- Text/facets: `q`; exact `exercise`; repeated `movement`, `muscle`,
+  `equipment`, and `set_type`. Repeated choices are ORed within one facet and
+  different filters are ANDed. `q` searches workout titles/notes/description,
+  exercise names, raw exercise names, and exercise notes.
+- Dates: inclusive `from`/`to` (`YYYY-MM-DD`); `weekday` = `sun` through `sat`;
+  `time_of_day` = `morning` (05:00-11:59), `afternoon` (12:00-16:59),
+  `evening` (17:00-20:59), or `night` (21:00-04:59). All date, weekday, and
+  time-of-day filtering uses `America/New_York`, including DST transitions.
+- Numbers: `min_load`/`max_load` are pounds converted exactly to
+  stored thousandths; `min_reps`/`max_reps` are integers; `max_effort` is a
+  decimal converted exactly to stored hundredths.
+- Flags: `has_record`, `has_superset`, `has_notes`, and `incomplete` accept
+  `true` or `false`; `duration` is `normal` or `suspicious`. A set is
+  incomplete when reps, distance, and set duration are all absent.
+- Pagination: positive `page`; `per_page` is exactly `10`, `20`, or `40`
+  (default `20`).
+
+Unknown, duplicated singular, malformed, out-of-range, or contradictory
+filters return 400. Repeated facets are capped at eight values each. Search
+patterns keep the original 50-byte escaped-LIKE limit as contract.
+
+The write path is `POST /api/fitness/import`, protected by the
+`FITNESS_SYNC_TOKEN` secret. The body is capped at 1,000,000 bytes, 50 sets,
+50 workouts, 75 exercises, and 300 tags. Its exact shape is:
+
+```text
+{
+  workouts: [{
+    id, title, raw_title, started_at_utc, duration_seconds,
+    duration_suspicious, notes, description, source: "workout-data-csv"
+  }],
+  exercises: [{
+    name, tags: [{kind: "movement"|"muscle"|"equipment", value}]
+  }],
+  sets: [{
+    id, workout_id, ordinal, exercise_name, raw_exercise_name, exercise_note,
+    superset_id, weight_milli, weight_unit: "lbs", reps, effort_hundredths, distance_milli,
+    set_time_seconds, set_type
+  }]
+}
+```
+
+A payload that includes a `records` key is rejected — records are derived,
+never imported. Nullable fields must be explicit JSON `null`. IDs,
+cross-references, UTC source dates, ordinals, scaled integers, enum values,
+and every string/array bound are validated before any write. The server
+derives the Eastern fields; callers never supply them. The response is
+`{received,added,skipped,version}`, where the counts refer to sets. Existing
+set IDs are skipped; a conflicting workout ordinal is an error rather than
+being silently ignored. Tags are replaced authoritatively for each exercise
+included in a chunk. The fitness version increments only when sets or
+taxonomy change.
+The CSV path is deliberately append-oriented: an already stored set ID is
+immutable. Editing, reordering, or deleting old rows in a later export requires
+an explicit replacement operation rather than silently rewriting history.
+The normal CLI only posts workouts containing a missing set, so taxonomy-only
+changes on a fully imported archive likewise need a deliberate re-import/API
+call (or will arrive when that exercise is included with a later missing set).
+
+Sync from the machine that has the export:
+
+```sh
+just sync-fitness /home/benji/Downloads/WorkoutData.csv --dry-run
+just sync-fitness /home/benji/Downloads/WorkoutData.csv
+```
+
+The default token file is `~/.config/benjisponge/fitness.token`; installing
+the matching `FITNESS_SYNC_TOKEN` secret is covered in
+`docs/cloudflare-deploy.md#database-and-secrets`.
 
 ## Local development
 
-- Local D1 persists under ignored `deploy/.wrangler/state`. To initialize it or
+- Local data lives in the `benjisponge-pg` Docker container (named volume
+  `benjisponge-pg-data`), which `just dev` starts and migrates. To seed or
   adopt a fitness schema/import change, start `just dev` in one terminal and
   reset from another. The CSV defaults to
   `/home/benji/Downloads/WorkoutData.csv`; pass another path as the argument:
@@ -65,8 +194,6 @@ or local fitness startup. Exact API/filter/import contracts live in
 
   This replaces local fitness data only; it never affects production or local
   Spire fixtures.
-- Port 8791 is reserved for Wrangler. `just dev` points `/lifting`'s server-side
-  API reader at that local Worker.
 
 ## Changing taxonomy or filters
 
@@ -75,40 +202,35 @@ or local fitness startup. Exact API/filter/import contracts live in
 - Keep taxonomy values aligned with the filter lists, labels, and
   advanced-filter detection in `src/app/interests/lifting/filters.rs`.
 - Normal sync is append-only. It does not resend fully imported workouts for a
-  taxonomy-only change. No retag command exists: write an explicit API/D1
-  replacement workflow instead of rerunning normal sync. Reset local D1 when
-  validating.
+  taxonomy-only change. No retag command exists: write an explicit
+  API/database replacement workflow instead of rerunning normal sync. Reset
+  local fitness data when validating.
 - Do not substring-match movement names without boundary tests: `throw` contains
   `row`; wrist/Jefferson curls are not biceps curls.
 
 ## Production and future logging
 
-- For a new archive, rollout order is: apply `fitness-schema.sql` remotely,
-  install `FITNESS_SYNC_TOKEN`, deploy committed HEAD, then run
-  `just sync-fitness`.
+- For a new archive, rollout order is: apply migrations to production
+  (`just migrate migration apply`), install `FITNESS_SYNC_TOKEN`, deploy
+  committed HEAD, then run `just sync-fitness`.
 - The fitness archive intentionally uses reset-and-resync rather than an
-  in-place schema upgrade.
-  To replace the existing production fitness data with the UTC/Eastern schema,
-  drop exactly the six fitness tables, recreate them, deploy committed HEAD,
-  then run `just sync-fitness` from the machine with the CSV:
+  in-place upgrade. To replace production fitness data, truncate exactly the
+  fitness tables against the production database (`POSTGRES_URL` in `.env`),
+  then resync from the machine with the CSV:
 
   ```sh
-  cd deploy
-  npx wrangler d1 execute benjisponge-spire --remote --command \
-    "DROP TABLE IF EXISTS set_records;
-     DROP TABLE IF EXISTS sets;
-     DROP TABLE IF EXISTS exercise_tags;
-     DROP TABLE IF EXISTS exercises;
-     DROP TABLE IF EXISTS workouts;
-     DROP TABLE IF EXISTS fitness_meta;"
-  npx wrangler d1 execute benjisponge-spire --remote --file=fitness-schema.sql
+  psql "$(sed -n 's/^POSTGRES_URL=//p' .env)" \
+    -c "TRUNCATE TABLE sets, exercise_tags, exercises, workouts;" \
+    -c "UPDATE fitness_meta SET v = 0 WHERE k = 'version';"
+  just sync-fitness /home/benji/Downloads/WorkoutData.csv
   ```
 
-  This is destructive for fitness history until the CSV is resynced. `SITE_DB`
-  is shared with Slay the Spire data: do not drop the database itself and do not
-  drop or alter any Spire tables. The commands above touch fitness tables only.
-- Never treat local D1 contents as proof that production has been reset or
-  seeded.
+  This is destructive for fitness history until the CSV is resynced. The
+  database is shared with Slay the Spire data: do not drop the database itself
+  and do not touch any Spire tables. The commands above touch fitness tables
+  only.
+- Never treat local database contents as proof that production has been reset
+  or seeded.
 - Manual logging is not implemented. Schema reserves `source='manual'`, but the
   import API accepts only `workout-data-csv`; there is no CRUD UI, mutation ID
   policy, or owner auth yet. Decide those explicitly before adding write UI.
@@ -124,6 +246,5 @@ bash -n scripts/reset-fitness-local.sh
 cd deploy && npx wrangler types --check && npx tsc --noEmit
 ```
 
-No committed Worker integration suite exists yet. For Worker/API changes, also
-exercise `just reset-fitness-local`, filtered reads, an idempotent second sync,
-and `just dev` shutdown cleanup.
+For API changes, also exercise `just reset-fitness-local`, filtered reads, an
+idempotent second sync, and `just dev` shutdown cleanup.

@@ -31,4 +31,4 @@ Rust SSR personal site on topcoat 0.3.0 — a niche framework; read
 - Units: kg CO₂e and km everywhere; number formatting mirrors Intl.NumberFormat half-away-from-zero — don't "fix" the rounding
 - Spire runs are data, not content: `/`, `/spire`, `/feed.xml` render them live from `/api/spire/runs` — publish runs with `just sync-spire`, never by editing the repo
 - Fitness sets are database data, not content: never hardcode the CSV; changes spanning `/lifting`, import, API, schema, tags, or local startup must preserve `docs/fitness.md` invariants
-- Records (`/lifting` badges) are derived from set history at snapshot build (`src/records.rs`), never stored or imported — there is deliberately no records table
+- Records (`/lifting` badges) are derived from set history at snapshot build (`src/app/interests/lifting/archive/records.rs`), never stored or imported — there is deliberately no records table
