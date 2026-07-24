@@ -7,6 +7,7 @@ and static assets — nothing else. Every application endpoint, pages and
 `/api/*` alike, is served by the Rust app inside the container, which talks to
 Postgres via the `POSTGRES_URL` secret. Config in `deploy/wrangler.jsonc`;
 image in `deploy/Dockerfile` (build context = repo root, see `.dockerignore`).
+For a Railway-only deploy of the same image, see `docs/railway-deploy.md`.
 
 ## Request flow
 

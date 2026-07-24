@@ -30,3 +30,8 @@ just build
 just release
 just check
 ```
+
+## Deploy
+
+- Cloudflare (Worker + container): `just deploy` — see `docs/cloudflare-deploy.md`
+- Railway (same Dockerfile): `railway.toml` + `docs/railway-deploy.md`
