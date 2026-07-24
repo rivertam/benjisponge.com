@@ -16,18 +16,17 @@ pub static INTERESTS: [Interest; 8] = [
     Interest {
         slug: "felix",
         title: "Felix",
-        teaser: "There is a dog. There is, accordingly, a website computing when we are the same \
-                 age.",
+        teaser: "I have a dog named Felix (cute, loud)",
     },
     Interest {
         slug: "swing",
         title: "Swing dancing",
-        teaser: "Swing dancing (lead and follow but mostly lead)",
+        teaser: "I am an intermediate swing dancer",
     },
     Interest {
         slug: "lifting",
         title: "Lifting",
-        teaser: "Every set I've logged since 2023, filterable from squat patterns down to the set.",
+        teaser: "I lift weights pretty often. Click on this one to learn how often!",
     },
     Interest {
         slug: "keyboards",

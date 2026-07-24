@@ -126,7 +126,7 @@ async fn lifting(cx: &Cx) -> Result {
             title: meta.title,
             active: "interests",
             runtime: false,
-            page_head(stamp: meta.slug, title: meta.title, lede: meta.teaser)
+            page_head(stamp: meta.slug, title: meta.title, lede: "")
             <div>
                 rail_section(
                     class: "mt-10",
@@ -150,9 +150,6 @@ async fn lifting(cx: &Cx) -> Result {
                             <h2 class="font-display text-2xl font-semibold">
                                 "Most recent lift"
                             </h2>
-                            <p class=(RESULT_COUNT)>
-                                "Each workout has its own linkable page."
-                            </p>
                         </div>
                         <a class=(class!(LIFT_LINK, "flex-none")) href=(LOG_PATH)>
                             "search full log →"
