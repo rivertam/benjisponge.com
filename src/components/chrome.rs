@@ -3,6 +3,7 @@
 
 use topcoat::{
     Result,
+    asset::{Asset, asset},
     font::{Font, fontsource::fontsource_font},
     view::{View, component, view},
 };
@@ -13,6 +14,7 @@ use crate::content::{interests::INTERESTS, logbook::LOG};
 pub const ZILLA_SLAB: Font = fontsource_font!(ZILLA_SLAB, host: Asset);
 pub const FIRA_SANS: Font = fontsource_font!(FIRA_SANS, host: Asset);
 pub const FIRA_MONO: Font = fontsource_font!(FIRA_MONO, host: Asset);
+const ANALYTICS_JS: Asset = asset!("./analytics.js");
 
 /// The full document: every page renders through this, so every page owns its
 /// title. Pages invoke it as markup with the page content as trailing children:
@@ -28,12 +30,16 @@ pub const FIRA_MONO: Font = fontsource_font!(FIRA_MONO, host: Asset);
 ///
 /// `runtime` controls Topcoat's browser runtime. It defaults on for existing
 /// pages; fully server-rendered pages can opt out and ship no production JS.
+///
+/// `analytics` controls the first-party tracker. It is disabled on the 404 so
+/// arbitrary requested paths can never become public dashboard entries.
 #[component]
 pub async fn shell(
     title: &str,
     active: &str,
     #[default(false)] hide_nav: bool,
     #[default(true)] runtime: bool,
+    #[default(true)] analytics: bool,
     child: View,
 ) -> Result {
     let title = if title.is_empty() {
@@ -56,10 +62,14 @@ pub async fn shell(
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width, initial-scale=1">
+                <meta name="referrer" content="strict-origin-when-cross-origin">
                 <title>(title)</title>
                 topcoat::dev::script()
                 if runtime {
                     topcoat::runtime::script()
+                }
+                if analytics {
+                    <script defer="" src=(ANALYTICS_JS)></script>
                 }
                 <link rel="stylesheet" href=(topcoat::tailwind::stylesheet!())>
                 topcoat::font::link(font: ZILLA_SLAB)
@@ -115,6 +125,7 @@ pub async fn shell(
                                 href="https://www.reddit.com/user/BenjiSponge"
                                 class="quiet-link"
                             >"Reddit"</a>
+                            <a href="/analytics" class="quiet-link">"Analytics"</a>
                         </span>
                         <span>
                             (format!("entry № {:04} of {:04} · ", LOG.len(), LOG.len()))

@@ -200,6 +200,8 @@ dependencies = [
  "toasty-cli",
  "tokio",
  "topcoat",
+ "url",
+ "uuid",
 ]
 
 [[package]]

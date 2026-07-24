@@ -1,3 +1,4 @@
+mod analytics;
 mod emdash_layer;
 mod feed;
 mod interests;
@@ -14,7 +15,9 @@ use topcoat::{
     Result,
     asset::{AssetBundle, RouterBuilderAssetExt},
     context::{Cx, app_context},
+    cookie::RouterBuilderCookieExt,
     router::{HeaderValue, Router, RouterBuilderDiscoverExt, header, page, query_params},
+    session::{Config, RouterBuilderSessionExt, cookie::CookieTokenStore},
     view::view,
 };
 
@@ -32,8 +35,16 @@ pub fn router() -> Router {
     Router::builder()
         .assets(AssetBundle::load().unwrap())
         .discover()
+        .cookies()
+        .sessions(
+            Config::builder()
+                .token_store(CookieTokenStore::new().name("analytics-visitor"))
+                .lifetime(std::time::Duration::from_hours(24 * 400))
+                .build(),
+        )
         .app_context(data.clone())
         .app_context(FitnessStore::new(data))
+        .app_context(analytics::guard::AnalyticsGuard::default())
         .build()
 }
 

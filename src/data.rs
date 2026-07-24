@@ -11,11 +11,13 @@
 //! registration need every model here. Queries and import logic live with
 //! the interests too — this module is only the handle and the schema.
 
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
 use toasty::Db;
 use tokio::sync::OnceCell;
 
+#[path = "app/analytics/models.rs"]
+pub mod analytics_models;
 #[path = "app/interests/lifting/models.rs"]
 pub mod fitness_models;
 #[path = "app/interests/spire/models.rs"]
@@ -78,6 +80,9 @@ pub async fn connect(url: &str) -> toasty::Result<Db> {
     Db::builder()
         .models(toasty::models!(crate::*))
         .pool_pre_ping(true)
+        .pool_wait_timeout(Some(Duration::from_secs(3)))
+        .pool_create_timeout(Some(Duration::from_secs(8)))
+        .pool_max_connection_lifetime(Some(Duration::from_secs(30 * 60)))
         .connect(url)
         .await
 }
