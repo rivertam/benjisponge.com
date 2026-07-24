@@ -31,8 +31,8 @@ Cache Rule: Eligible for cache on the zone, edge TTL
 Default HTML is `public, max-age=0, s-maxage=86400` from `shell`
 ([src/components/chrome.rs](../src/components/chrome.rs)); spire/home/feed
 set `s-maxage=60`; lifting/API set `no-store`. Hashed `/_topcoat/assets/*`
-are immutable from the container. CI purges the zone cache on each deploy
-(replaces the old Worker `RELEASE_ID` cache-key bust).
+are immutable from the container. Pages expire via origin `s-maxage`;
+`just deploy` can purge the zone when a change must show immediately.
 
 ## Migrations
 
@@ -66,17 +66,16 @@ Empty DB: migrate, then `just sync-spire` / `just sync-fitness` against
 
 ## Deploy
 
-GitHub Actions on `main` runs `just check`, deploys the web service with
-the Railway CLI, then purges Cloudflare cache. Railway GitHub App can also
-redeploy on push; the workflow is the source of truth for purge timing.
+Railway's GitHub App builds `deploy/Dockerfile` and deploys the web service
+on push to `main`. CI only runs `just check`. CDN pages expire via
+`s-maxage`; purge manually when a deploy must show immediately:
 
 ```sh
-just deploy   # railway up + CF purge (RAILWAY_TOKEN + CLOUDFLARE_API_TOKEN)
+just deploy   # optional: railway up + Cloudflare purge
 ```
 
-CI needs `RAILWAY_TOKEN` (Railway project token for production) plus the existing
-`CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` in the `prod` GitHub
-environment.
+`just deploy` needs a logged-in Railway CLI (or `RAILWAY_TOKEN`) and
+`CLOUDFLARE_API_TOKEN`.
 
 Touching Tunnel/DNS/cache rules? This doc. Old Worker notes:
 [cloudflare-deploy.md](cloudflare-deploy.md).

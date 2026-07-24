@@ -36,5 +36,5 @@ point `just sync-spire` / `just sync-fitness` at `https://benjisponge.com`.
 The former Worker (`deploy/src/index.ts`) owned edge Cache API keys keyed
 by `RELEASE_ID`, injected `s-maxage=86400` for HTML without a header, and
 served `/_topcoat/assets/*` from the Workers static-asset layer. Those jobs
-moved to origin headers + CDN Cache Rules + deploy-time purge, and assets
-are served by the container (immutable hashed URLs).
+moved to origin headers + CDN Cache Rules + optional purge (`just deploy`),
+and assets are served by the container (immutable hashed URLs).

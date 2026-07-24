@@ -24,16 +24,23 @@ release:
     cargo build --release
     topcoat asset bundle --release --bin benjisponge
 
-# Build the container image, sync its bundled assets, and deploy to Cloudflare
+# Optional: redeploy the web service and purge the Cloudflare CDN cache
 deploy:
-    docker build -f deploy/Dockerfile -t benjisponge-build .
-    docker rm -f benjisponge-extract 2>/dev/null || true
-    docker create --name benjisponge-extract benjisponge-build
-    rm -rf deploy/assets/_topcoat && mkdir -p deploy/assets/_topcoat
-    docker cp benjisponge-extract:/app/assets deploy/assets/_topcoat/assets
-    docker rm benjisponge-extract
-    rm -f deploy/assets/_topcoat/assets/manifest.toml
-    cd deploy && npx wrangler deploy --var RELEASE_ID:$(git rev-parse --short HEAD)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    railway link \
+      --project 096cd9a2-678d-42bc-9212-4d0fbe1e1ecc \
+      --environment 07803718-f8a6-4bc9-945a-a08f6a75584e \
+      --service 9b0ab183-4157-4654-bc62-e13cdc59ce68
+    railway up --ci -m "deploy $(git rev-parse --short HEAD)"
+    ZONE_ID="$(curl -sS "https://api.cloudflare.com/client/v4/zones?name=benjisponge.com" \
+      -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+      | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"][0]["id"])')"
+    curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/purge_cache" \
+      -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+      -H "Content-Type: application/json" \
+      -d '{"purge_everything":true}' \
+      | python3 -c 'import json,sys; r=json.load(sys.stdin); assert r["success"], r'
 
 # Run the migrations CLI against PRODUCTION Postgres (POSTGRES_URL from .env)
 migrate *args:
@@ -52,6 +59,9 @@ sync-spire *args:
 # Upload a Strong workout CSV export to the site's fitness database (see --help)
 sync-fitness csv *args:
     cargo run --bin fitness_sync -- "{{csv}}" {{args}}
+
+# Thought posts: `just thought new`, `just thought publish` (see `just thought`)
+mod thought
 
 # Run formatting, lint, and test checks
 check:

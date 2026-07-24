@@ -8,9 +8,8 @@ Rust SSR personal site on topcoat 0.3.0 — a niche framework; read
 - `just dev [port]` — start local Postgres (docker) + live-reload server (default 3000); run `just reset-fitness-local [csv]` separately to rebuild fitness data; details in `docs/fitness.md`
 - `just build` — cargo build + `topcoat asset bundle`; serving without the bundle step panics
 - `just check` — fmt + clippy -D warnings + tests; must pass before claiming done
-- `just deploy` — Cloudflare deploy (Worker + container); CI also deploys on push to main. Touching `deploy/` or caching? Read `docs/cloudflare-deploy.md` first
-- Railway — Dockerfile deploy via `railway.toml`; Postgres + vars + migrations in `docs/railway-deploy.md` (do not use Railpack for this app)
-- `just sync-spire [--dry-run|--json]` — upload new Slay the Spire 2 runs from this machine's save files to the site's database; idempotent; pipeline details in `docs/cloudflare-deploy.md`
+- `just deploy` — optional Railway redeploy + Cloudflare cache purge (Railway GitHub App deploys on push to main; CI only runs `just check`). Prod path: `docs/railway-deploy.md` (Dockerfile only — not Railpack); DNS/Tunnel/CDN: `docs/cloudflare-deploy.md`
+- `just sync-spire [--dry-run|--json]` — upload new Slay the Spire 2 runs from this machine's save files to the site's database; idempotent; pipeline details in `docs/railway-deploy.md`
 - `just sync-fitness <csv> [--dry-run|--json]` — idempotent fitness CSV upload; read `docs/fitness.md` before changing its data flow or taxonomy
 
 ## Adding a page

@@ -5,6 +5,7 @@ use topcoat::{
     Result,
     asset::{Asset, asset},
     font::{Font, fontsource::fontsource_font},
+    router::{HeaderValue, header},
     view::{View, component, view},
 };
 
@@ -57,6 +58,13 @@ pub async fn shell(
     };
     let nav_hidden = if hide_nav { "true" } else { "false" };
     view! {
+        // Default edge TTL for HTML that does not set Cache-Control itself.
+        // First mention wins: pages that emit their own header before shell()
+        // keep it (spire/home/feed use s-maxage=60; lifting/API use no-store).
+        // Cloudflare CDN honors s-maxage when the zone Cache Rule makes HTML
+        // eligible; deploy CI purges the zone so RELEASE_ID-style busting is
+        // not needed.
+        ((header::CACHE_CONTROL, HeaderValue::from_static("public, max-age=0, s-maxage=86400")))
         <!DOCTYPE html>
         <html lang="en">
             <head>

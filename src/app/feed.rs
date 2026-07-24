@@ -28,7 +28,7 @@ async fn feed(cx: &Cx) -> Result<([(&'static str, &'static str); 2], String)> {
     Ok((
         [
             ("Content-Type", "application/rss+xml; charset=utf-8"),
-            // Fresh runs appear within a minute; see cache.ts for the edge side.
+            // Fresh runs appear within a minute; CDN honors s-maxage (see docs/railway-deploy.md).
             ("Cache-Control", "public, max-age=0, s-maxage=60"),
         ],
         rss_xml(&origin(), &log.runs),
