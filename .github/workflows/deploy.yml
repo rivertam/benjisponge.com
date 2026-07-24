@@ -26,39 +26,29 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: docker/setup-buildx-action@v3
+      - name: Install Railway CLI
+        run: curl -fsSL https://railway.com/install.sh | sh
 
-      # Load into the local daemon so wrangler's own build is a cache hit,
-      # and so we can extract the bundled assets from the image.
-      - name: Build container image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: deploy/Dockerfile
-          tags: benjisponge-build:latest
-          load: true
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
-
-      - name: Extract bundled assets for the static-asset layer
+      - name: Deploy web service
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
         run: |
-          docker create --name extract benjisponge-build:latest
-          mkdir -p deploy/assets/_topcoat
-          docker cp extract:/app/assets deploy/assets/_topcoat/assets
-          docker rm extract
-          rm -f deploy/assets/_topcoat/assets/manifest.toml
+          railway link \
+            --project 096cd9a2-678d-42bc-9212-4d0fbe1e1ecc \
+            --environment 07803718-f8a6-4bc9-945a-a08f6a75584e \
+            --service 9b0ab183-4157-4654-bc62-e13cdc59ce68
+          railway up --ci -m "deploy ${GITHUB_SHA::7}"
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: deploy/package-lock.json
-
-      - name: Deploy
-        working-directory: deploy
+      - name: Purge Cloudflare cache
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          npm ci
-          npx wrangler deploy --var RELEASE_ID:${GITHUB_SHA::7}
+          ZONE_ID=$(curl -sS "https://api.cloudflare.com/client/v4/zones?name=benjisponge.com" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            | python3 -c 'import json,sys; print(json.load(sys.stdin)["result"][0]["id"])')
+          curl -sS -X POST "https://api.cloudflare.com/client/v4/zones/${ZONE_ID}/purge_cache" \
+            -H "Authorization: Bearer ${CLOUDFLARE_API_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -d '{"purge_everything":true}' \
+            | python3 -c 'import json,sys; r=json.load(sys.stdin); assert r["success"], r'

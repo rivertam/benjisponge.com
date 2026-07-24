@@ -1,74 +1,82 @@
 # Railway deployment
 
-The site binary runs as a Railway service built from `deploy/Dockerfile`
-(same multi-stage image as Cloudflare Containers). Config is in
-`railway.toml` at the repo root — it forces the Dockerfile builder so
-Railpack/Nixpacks cannot fall back to an old `rustc` and a bare
-`cargo build --release` (which skips `topcoat asset bundle` and panics at
-runtime without `assets/manifest.toml`).
+Production runs on Railway: topcoat container + Postgres + cloudflared
+Tunnel. Cloudflare keeps DNS/CDN only (no Worker/Containers).
 
-## Build
+## Services
 
-- Builder: Dockerfile at `deploy/Dockerfile`, context = repo root.
-- Image: `rust:1.97-slim` build → `debian:trixie-slim` runtime; installs
-  `topcoat-cli`, runs `cargo build --release`, then
-  `topcoat asset bundle --release --bin benjisponge`.
-- Do not set a custom build command. Do not use Railpack for this service.
-- Confirm the build log says it is using the Dockerfile. If it still runs
-  Railpack, set service variable `RAILWAY_DOCKERFILE_PATH=deploy/Dockerfile`
-  (or `NO_CACHE=1` once) and redeploy.
+- **benjisponge.com** — [deploy/Dockerfile](../deploy/Dockerfile) (not
+  Railpack: Railpack skips `topcoat asset bundle` and the binary panics
+  without `assets/manifest.toml`). Private only; `PORT=8080`.
+- **Postgres** — `POSTGRES_URL=${{Postgres.DATABASE_URL}}` on the web
+  service (app reads `POSTGRES_URL`, not `DATABASE_URL`).
+- **cloudflared** — [deploy/cloudflared.Dockerfile](../deploy/cloudflared.Dockerfile);
+  `TUNNEL_TOKEN` from a Cloudflare Tunnel whose public hostnames point at
+  `http://benjispongecom.railway.internal:8080`.
 
-`HOST=0.0.0.0` is baked into the image; Railway injects `PORT` at runtime.
+Also set on the web service: `SPIRE_SYNC_TOKEN`, `FITNESS_SYNC_TOKEN`,
+`SITE_ORIGIN=https://benjisponge.com`.
 
-## Database and variables
+`HOST=0.0.0.0` is baked into the image; Railway injects `PORT` (pin `8080`
+so the tunnel origin stays stable).
 
-Add a Railway Postgres plugin (or point at an existing Postgres). The app
-reads `POSTGRES_URL` only — not `DATABASE_URL`. On the web service:
+## Cloudflare edge
 
-```
-POSTGRES_URL=${{Postgres.DATABASE_URL}}
-```
+DNS (proxied) CNAMEs apex/`www`/`railway` →
+`<tunnel-id>.cfargotunnel.com`. Redirect Rule: `www` → apex 301 (planes QR
+codes bake Host).
 
-Also set (same names as Cloudflare Worker secrets):
-
-- `SPIRE_SYNC_TOKEN` — Bearer for `POST /api/spire/runs`
-- `FITNESS_SYNC_TOKEN` — Bearer for fitness import
-- `SITE_ORIGIN` — optional; absolute links / analytics origin checks.
-  Defaults to `https://benjisponge.com` when unset.
-
-Unset sync tokens close those write endpoints. Missing `POSTGRES_URL`
-leaves data pages degraded but the process still starts.
+Cache Rule: Eligible for cache on the zone, edge TTL
+`respect_origin` / `bypass_by_default` so origin `Cache-Control` wins.
+Default HTML is `public, max-age=0, s-maxage=86400` from `shell`
+([src/components/chrome.rs](../src/components/chrome.rs)); spire/home/feed
+set `s-maxage=60`; lifting/API set `no-store`. Hashed `/_topcoat/assets/*`
+are immutable from the container. CI purges the zone cache on each deploy
+(replaces the old Worker `RELEASE_ID` cache-key bust).
 
 ## Migrations
 
-Schema lives in `toasty/migrations/`. The runtime image does not ship the
-`migrate` binary — apply from a machine with the repo and
-`POSTGRES_URL` pointed at Railway:
+Schema in `toasty/migrations/`. Runtime image has no `migrate` binary —
+apply from a machine with the repo:
 
 ```sh
-POSTGRES_URL='postgresql://...' just migrate migration apply
+POSTGRES_URL='postgresql://…' just migrate migration apply
 ```
 
-Or put Railway's URL in `.env` as `POSTGRES_URL` and run
-`just migrate migration apply`. `just dev` only migrates local Docker
-Postgres; it does not touch Railway.
+Or put Railway's public `POSTGRES_URL` in `.env` and run the same. `just
+dev` only migrates local Docker Postgres.
 
-After the first successful migrate, normal deploys only need a new image
-when code or assets change. New migrations still need an explicit apply
-before (or right after) the deploy that depends on them.
+Empty DB: migrate, then `just sync-spire` / `just sync-fitness` against
+`https://benjisponge.com` (tokens must match the web service).
 
-## Sync CLIs
+## Cutover checklist
 
-`just sync-spire` and `just sync-fitness` POST to the live site. Point
-them at the Railway public URL (or custom domain) the same way as
-production today; tokens must match the service variables above. Details:
-`docs/cloudflare-deploy.md` (spire) and `docs/fitness.md` (fitness).
+1. Tunnel connector healthy on Railway (`cloudflared` service Online).
+2. DNS (proxied CNAMEs) for `railway`, apex, and `www` →
+   `ef6f5558-8eff-4d99-a113-03df63444810.cfargotunnel.com`.
+3. Cache Rule: Eligible for cache; edge TTL respect origin / bypass if no
+   `Cache-Control`.
+4. Redirect Rule: `www.benjisponge.com` → `https://benjisponge.com` 301.
+5. Migrate + sync (empty Postgres): `just migrate migration apply`, then
+   `just sync-spire` / `just sync-fitness`.
+6. Verify on `https://railway.benjisponge.com`, then apex; remove Worker
+   custom domains / Containers when apex is live.
+7. Optional: delete the Railway `*.up.railway.app` service domain so the
+   origin stays private-only.
 
-## Cutover notes
+## Deploy
 
-- Custom domain: attach in Railway and update DNS; keep apex vs `www`
-  consistent — planes QR codes bake the request Host.
-- Cloudflare edge cache / Worker assets are not used on Railway; the
-  container serves HTML and `/_topcoat/assets/*` itself.
-- Rotating `POSTGRES_URL` or sync tokens requires a redeploy/restart so
-  the process picks up the new env.
+GitHub Actions on `main` runs `just check`, deploys the web service with
+the Railway CLI, then purges Cloudflare cache. Railway GitHub App can also
+redeploy on push; the workflow is the source of truth for purge timing.
+
+```sh
+just deploy   # railway up + CF purge (RAILWAY_TOKEN + CLOUDFLARE_API_TOKEN)
+```
+
+CI needs `RAILWAY_TOKEN` (Railway project token for production) plus the existing
+`CLOUDFLARE_API_TOKEN` / `CLOUDFLARE_ACCOUNT_ID` in the `prod` GitHub
+environment.
+
+Touching Tunnel/DNS/cache rules? This doc. Old Worker notes:
+[cloudflare-deploy.md](cloudflare-deploy.md).
