@@ -54,11 +54,18 @@ pub async fn diary_enqueue(
     written_at: f64,
     body: String,
     enqueued_at_ms: f64,
+    reply_to: Option<String>,
 ) -> Result<String, JsError> {
     let db = db().await?;
-    let placed = outbox::enqueue(&db, written_at as i64, &body, enqueued_at_ms as i64)
-        .await
-        .map_err(outbox_error)?;
+    let placed = outbox::enqueue(
+        &db,
+        written_at as i64,
+        &body,
+        enqueued_at_ms as i64,
+        reply_to.as_deref(),
+    )
+    .await
+    .map_err(outbox_error)?;
     serde_json::to_string(&placed).map_err(json_error)
 }
 
@@ -445,7 +452,11 @@ mod ssr {
                 let heading = entry_date(&row.id);
                 view! {
                     <h1 class="mt-8 font-display text-xl">(heading)</h1>
-                    entry_detail(id: row.id.clone(), body: row.body.clone())
+                    entry_detail(
+                        id: row.id.clone(),
+                        body: row.body.clone(),
+                        reply_to: row.reply_to.clone()
+                    )
                 }?
             }
             None => view! {

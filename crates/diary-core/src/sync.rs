@@ -87,21 +87,47 @@ async fn apply_once(db: &Db, incoming: &[SnapshotEntry]) -> Result<u32, OutboxEr
     let mut string_binds: Vec<(String, String)> = Vec::new();
     let mut int_binds: Vec<(String, i64)> = Vec::new();
     for (index, entry) in plan.creates.iter().enumerate() {
-        statements.push_str(&format!(
-            "CREATE ONLY type::record('diary_entries', $c{index}_id) \
-             SET written_at = $c{index}_wa, body = $c{index}_body, \
-             state = 'synced', enqueued_at = 0;\n"
-        ));
+        match entry.reply_to.as_deref() {
+            Some(_) => {
+                statements.push_str(&format!(
+                    "CREATE ONLY type::record('diary_entries', $c{index}_id) \
+                     SET written_at = $c{index}_wa, body = $c{index}_body, \
+                     reply_to = $c{index}_rt, state = 'synced', enqueued_at = 0;\n"
+                ));
+                string_binds.push((format!("c{index}_rt"), entry.reply_to.clone().unwrap()));
+            }
+            None => {
+                statements.push_str(&format!(
+                    "CREATE ONLY type::record('diary_entries', $c{index}_id) \
+                     SET written_at = $c{index}_wa, body = $c{index}_body, \
+                     state = 'synced', enqueued_at = 0;\n"
+                ));
+            }
+        }
         string_binds.push((format!("c{index}_id"), entry.id.clone()));
         int_binds.push((format!("c{index}_wa"), entry.written_at));
         string_binds.push((format!("c{index}_body"), entry.body.clone()));
     }
     for (index, entry) in plan.updates.iter().enumerate() {
-        statements.push_str(&format!(
-            "UPDATE type::record('diary_entries', $u{index}_id) \
-             SET written_at = $u{index}_wa, body = $u{index}_body \
-             WHERE state = 'synced';\n"
-        ));
+        match entry.reply_to.as_deref() {
+            Some(_) => {
+                statements.push_str(&format!(
+                    "UPDATE type::record('diary_entries', $u{index}_id) \
+                     SET written_at = $u{index}_wa, body = $u{index}_body, \
+                     reply_to = $u{index}_rt \
+                     WHERE state = 'synced';\n"
+                ));
+                string_binds.push((format!("u{index}_rt"), entry.reply_to.clone().unwrap()));
+            }
+            None => {
+                statements.push_str(&format!(
+                    "UPDATE type::record('diary_entries', $u{index}_id) \
+                     SET written_at = $u{index}_wa, body = $u{index}_body, \
+                     reply_to = NONE \
+                     WHERE state = 'synced';\n"
+                ));
+            }
+        }
         string_binds.push((format!("u{index}_id"), entry.id.clone()));
         int_binds.push((format!("u{index}_wa"), entry.written_at));
         string_binds.push((format!("u{index}_body"), entry.body.clone()));
@@ -142,7 +168,14 @@ pub struct DirectRemote {
 
 impl Remote for DirectRemote {
     async fn push(&self, entry: WireEntry) -> SendOutcome {
-        match crate::store::save_entry(&self.db, entry.written_at, &entry.body).await {
+        match crate::store::save_entry(
+            &self.db,
+            entry.written_at,
+            &entry.body,
+            entry.reply_to.as_deref(),
+        )
+        .await
+        {
             Ok(saved) => SendOutcome::Saved(crate::contract::SavedRef {
                 id: saved.id,
                 written_at: saved.written_at,
@@ -170,6 +203,7 @@ impl Remote for DirectRemote {
                         id: entry.id,
                         written_at: entry.written_at,
                         body: entry.body,
+                        reply_to: entry.reply_to,
                     })
                     .collect(),
             ),
@@ -208,7 +242,10 @@ fn diff<'a>(local: &[LocalEntry], incoming: &'a [SnapshotEntry]) -> PullPlan<'a>
         match by_id.get(entry.id.as_str()) {
             None => creates.push(entry),
             Some(row) if row.state == STATE_SYNCED => {
-                if row.written_at != entry.written_at || row.body != entry.body {
+                if row.written_at != entry.written_at
+                    || row.body != entry.body
+                    || row.reply_to != entry.reply_to
+                {
                     updates.push(entry);
                 }
             }
@@ -261,7 +298,8 @@ mod tests {
                 "DEFINE TABLE diary_entries SCHEMAFULL PERMISSIONS NONE;
                  DEFINE FIELD id ON diary_entries TYPE string;
                  DEFINE FIELD written_at ON diary_entries TYPE int;
-                 DEFINE FIELD body ON diary_entries TYPE string;",
+                 DEFINE FIELD body ON diary_entries TYPE string;
+                 DEFINE FIELD reply_to ON diary_entries TYPE option<string>;",
             )
             .await
             .expect("schema applies")
@@ -278,7 +316,14 @@ mod tests {
     impl Remote for TestServer {
         async fn push(&self, entry: WireEntry) -> SendOutcome {
             *self.pushes.borrow_mut() += 1;
-            match store::save_entry(&self.db, entry.written_at, &entry.body).await {
+            match store::save_entry(
+                &self.db,
+                entry.written_at,
+                &entry.body,
+                entry.reply_to.as_deref(),
+            )
+            .await
+            {
                 Ok(saved) => SendOutcome::Saved(SavedRef {
                     id: saved.id,
                     written_at: saved.written_at,
@@ -297,6 +342,7 @@ mod tests {
                             id: entry.id,
                             written_at: entry.written_at,
                             body: entry.body,
+                            reply_to: entry.reply_to,
                         })
                         .collect(),
                 ),
@@ -327,6 +373,7 @@ mod tests {
             id: id.to_string(),
             written_at,
             body: body.to_string(),
+            reply_to: None,
         }
     }
 
@@ -369,7 +416,7 @@ mod tests {
     async fn apply_creates_updates_and_deletes_only_synced_rows() {
         let db = device().await;
         // Local state: one pending, one failed, two synced.
-        let pending = outbox::enqueue(&db, 1_753_640_000, "pending text", 1)
+        let pending = outbox::enqueue(&db, 1_753_640_000, "pending text", 1, None)
             .await
             .unwrap();
         let report = outbox::flush(&db, |_| std::future::ready(SendOutcome::Rejected(422)))
@@ -377,10 +424,10 @@ mod tests {
             .unwrap();
         assert_eq!(report.failed, 1); // the pending row became our failed row
         let failed_id = pending.id.clone();
-        let kept = outbox::enqueue(&db, 1_753_640_100, "kept synced", 2)
+        let kept = outbox::enqueue(&db, 1_753_640_100, "kept synced", 2, None)
             .await
             .unwrap();
-        let dropped = outbox::enqueue(&db, 1_753_640_200, "dropped synced", 3)
+        let dropped = outbox::enqueue(&db, 1_753_640_200, "dropped synced", 3, None)
             .await
             .unwrap();
         outbox::flush(&db, |wire: WireEntry| {
@@ -392,7 +439,7 @@ mod tests {
         })
         .await
         .unwrap();
-        let still_pending = outbox::enqueue(&db, 1_753_640_300, "still pending", 4)
+        let still_pending = outbox::enqueue(&db, 1_753_640_300, "still pending", 4, None)
             .await
             .unwrap();
 
@@ -448,7 +495,7 @@ mod tests {
     #[tokio::test]
     async fn run_skips_pull_when_auth_blocked_and_reports_it_otherwise() {
         let db = device().await;
-        outbox::enqueue(&db, 1_753_640_000, "blocked", 1)
+        outbox::enqueue(&db, 1_753_640_000, "blocked", 1, None)
             .await
             .unwrap();
         let auth_remote = Scripted {
@@ -485,10 +532,16 @@ mod tests {
             db: server.db.clone(),
         };
         let device_db = device().await;
-        outbox::enqueue(&device_db, 1_753_640_000, "straight to the database", 1)
-            .await
-            .unwrap();
-        outbox::enqueue(&device_db, 1_753_640_060, "second entry", 2)
+        outbox::enqueue(
+            &device_db,
+            1_753_640_000,
+            "straight to the database",
+            1,
+            None,
+        )
+        .await
+        .unwrap();
+        outbox::enqueue(&device_db, 1_753_640_060, "second entry", 2, None)
             .await
             .unwrap();
         let report = run(&device_db, &remote).await.unwrap();
@@ -516,7 +569,7 @@ mod tests {
     #[tokio::test]
     async fn an_empty_snapshot_never_wipes_a_populated_mirror() {
         let db = device().await;
-        outbox::enqueue(&db, 1_753_640_000, "history", 1)
+        outbox::enqueue(&db, 1_753_640_000, "history", 1, None)
             .await
             .unwrap();
         outbox::flush(&db, |wire: WireEntry| {
@@ -567,10 +620,10 @@ mod tests {
         let device_b = device().await;
         let second = 1_753_640_000;
 
-        let entry_a = outbox::enqueue(&device_a, second, "from device A", 1)
+        let entry_a = outbox::enqueue(&device_a, second, "from device A", 1, None)
             .await
             .unwrap();
-        let entry_b = outbox::enqueue(&device_b, second, "from device B", 1)
+        let entry_b = outbox::enqueue(&device_b, second, "from device B", 1, None)
             .await
             .unwrap();
         assert_eq!(entry_a.id, entry_b.id, "both predicted the same key");

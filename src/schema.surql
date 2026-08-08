@@ -193,6 +193,9 @@ DEFINE FIELD OVERWRITE written_at ON diary_entries TYPE int
     ASSERT $value >= 0 AND $value <= 253402300799;
 DEFINE FIELD OVERWRITE body ON diary_entries TYPE string
     ASSERT string::len($value) >= 1 AND string::len($value) <= 65536;
+DEFINE FIELD OVERWRITE reply_to ON diary_entries TYPE option<string>
+    ASSERT $value IS NONE OR string::matches($value,
+        '^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}-[0-9]{2}-[0-9]{2}[+-][0-9]{2}-[0-9]{2}$');
 DEFINE INDEX OVERWRITE diary_entries_written_at ON diary_entries FIELDS written_at;
 
 DEFINE TABLE OVERWRITE analytics_events SCHEMAFULL PERMISSIONS NONE;

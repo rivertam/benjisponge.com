@@ -26,13 +26,17 @@ pub const COLLISION_PROBES: i64 = 5;
 
 /// One queued entry on the wire: the entry text plus the second it was
 /// composed (the entry keeps the time it was written, not the time it
-/// synced). `deny_unknown_fields` keeps the contract exact — a shape drift
-/// between worker and server should fail loudly, not half-parse.
+/// synced). `reply_to` is the parent entry's permalink id when this message
+/// is a reply; omitted (or null) for a top-level entry. `deny_unknown_fields`
+/// keeps the contract exact — a shape drift between worker and server should
+/// fail loudly, not half-parse.
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[serde(deny_unknown_fields)]
 pub struct WireEntry {
     pub written_at: i64,
     pub body: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reply_to: Option<String>,
 }
 
 pub fn written_at_in_window(written_at: i64, now: i64) -> bool {
@@ -140,6 +144,8 @@ pub struct SnapshotEntry {
     pub id: String,
     pub written_at: i64,
     pub body: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub reply_to: Option<String>,
 }
 
 /// The snapshot wire shape: `{"entries": [...]}`.
@@ -224,6 +230,12 @@ mod tests {
                 .unwrap();
         assert_eq!(entry.written_at, 1_753_640_000);
         assert_eq!(entry.body, "Dear diary,");
+        assert_eq!(entry.reply_to, None);
+        let reply: WireEntry = serde_json::from_slice(
+            br#"{"written_at": 1753640000, "body": "and also", "reply_to": "2026-07-27T14-30-45-04-00"}"#,
+        )
+        .unwrap();
+        assert_eq!(reply.reply_to.as_deref(), Some("2026-07-27T14-30-45-04-00"));
         for bad in [
             &br#"{"written_at": 1753640000.5, "body": "x"}"#[..],
             br#"{"written_at": "1753640000", "body": "x"}"#,
@@ -247,11 +259,26 @@ mod tests {
         let entry = WireEntry {
             written_at: 1_753_640_000,
             body: "Dear diary,\n\nIt me.".to_string(),
+            reply_to: Some("2026-07-27T14-30-45-04-00".to_string()),
         };
         let json = serde_json::to_string(&entry).unwrap();
+        assert!(
+            json.contains("reply_to"),
+            "reply is serialized when present"
+        );
         let back: WireEntry = serde_json::from_str(&json).unwrap();
         assert_eq!(back.written_at, entry.written_at);
         assert_eq!(back.body, entry.body);
+        assert_eq!(back.reply_to, entry.reply_to);
+        let plain = WireEntry {
+            written_at: 1,
+            body: "x".to_string(),
+            reply_to: None,
+        };
+        assert!(
+            !serde_json::to_string(&plain).unwrap().contains("reply_to"),
+            "absent reply stays off the wire"
+        );
     }
 
     #[test]

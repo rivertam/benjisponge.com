@@ -54,6 +54,7 @@ function init() {
   });
   hookForm();
   hookDiscards();
+  hookReplies();
   positionTranscript();
   renderFromStore();
   kick();
@@ -116,6 +117,49 @@ function hookForm() {
   if (desktop.matches && document.activeElement === document.body) {
     box.focus();
   }
+  const cancel = document.getElementById("diary-reply-cancel");
+  if (cancel) {
+    cancel.addEventListener("click", () => clearReplyTarget(box));
+  }
+}
+
+function replyTarget() {
+  const input = document.getElementById("diary-reply-to");
+  const value = input && input.value.trim();
+  return value || null;
+}
+
+function setReplyTarget(id, box) {
+  const input = document.getElementById("diary-reply-to");
+  const banner = document.getElementById("diary-replying");
+  const stamp = document.getElementById("diary-replying-stamp");
+  if (!input || !banner || !stamp) {
+    return;
+  }
+  input.value = id;
+  stamp.textContent = stampOf({ id: id, written_at: 0 });
+  banner.hidden = false;
+  if (box) {
+    box.focus();
+  }
+}
+
+function clearReplyTarget(box) {
+  const input = document.getElementById("diary-reply-to");
+  const banner = document.getElementById("diary-replying");
+  const stamp = document.getElementById("diary-replying-stamp");
+  if (input) {
+    input.value = "";
+  }
+  if (stamp) {
+    stamp.textContent = "";
+  }
+  if (banner) {
+    banner.hidden = true;
+  }
+  if (box) {
+    box.focus();
+  }
 }
 
 /* The synchronous half: the bubble is in the DOM before ANY await, so the
@@ -125,24 +169,26 @@ function save(form, box) {
   if (!raw.trim()) {
     return;
   }
+  const parent = replyTarget();
   const draft = {
     id: null,
     written_at: Math.floor(Date.now() / 1000),
     body: raw.replace(/\r\n?/g, "\n").trim(),
+    reply_to: parent,
     state: "draft",
     reason: null,
   };
   const bubble = appendBubble(draft, true);
   box.value = "";
-  box.focus();
-  persist(form, box, raw, draft, bubble);
+  clearReplyTarget(box);
+  persist(form, box, raw, draft, bubble, parent);
 }
 
-async function persist(form, box, raw, draft, bubble) {
+async function persist(form, box, raw, draft, bubble, parent) {
   try {
     const wasm = await ensureWasm();
     const entry = JSON.parse(
-      await wasm.diary_enqueue(draft.written_at, raw, Date.now()),
+      await wasm.diary_enqueue(draft.written_at, raw, Date.now(), parent),
     );
     const existing = byId(entry.id);
     if (existing && existing !== bubble) {
@@ -165,6 +211,9 @@ async function persist(form, box, raw, draft, bubble) {
     }
     hideQueueIfEmpty();
     box.value = box.value ? raw + "\n\n" + box.value : raw;
+    if (parent) {
+      setReplyTarget(parent, null);
+    }
     if (navigator.onLine === false) {
       return;
     }
@@ -217,13 +266,34 @@ function applyEntry(bubble, entry) {
     bubble.dataset.id = entry.id;
   }
   bubble.dataset.state = entry.state;
-  bubble.firstElementChild.textContent = entry.body;
+  bubble.dataset.replyTo = entry.reply_to || "";
+  const body = bubble.querySelector(".diary-body");
+  if (body) {
+    body.textContent = entry.body;
+  }
+  const replyTo = bubble.querySelector(".diary-reply-to");
+  const replyLink = replyTo && replyTo.querySelector("a");
+  if (replyTo && replyLink) {
+    if (entry.reply_to) {
+      replyTo.hidden = false;
+      replyLink.href = SCOPE + "/" + encodeURIComponent(entry.reply_to);
+      replyLink.textContent = "↳ " + stampOf({ id: entry.reply_to, written_at: 0 });
+    } else {
+      replyTo.hidden = true;
+      replyLink.removeAttribute("href");
+      replyLink.textContent = "";
+    }
+  }
   const note = bubble.querySelector(".diary-note");
-  const link = bubble.querySelector("a");
+  const link = bubble.querySelector("p.mt-2 > a.quiet-link");
+  const reply = bubble.querySelector(".diary-reply");
   const discard = bubble.querySelector(".diary-discard");
   const queuedLook =
     entry.state === "failed" || (entry.state === "pending" && lastBlocked);
   bubble.classList.toggle("diary-message-queued", Boolean(queuedLook));
+  if (reply) {
+    reply.hidden = !entry.id;
+  }
   if (entry.state === "synced") {
     link.hidden = false;
     link.href = SCOPE + "/" + encodeURIComponent(entry.id);
@@ -344,6 +414,7 @@ function onReport(report) {
       id: ref.id,
       written_at: ref.written_at,
       body: ref.body,
+      reply_to: ref.reply_to || null,
       state: "synced",
       reason: null,
     });
@@ -413,6 +484,22 @@ function hookDiscards() {
     } catch (error) {
       // Store refused; the bubble stays and the tap can be retried.
     }
+  });
+}
+
+function hookReplies() {
+  document.addEventListener("click", (event) => {
+    const button = event.target.closest(".diary-reply");
+    if (!button) {
+      return;
+    }
+    const bubble = button.closest(".diary-message");
+    const id = bubble && bubble.dataset.id;
+    if (!id) {
+      return;
+    }
+    const box = document.getElementById("diary-body");
+    setReplyTarget(id, box);
   });
 }
 

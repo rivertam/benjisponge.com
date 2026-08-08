@@ -54,6 +54,7 @@ const SCHEMA: &str = "\
     DEFINE TABLE OVERWRITE diary_entries SCHEMAFULL PERMISSIONS NONE;\n\
     DEFINE FIELD OVERWRITE written_at ON diary_entries TYPE int;\n\
     DEFINE FIELD OVERWRITE body ON diary_entries TYPE string;\n\
+    DEFINE FIELD OVERWRITE reply_to ON diary_entries TYPE option<string>;\n\
     DEFINE FIELD OVERWRITE state ON diary_entries TYPE string \
         ASSERT $value IN ['synced', 'pending', 'failed'];\n\
     DEFINE FIELD OVERWRITE reason ON diary_entries TYPE option<string>;\n\
@@ -103,6 +104,8 @@ pub struct LocalEntry {
     pub id: String,
     pub written_at: i64,
     pub body: String,
+    #[serde(default)]
+    pub reply_to: Option<String>,
     pub state: String,
     pub reason: Option<String>,
     pub enqueued_at: i64,
@@ -151,6 +154,8 @@ pub struct SavedEntry {
     pub id: String,
     pub written_at: i64,
     pub body: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub reply_to: Option<String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
@@ -192,24 +197,40 @@ pub async fn open(endpoint: &str) -> Result<Db, OutboxError> {
 /// over-length text queues fine, replays, gets the server's 422, and stays
 /// on the page as a failed entry for manual copy. `enqueued_at_ms` comes
 /// from the caller because the caller owns the clock (the page passes
-/// `Date.now()`).
+/// `Date.now()`). `reply_to` is the parent permalink when this message is a
+/// reply; it must parse as one (or be absent) — the page only offers reply
+/// on predicted ids.
 ///
 /// The id is resolved HERE, with the same probe-and-dedupe rule the server
-/// applies: same second + same body at any probed key is the same entry
-/// (returned as-is — a double-tap converges instead of minting a twin);
-/// only a different body probes forward. The permalink is therefore right
-/// from birth, and the server's own probe remains the cross-device backstop.
+/// applies: same second + same body + same reply target at any probed key
+/// is the same entry (returned as-is — a double-tap converges instead of
+/// minting a twin); only a different body or reply target probes forward.
+/// The permalink is therefore right from birth, and the server's own probe
+/// remains the cross-device backstop.
 pub async fn enqueue(
     db: &Db,
     written_at: i64,
     raw_body: &str,
     enqueued_at_ms: i64,
+    reply_to: Option<&str>,
 ) -> Result<LocalEntry, OutboxError> {
     let body = normalize_lines(raw_body);
     if body.is_empty() {
         return Err(OutboxError::InvalidBody);
     }
-    place(db, written_at, &body, STATE_PENDING, None, enqueued_at_ms).await
+    let Some(reply_to) = crate::store::normalize_reply_to(reply_to) else {
+        return Err(OutboxError::InvalidBody);
+    };
+    place(
+        db,
+        written_at,
+        &body,
+        reply_to.as_deref(),
+        STATE_PENDING,
+        None,
+        enqueued_at_ms,
+    )
+    .await
 }
 
 /// Every not-yet-synced row, oldest enqueue first — flush order and the
@@ -218,7 +239,7 @@ pub async fn enqueue(
 pub async fn queued(db: &Db) -> Result<Vec<LocalEntry>, OutboxError> {
     let mut response = db
         .query(
-            "SELECT record::id(id) AS id, written_at, body, state, reason, enqueued_at \
+            "SELECT record::id(id) AS id, written_at, body, reply_to, state, reason, enqueued_at \
              FROM diary_entries WHERE state != 'synced' \
              ORDER BY enqueued_at ASC, id ASC",
         )
@@ -234,7 +255,7 @@ pub async fn queued(db: &Db) -> Result<Vec<LocalEntry>, OutboxError> {
 pub async fn all_local(db: &Db) -> Result<Vec<LocalEntry>, OutboxError> {
     let mut response = db
         .query(
-            "SELECT record::id(id) AS id, written_at, body, state, reason, enqueued_at \
+            "SELECT record::id(id) AS id, written_at, body, reply_to, state, reason, enqueued_at \
              FROM diary_entries ORDER BY written_at ASC, id ASC",
         )
         .await
@@ -280,6 +301,7 @@ pub async fn import(db: &Db, legacy: &[LegacyEntry]) -> Result<u32, OutboxError>
             db,
             entry.written_at,
             &entry.body,
+            None,
             state,
             entry.reason.as_deref(),
             entry.enqueued_at.unwrap_or(0),
@@ -312,6 +334,7 @@ where
         let wire = WireEntry {
             written_at: entry.written_at,
             body: entry.body.clone(),
+            reply_to: entry.reply_to.clone(),
         };
         match send(wire).await {
             SendOutcome::Saved(server) => {
@@ -321,6 +344,7 @@ where
                     id: server.id,
                     written_at: server.written_at,
                     body: entry.body.clone(),
+                    reply_to: entry.reply_to.clone(),
                 });
             }
             SendOutcome::Auth => {
@@ -376,8 +400,27 @@ async fn mark_synced(
         .map_err(db_error)?;
         return Ok(());
     }
-    let moved = db
-        .query(
+    let moved = if entry.reply_to.is_some() {
+        db.query(
+            "BEGIN TRANSACTION;
+             DELETE type::record('diary_entries', $old);
+             CREATE ONLY type::record('diary_entries', $new)
+                 SET written_at = $written_at, body = $body,
+                     reply_to = $reply_to,
+                     state = 'synced', enqueued_at = $enqueued_at;
+             COMMIT TRANSACTION;",
+        )
+        .bind(("old", entry.id.clone()))
+        .bind(("new", server_id.to_string()))
+        .bind(("written_at", server_written_at))
+        .bind(("body", entry.body.clone()))
+        .bind(("reply_to", entry.reply_to.clone().unwrap()))
+        .bind(("enqueued_at", entry.enqueued_at))
+        .await
+        .map_err(db_error)?
+        .check()
+    } else {
+        db.query(
             "BEGIN TRANSACTION;
              DELETE type::record('diary_entries', $old);
              CREATE ONLY type::record('diary_entries', $new)
@@ -392,7 +435,8 @@ async fn mark_synced(
         .bind(("enqueued_at", entry.enqueued_at))
         .await
         .map_err(db_error)?
-        .check();
+        .check()
+    };
     if moved.is_err() {
         // The bumped key is occupied by a different local row. Release the
         // delivered pending row alone; the pull that follows in the same
@@ -424,19 +468,21 @@ async fn mark_failed(db: &Db, id: &str, reason: &str) -> Result<(), OutboxError>
 
 /// The local placement loop — the same probe-and-dedupe shape as
 /// `store::save_entry`, extended with the local state columns. Same second +
-/// same body at ANY probed key returns that existing row (dedupe, any
-/// state); a different body probes forward; check-CREATE-recheck absorbs a
-/// concurrent placer. Rows whose epoch cannot project get a deterministic
-/// synthetic key and land as failed — never dropped.
+/// same body + same reply target at ANY probed key returns that existing row
+/// (dedupe, any state); a different body or reply target probes forward;
+/// check-CREATE-recheck absorbs a concurrent placer. Rows whose epoch cannot
+/// project get a deterministic synthetic key and land as failed — never
+/// dropped.
 async fn place(
     db: &Db,
     written_at: i64,
     body: &str,
+    reply_to: Option<&str>,
     state: &str,
     reason: Option<&str>,
     enqueued_at: i64,
 ) -> Result<LocalEntry, OutboxError> {
-    match place_inner(db, written_at, body, state, reason, enqueued_at).await? {
+    match place_inner(db, written_at, body, reply_to, state, reason, enqueued_at).await? {
         Placement::Placed(entry) | Placement::Deduped(entry) => Ok(entry),
         Placement::Exhausted => Err(OutboxError::Db(format!("no free second near {written_at}"))),
     }
@@ -450,32 +496,38 @@ async fn place_preserving(
     db: &Db,
     written_at: i64,
     body: &str,
+    reply_to: Option<&str>,
     state: &str,
     reason: Option<&str>,
     enqueued_at: i64,
 ) -> Result<bool, OutboxError> {
     if entry_key(written_at).is_some() {
-        match place_inner(db, written_at, body, state, reason, enqueued_at).await? {
+        match place_inner(db, written_at, body, reply_to, state, reason, enqueued_at).await? {
             Placement::Placed(_) => return Ok(true),
             Placement::Deduped(_) => return Ok(false),
             Placement::Exhausted => {}
         }
     }
-    synthetic_failed(db, written_at, body, reason, enqueued_at).await
+    synthetic_failed(db, written_at, body, reply_to, reason, enqueued_at).await
 }
 
 enum Placement {
     /// Newly created under this key.
     Placed(LocalEntry),
-    /// An existing row already held this second + body — the same entry.
+    /// An existing row already held this second + body + reply — the same entry.
     Deduped(LocalEntry),
     Exhausted,
+}
+
+fn same_content(existing: &LocalEntry, body: &str, reply_to: Option<&str>) -> bool {
+    existing.body == body && existing.reply_to.as_deref() == reply_to
 }
 
 async fn place_inner(
     db: &Db,
     written_at: i64,
     body: &str,
+    reply_to: Option<&str>,
     state: &str,
     reason: Option<&str>,
     enqueued_at: i64,
@@ -486,25 +538,26 @@ async fn place_inner(
             return Err(OutboxError::Db(format!("unprojectable epoch {epoch}")));
         };
         match local_by_id(db, &id).await? {
-            Some(existing) if existing.body == body => {
+            Some(existing) if same_content(&existing, body, reply_to) => {
                 return Ok(Placement::Deduped(existing));
             }
             Some(_) => continue,
             None => {}
         }
-        match create_row(db, &id, epoch, body, state, reason, enqueued_at).await {
+        match create_row(db, &id, epoch, body, reply_to, state, reason, enqueued_at).await {
             Ok(()) => {
                 return Ok(Placement::Placed(LocalEntry {
                     id,
                     written_at: epoch,
                     body: body.to_string(),
+                    reply_to: reply_to.map(str::to_string),
                     state: state.to_string(),
                     reason: reason.map(str::to_string),
                     enqueued_at,
                 }));
             }
             Err(error) => match local_by_id(db, &id).await? {
-                Some(existing) if existing.body == body => {
+                Some(existing) if same_content(&existing, body, reply_to) => {
                     return Ok(Placement::Deduped(existing));
                 }
                 Some(_) => continue,
@@ -522,6 +575,7 @@ async fn synthetic_failed(
     db: &Db,
     written_at: i64,
     body: &str,
+    reply_to: Option<&str>,
     reason: Option<&str>,
     enqueued_at: i64,
 ) -> Result<bool, OutboxError> {
@@ -535,6 +589,7 @@ async fn synthetic_failed(
                 &id,
                 written_at,
                 body,
+                reply_to,
                 STATE_FAILED,
                 Some(reason),
                 enqueued_at,
@@ -548,7 +603,7 @@ async fn synthetic_failed(
 async fn local_by_id(db: &Db, id: &str) -> Result<Option<LocalEntry>, OutboxError> {
     let mut response = db
         .query(
-            "SELECT record::id(id) AS id, written_at, body, state, reason, enqueued_at \
+            "SELECT record::id(id) AS id, written_at, body, reply_to, state, reason, enqueued_at \
              FROM type::record('diary_entries', $id)",
         )
         .bind(("id", id.to_string()))
@@ -560,26 +615,37 @@ async fn local_by_id(db: &Db, id: &str) -> Result<Option<LocalEntry>, OutboxErro
     Ok(rows.into_iter().next())
 }
 
-/// Two statement shapes rather than binding an Option: whether a bound
-/// `None` lands as SurrealQL `NONE` or `null` is exactly the kind of
-/// result-shape trap docs/surrealdb-notes.md exists for, and `option<string>`
-/// only admits one of them.
+/// Statement shapes rather than binding an Option: whether a bound `None`
+/// lands as SurrealQL `NONE` or `null` is exactly the kind of result-shape
+/// trap docs/surrealdb-notes.md exists for, and `option<string>` only admits
+/// one of them. Four shapes cover reason × reply_to presence.
 async fn create_row(
     db: &Db,
     id: &str,
     written_at: i64,
     body: &str,
+    reply_to: Option<&str>,
     state: &str,
     reason: Option<&str>,
     enqueued_at: i64,
 ) -> Result<(), OutboxError> {
-    let statement = match reason {
-        Some(_) => {
+    let statement = match (reply_to, reason) {
+        (Some(_), Some(_)) => {
+            "CREATE ONLY type::record('diary_entries', $id) \
+             SET written_at = $written_at, body = $body, reply_to = $reply_to, \
+             state = $state, reason = $reason, enqueued_at = $enqueued_at"
+        }
+        (Some(_), None) => {
+            "CREATE ONLY type::record('diary_entries', $id) \
+             SET written_at = $written_at, body = $body, reply_to = $reply_to, \
+             state = $state, enqueued_at = $enqueued_at"
+        }
+        (None, Some(_)) => {
             "CREATE ONLY type::record('diary_entries', $id) \
              SET written_at = $written_at, body = $body, \
              state = $state, reason = $reason, enqueued_at = $enqueued_at"
         }
-        None => {
+        (None, None) => {
             "CREATE ONLY type::record('diary_entries', $id) \
              SET written_at = $written_at, body = $body, \
              state = $state, enqueued_at = $enqueued_at"
@@ -592,6 +658,9 @@ async fn create_row(
         .bind(("body", body.to_string()))
         .bind(("state", state.to_string()))
         .bind(("enqueued_at", enqueued_at));
+    if let Some(reply_to) = reply_to {
+        query = query.bind(("reply_to", reply_to.to_string()));
+    }
     if let Some(reason) = reason {
         query = query.bind(("reason", reason.to_string()));
     }
@@ -635,6 +704,7 @@ async fn drain_v1(db: &Db) -> Result<(), OutboxError> {
                 db,
                 row.written_at,
                 &row.body,
+                None,
                 state,
                 row.reason.as_deref(),
                 row.enqueued_at,
@@ -701,7 +771,7 @@ mod tests {
     #[tokio::test]
     async fn enqueue_normalizes_predicts_the_permalink_and_round_trips() {
         let db = store().await;
-        let entry = enqueue(&db, 1_753_640_000, "Dear diary,\r\nIt me.\r\n", 7)
+        let entry = enqueue(&db, 1_753_640_000, "Dear diary,\r\nIt me.\r\n", 7, None)
             .await
             .unwrap();
         assert_eq!(entry.body, "Dear diary,\nIt me.");
@@ -713,6 +783,7 @@ mod tests {
         // The explicit projection must surface the absent `reason` as None
         // instead of dropping the field (the `SELECT *` NONE-omission trap).
         assert_eq!(listed[0].reason, None);
+        assert_eq!(listed[0].reply_to, None);
         assert_eq!(listed[0].id, entry.id);
         assert_eq!(listed[0].written_at, 1_753_640_000);
         assert_eq!(listed[0].enqueued_at, 7);
@@ -723,7 +794,7 @@ mod tests {
         let db = store().await;
         for bad in ["", "  \r\n\t "] {
             assert!(matches!(
-                enqueue(&db, 1_753_640_000, bad, 1).await,
+                enqueue(&db, 1_753_640_000, bad, 1, None).await,
                 Err(OutboxError::InvalidBody)
             ));
         }
@@ -736,8 +807,8 @@ mod tests {
     #[tokio::test]
     async fn enqueue_dedupes_a_same_second_twin() {
         let db = store().await;
-        let first = enqueue(&db, 1_753_640_000, "tap", 10).await.unwrap();
-        let twin = enqueue(&db, 1_753_640_000, "tap", 25).await.unwrap();
+        let first = enqueue(&db, 1_753_640_000, "tap", 10, None).await.unwrap();
+        let twin = enqueue(&db, 1_753_640_000, "tap", 25, None).await.unwrap();
         assert_eq!(twin.id, first.id);
         assert_eq!(twin.enqueued_at, 10, "the original row is the entry");
         assert_eq!(queued(&db).await.unwrap().len(), 1);
@@ -748,8 +819,8 @@ mod tests {
     #[tokio::test]
     async fn enqueue_probes_a_different_body_forward() {
         let db = store().await;
-        let first = enqueue(&db, 1_753_640_000, "one", 10).await.unwrap();
-        let second = enqueue(&db, 1_753_640_000, "two", 20).await.unwrap();
+        let first = enqueue(&db, 1_753_640_000, "one", 10, None).await.unwrap();
+        let second = enqueue(&db, 1_753_640_000, "two", 20, None).await.unwrap();
         assert_eq!(first.written_at, 1_753_640_000);
         assert_eq!(second.written_at, 1_753_640_001);
         assert_eq!(second.id, key(1_753_640_001));
@@ -763,7 +834,9 @@ mod tests {
         use crate::contract::MAX_ENTRY_CHARS;
         let db = store().await;
         let oversized = "a".repeat(MAX_ENTRY_CHARS + 1);
-        enqueue(&db, 1_753_640_000, &oversized, 10).await.unwrap();
+        enqueue(&db, 1_753_640_000, &oversized, 10, None)
+            .await
+            .unwrap();
         let report = flush(&db, |_| ready(SendOutcome::Rejected(422)))
             .await
             .unwrap();
@@ -776,12 +849,16 @@ mod tests {
     #[tokio::test]
     async fn discard_removes_queued_rows_and_spares_synced_history() {
         let db = store().await;
-        let queued_entry = enqueue(&db, 1_753_640_000, "keep me", 1).await.unwrap();
+        let queued_entry = enqueue(&db, 1_753_640_000, "keep me", 1, None)
+            .await
+            .unwrap();
         discard(&db, &queued_entry.id).await.unwrap();
         discard(&db, &queued_entry.id).await.unwrap();
         assert!(queued(&db).await.unwrap().is_empty());
 
-        let delivered = enqueue(&db, 1_753_640_100, "delivered", 2).await.unwrap();
+        let delivered = enqueue(&db, 1_753_640_100, "delivered", 2, None)
+            .await
+            .unwrap();
         flush(&db, |wire: WireEntry| {
             ready(saved(&key(wire.written_at), wire.written_at))
         })
@@ -802,9 +879,15 @@ mod tests {
     async fn flush_sends_oldest_first_and_flips_state_in_place() {
         let db = store().await;
         // Enqueued out of order on purpose; enqueued_at decides.
-        let second = enqueue(&db, 1_753_640_200, "second", 20).await.unwrap();
-        let first = enqueue(&db, 1_753_640_100, "first", 10).await.unwrap();
-        let third = enqueue(&db, 1_753_640_300, "third", 30).await.unwrap();
+        let second = enqueue(&db, 1_753_640_200, "second", 20, None)
+            .await
+            .unwrap();
+        let first = enqueue(&db, 1_753_640_100, "first", 10, None)
+            .await
+            .unwrap();
+        let third = enqueue(&db, 1_753_640_300, "third", 30, None)
+            .await
+            .unwrap();
         let sent = RefCell::new(Vec::new());
         let report = flush(&db, |wire: WireEntry| {
             sent.borrow_mut().push(wire.body.clone());
@@ -836,9 +919,15 @@ mod tests {
     #[tokio::test]
     async fn flush_stops_on_retryable_trouble() {
         let db = store().await;
-        enqueue(&db, 1_753_640_100, "first", 10).await.unwrap();
-        enqueue(&db, 1_753_640_200, "second", 20).await.unwrap();
-        enqueue(&db, 1_753_640_300, "third", 30).await.unwrap();
+        enqueue(&db, 1_753_640_100, "first", 10, None)
+            .await
+            .unwrap();
+        enqueue(&db, 1_753_640_200, "second", 20, None)
+            .await
+            .unwrap();
+        enqueue(&db, 1_753_640_300, "third", 30, None)
+            .await
+            .unwrap();
         let script = RefCell::new(VecDeque::from([
             saved(&key(1_753_640_100), 1_753_640_100),
             SendOutcome::Retry,
@@ -864,7 +953,9 @@ mod tests {
     #[tokio::test]
     async fn flush_stops_quietly_when_signed_out() {
         let db = store().await;
-        enqueue(&db, 1_753_640_100, "private", 10).await.unwrap();
+        enqueue(&db, 1_753_640_100, "private", 10, None)
+            .await
+            .unwrap();
         let report = flush(&db, |_| ready(SendOutcome::Auth)).await.unwrap();
         assert_eq!(report.blocked, Some(Blocked::Auth));
         assert_eq!(report.pending, 1);
@@ -873,8 +964,12 @@ mod tests {
     #[tokio::test]
     async fn flush_marks_rejections_failed_and_moves_on() {
         let db = store().await;
-        enqueue(&db, 1_753_640_100, "rejected", 10).await.unwrap();
-        enqueue(&db, 1_753_640_200, "accepted", 20).await.unwrap();
+        enqueue(&db, 1_753_640_100, "rejected", 10, None)
+            .await
+            .unwrap();
+        enqueue(&db, 1_753_640_200, "accepted", 20, None)
+            .await
+            .unwrap();
         let script = RefCell::new(VecDeque::from([
             SendOutcome::Rejected(422),
             saved(&key(1_753_640_200), 1_753_640_200),
@@ -904,7 +999,9 @@ mod tests {
     #[tokio::test]
     async fn flush_rekeys_a_server_bumped_entry() {
         let db = store().await;
-        let entry = enqueue(&db, 1_753_640_000, "bumped", 10).await.unwrap();
+        let entry = enqueue(&db, 1_753_640_000, "bumped", 10, None)
+            .await
+            .unwrap();
         let server_id = key(1_753_640_001);
         let report = flush(&db, |_| ready(saved(&server_id, 1_753_640_001)))
             .await
@@ -926,8 +1023,10 @@ mod tests {
     #[tokio::test]
     async fn a_bump_never_clobbers_a_pending_neighbor() {
         let db = store().await;
-        let bumped = enqueue(&db, 1_753_640_000, "mine", 10).await.unwrap();
-        let neighbor = enqueue(&db, 1_753_640_001, "neighbor", 20).await.unwrap();
+        let bumped = enqueue(&db, 1_753_640_000, "mine", 10, None).await.unwrap();
+        let neighbor = enqueue(&db, 1_753_640_001, "neighbor", 20, None)
+            .await
+            .unwrap();
         let script = RefCell::new(VecDeque::from([
             // The server saved "mine" at T+1 (some other device's entry
             // occupied T there)…
@@ -1105,6 +1204,7 @@ mod tests {
                 id: "2026-07-27T14-30-46-04-00".to_string(),
                 written_at: 1_753_640_000,
                 body: "Dear diary,".to_string(),
+                reply_to: None,
             }],
             pulled: Some(2),
         };

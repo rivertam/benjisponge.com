@@ -210,7 +210,11 @@ async fn diary_entry(cx: &Cx) -> Result {
             if let Some(entry) = entry {
                 // The stamp/body/delete core is the shared component the
                 // worker's offline permalink pages render too.
-                entry_detail(id: entry.id.clone(), body: entry.body.clone())
+                entry_detail(
+                    id: entry.id.clone(),
+                    body: entry.body.clone(),
+                    reply_to: entry.reply_to.clone()
+                )
             } else {
                 <p class="mt-8 max-w-prose text-ink2">
                     "The diary store is unreachable, so this entry did not "
@@ -229,16 +233,27 @@ async fn write_entry(cx: &Cx, body: Body) -> Result<Response> {
         Ok(bytes) => bytes,
         Err(response) => return Ok(response),
     };
-    let Some(raw) = parse_single_field(&bytes, "body") else {
+    let Some((raw, reply_raw)) = parse_write_form(&bytes) else {
         return Ok(back("invalid"));
     };
     let Some(entry_body) = normalize_body(&raw) else {
         return Ok(back("invalid"));
     };
+    let Some(reply_to) = store::normalize_reply_to(reply_raw.as_deref()) else {
+        return Ok(back("invalid"));
+    };
     let Some((id, written_at)) = now_entry() else {
         return Ok(back("unavailable"));
     };
-    match insert_entry(app_context::<Data>(cx), &id, written_at, &entry_body).await {
+    match insert_entry(
+        app_context::<Data>(cx),
+        &id,
+        written_at,
+        &entry_body,
+        reply_to.as_deref(),
+    )
+    .await
+    {
         Ok(()) => Ok(back("saved")),
         Err(error) => {
             log_failure("write", &error);
@@ -320,7 +335,20 @@ async fn api_write_entry(cx: &Cx, body: Body) -> Result<Response> {
             "that didn't validate",
         ));
     };
-    match save_queued_entry(app_context::<Data>(cx), entry.written_at, &entry_body).await {
+    let Some(reply_to) = store::normalize_reply_to(entry.reply_to.as_deref()) else {
+        return Ok(api_error(
+            StatusCode::UNPROCESSABLE_ENTITY,
+            "that didn't validate",
+        ));
+    };
+    match save_queued_entry(
+        app_context::<Data>(cx),
+        entry.written_at,
+        &entry_body,
+        reply_to.as_deref(),
+    )
+    .await
+    {
         Ok(saved) => Ok(api_json(
             StatusCode::OK,
             serde_json::json!({
@@ -376,6 +404,7 @@ async fn api_snapshot(cx: &Cx) -> Result<Response> {
                 id: entry.id,
                 written_at: entry.written_at,
                 body: entry.body,
+                reply_to: entry.reply_to,
             })
             .collect(),
     };
@@ -477,9 +506,10 @@ async fn save_queued_entry(
     data: &Data,
     written_at: i64,
     body: &str,
+    reply_to: Option<&str>,
 ) -> std::result::Result<SavedWrite, SaveError> {
     let db = open_db(data).await.map_err(SaveError::Store)?;
-    store::save_entry(&db, written_at, body).await
+    store::save_entry(&db, written_at, body, reply_to).await
 }
 
 fn is_json_content_type(headers: &HeaderMap) -> bool {
@@ -528,8 +558,9 @@ async fn insert_entry(
     id: &str,
     written_at: i64,
     body: &str,
+    reply_to: Option<&str>,
 ) -> std::result::Result<(), String> {
-    store::insert_entry(&open_db(data).await?, id, written_at, body).await
+    store::insert_entry(&open_db(data).await?, id, written_at, body, reply_to).await
 }
 
 async fn remove_entry(data: &Data, id: &str) -> std::result::Result<(), String> {
@@ -571,6 +602,29 @@ fn parse_single_field(body: &[u8], name: &str) -> Option<String> {
         }
     }
     value
+}
+
+/// The write form: required `body`, optional empty-or-permalink `reply_to`.
+/// Anything else (duplicate keys, unknown fields) is invalid — same spirit
+/// as [`parse_single_field`], widened only far enough for the reply target.
+fn parse_write_form(body: &[u8]) -> Option<(String, Option<String>)> {
+    let mut entry_body = None;
+    let mut reply_to = None;
+    let mut saw_reply = false;
+    for (key, field) in form_urlencoded::parse(body) {
+        match key.as_ref() {
+            "body" if entry_body.is_none() => entry_body = Some(field.into_owned()),
+            "reply_to" if !saw_reply => {
+                saw_reply = true;
+                let value = field.into_owned();
+                if !value.is_empty() {
+                    reply_to = Some(value);
+                }
+            }
+            _ => return None,
+        }
+    }
+    Some((entry_body?, reply_to))
 }
 
 /// The record key and stored timestamp for a new form entry, from one
@@ -693,6 +747,25 @@ mod tests {
         assert_eq!(parse_single_field(b"path=x", "body"), None);
     }
 
+    #[test]
+    fn write_forms_accept_an_optional_reply_target() {
+        assert_eq!(parse_write_form(b"body=hi"), Some(("hi".to_string(), None)));
+        assert_eq!(
+            parse_write_form(b"body=hi&reply_to="),
+            Some(("hi".to_string(), None))
+        );
+        assert_eq!(
+            parse_write_form(b"body=hi&reply_to=2026-07-27T14-30-45-04-00"),
+            Some((
+                "hi".to_string(),
+                Some("2026-07-27T14-30-45-04-00".to_string())
+            ))
+        );
+        assert_eq!(parse_write_form(b"body=a&body=b"), None);
+        assert_eq!(parse_write_form(b"body=a&extra=1"), None);
+        assert_eq!(parse_write_form(b"reply_to=x"), None);
+    }
+
     /// The protocol items now live in `diary-core` (where the wasm worker
     /// compiles them too); what stays here is the glue that must keep
     /// matching them: the route literal in the `#[route]` attribute, and the
@@ -806,6 +879,10 @@ mod tests {
             "dataset.state",
             ".diary-note",
             ".diary-discard",
+            ".diary-reply",
+            "diary-reply-to",
+            "diary-replying",
+            "setReplyTarget",
             "saved_entries",
             "diary-message-queued",
             // the placeholder toggle and the offline fallback guard
@@ -814,6 +891,9 @@ mod tests {
             // Enter-to-send stays desktop-only and IME-safe
             "(hover: hover) and (pointer: fine)",
             "isComposing",
+            // body text lives on .diary-body — never firstElementChild, which
+            // is the optional reply-to line above it
+            ".diary-body",
         ] {
             assert!(DIARY_JS_SRC.contains(needle), "diary.js lost {needle:?}");
         }
