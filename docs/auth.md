@@ -113,12 +113,12 @@ Invariants:
 - A flush stops and keeps the queue on 401/404 (sign in again) and on
   400/403/5xx/network trouble (retry later); a 400 can be an older server
   rejecting a newer strict wire envelope during rollout. Replies are wire
-  generation 2; frozen unversioned/v1 push and snapshot Adapters translate
-  body-only entries with no Reply Target, while compose and direct-sync grants
+  generation 2; frozen unversioned/v1 push and snapshot adapters translate
+  body-only entries with no reply target, while compose and direct-sync grants
   require the exact current generation. Direct JWT claims and diary table
-  permissions repeat that fence so an already-open older database session is
-  denied after the schema moves generations. Only
-  409/413/415/422 mark an entry failed, and failed text stays on the page
+  permissions carry the same generation so an already-open older database
+  session is denied after the schema moves generations. Only 409/413/415/422
+  mark an entry failed, and failed text stays on the page
   with a discard button — queued diary text is never silently dropped.
 - `/sw.js` and the manifest keep stable un-hashed URLs (a worker's URL is
   its identity; a hashed URL would register a new worker every deploy).
