@@ -115,11 +115,12 @@ Invariants:
   rejecting a newer strict wire envelope during rollout. Replies are wire
   generation 2; frozen unversioned/v1 push and snapshot adapters translate
   body-only entries with no reply target, while compose and direct-sync grants
-  require the exact current generation. Direct JWT claims and diary table
-  permissions carry the same generation so an already-open older database
-  session is denied after the schema moves generations. Only 409/413/415/422
-  mark an entry failed, and failed text stays on the page
-  with a discard button — queued diary text is never silently dropped.
+  require the exact current generation. Direct JWT claims and every persisted
+  server row carry that generation; the stable table permission hides newer
+  rows from older sessions even if an older instance reapplies its schema
+  after the new deployment starts. Only 409/413/415/422 mark an entry failed,
+  and failed text stays on the page with a discard button — queued diary text
+  is never silently dropped.
 - `/sw.js` and the manifest keep stable un-hashed URLs (a worker's URL is
   its identity; a hashed URL would register a new worker every deploy).
   Served `no-cache` / day-long cache respectively via `pwa.rs`.
