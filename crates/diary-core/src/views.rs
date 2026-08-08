@@ -17,8 +17,9 @@ use topcoat::{
 };
 
 use crate::eastern;
+use crate::entry::DiaryEntry;
 use crate::outbox::{LocalEntry, STATE_FAILED, STATE_SYNCED};
-use crate::store::{DiaryEntry, PAGE_SIZE};
+use crate::store::PAGE_SIZE;
 
 pub const DIARY_PATH: &str = "/diary";
 
@@ -156,8 +157,10 @@ impl Bubble {
         !matches!(self.state, BubbleState::Failed { .. })
     }
 
+    /// Replying is a relationship to a durable permalink, so a local
+    /// draft, pending row, or failed row must never offer the control.
     fn reply_hidden(&self) -> bool {
-        matches!(self.state, BubbleState::Draft) || self.id.is_empty()
+        !matches!(self.state, BubbleState::Synced) || self.id.is_empty()
     }
 
     fn reply_to_hidden(&self) -> bool {
@@ -165,14 +168,14 @@ impl Bubble {
     }
 
     fn reply_to_href(&self) -> Option<String> {
-        self.reply_to.as_ref().map(|id| entry_url(id))
+        self.reply_to.as_deref().map(entry_url)
     }
 
     fn reply_to_text(&self) -> String {
-        match self.reply_to.as_deref() {
-            Some(id) => format!("↳ {}", entry_stamp(id)),
-            None => String::new(),
-        }
+        self.reply_to
+            .as_deref()
+            .map(|id| format!("↳ {}", entry_stamp(id)))
+            .unwrap_or_default()
     }
 }
 
@@ -203,7 +206,7 @@ pub async fn bubble(item: Bubble) -> Result {
                     (item.note_text())
                 </span>
                 <a
-                    class="quiet-link"
+                    class="diary-permalink quiet-link"
                     hidden=(item.anchor_hidden())
                     href=(item.synced_href())
                 >(item.anchor_text())</a>
@@ -343,26 +346,27 @@ pub async fn diary_room(
 }
 
 /// One entry's detail core — stamp, body, optional reply parent, and the
-/// delete form. Hosts add their own chrome and heading around it.
+/// delete form. Hosts pass the canonical entry and add their own chrome and
+/// heading around it.
 #[component]
-pub async fn entry_detail(id: String, body: String, reply_to: Option<String>) -> Result {
+pub async fn entry_detail(entry: DiaryEntry) -> Result {
     view! {
         <section class="mt-8 max-w-prose">
-            <p class="font-meta text-xs text-muted">(entry_stamp(&id))</p>
-            if let Some(parent) = reply_to.as_ref() {
+            <p class="font-meta text-xs text-muted">(entry_stamp(&entry.id))</p>
+            if let Some(parent) = entry.reply_to.as_ref() {
                 <p class="mt-2 font-meta text-[0.6875rem] text-muted">
                     <a class="quiet-link" href=(entry_url(parent))>
                         (format!("↳ {}", entry_stamp(parent)))
                     </a>
                 </p>
             }
-            <p class="mt-3 leading-relaxed whitespace-pre-wrap text-ink2">(body.as_str())</p>
+            <p class="mt-3 leading-relaxed whitespace-pre-wrap text-ink2">(entry.body.as_str())</p>
             <form
                 method="post"
                 action="/diary/delete"
                 class="mt-10 border-t border-hairline pt-4 text-right"
             >
-                <input type="hidden" name="path" value=(id.as_str())>
+                <input type="hidden" name="path" value=(entry.id.as_str())>
                 <button
                     type="submit"
                     class="quiet-link cursor-pointer font-meta text-xs"
@@ -499,12 +503,9 @@ mod tests {
 
     #[test]
     fn bubbles_shape_their_states() {
-        let synced = Bubble::synced(&DiaryEntry {
-            id: "2026-07-27T14-30-45-04-00".to_string(),
-            written_at: 1_753_640_000,
-            body: "hello".to_string(),
-            reply_to: None,
-        });
+        let synced_entry =
+            DiaryEntry::from_parts("2026-07-27T14-30-45-04-00", 1_753_640_000, "hello");
+        let synced = Bubble::synced(&synced_entry);
         assert_eq!(synced.state_attr(), "synced");
         assert!(!synced.queued_look());
         assert_eq!(
@@ -515,12 +516,12 @@ mod tests {
         assert!(synced.reply_to_hidden());
         assert!(!synced.reply_hidden());
 
+        let mut pending_entry =
+            DiaryEntry::from_parts("2026-07-27T14-30-46-04-00", 1_753_640_001, "queued");
+        pending_entry.reply_to = Some("2026-07-27T14-30-45-04-00".to_string());
         let pending_quiet = Bubble::from_local(
             &LocalEntry {
-                id: "2026-07-27T14-30-46-04-00".to_string(),
-                written_at: 1_753_640_001,
-                body: "queued".to_string(),
-                reply_to: Some("2026-07-27T14-30-45-04-00".to_string()),
+                entry: pending_entry,
                 state: "pending".to_string(),
                 reason: None,
                 enqueued_at: 5,
@@ -535,6 +536,7 @@ mod tests {
         assert_eq!(pending_quiet.note_text(), "Jul 27, 2026 · 2:30 PM");
         assert!(!pending_quiet.reply_to_hidden());
         assert_eq!(pending_quiet.reply_to_text(), "↳ Jul 27, 2026 · 2:30 PM");
+        assert!(pending_quiet.reply_hidden());
 
         let pending_blocked = Bubble {
             state: BubbleState::Pending { blocked: true },
@@ -549,10 +551,7 @@ mod tests {
 
         let failed = Bubble::from_local(
             &LocalEntry {
-                id: "failed-99-1".to_string(),
-                written_at: 99,
-                body: "kept".to_string(),
-                reply_to: None,
+                entry: DiaryEntry::from_parts("failed-99-1", 99, "kept"),
                 state: "failed".to_string(),
                 reason: Some("rejected (HTTP 422)".to_string()),
                 enqueued_at: 1,
@@ -561,6 +560,7 @@ mod tests {
         );
         assert!(failed.queued_look());
         assert!(!failed.discard_hidden());
+        assert!(failed.reply_hidden());
         assert_eq!(
             failed.note_text(),
             "failed-99-1 · failed — rejected (HTTP 422)"

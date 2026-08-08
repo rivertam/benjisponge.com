@@ -6,15 +6,20 @@
 //!
 //! The query shapes follow docs/surrealdb-notes.md: explicit projections
 //! (`SELECT *` omits `option` fields holding `NONE` — `reply_to` is one),
-//! string keys via `record::id(id)`, keys returned from creates via
-//! `RETURN VALUE record::id(id)`, one `=` per delete.
+//! string keys via `record::id(id)`, keys returned
+//! from creates via `RETURN VALUE record::id(id)`, one `=` per delete.
 
-use serde::{Deserialize, Serialize};
+use std::ops::Deref;
+
+use serde::Deserialize;
 use surrealdb::types::SurrealValue;
 
 use crate::Db;
-use crate::contract::COLLISION_PROBES;
 use crate::eastern;
+use crate::entry::{ComposedEntry, EntryRejection, PROJECTION, accept_for_save};
+use crate::placement::{self, Occupant, Placement};
+
+pub use crate::entry::DiaryEntry;
 
 /// Transcript page size — the server page and the worker's offline SSR agree
 /// through this constant.
@@ -24,42 +29,44 @@ pub const PAGE_SIZE: usize = 20;
 /// surfacing a SurrealDB parse error as a fake outage.
 pub const MAX_PAGE: usize = 1_000_000;
 
-/// One stored entry. `id` is the Eastern public-path record key;
-/// `written_at` is UTC epoch seconds, the instant the key projects.
-/// `reply_to` is the parent entry's permalink when this message is a reply.
-#[derive(Clone, Debug, Deserialize, Serialize, SurrealValue)]
-pub struct DiaryEntry {
-    pub id: String,
-    pub written_at: i64,
-    pub body: String,
-    #[serde(default)]
-    pub reply_to: Option<String>,
-}
+/// Test stores share one server-row fixture so a new business field has one
+/// test-schema seam rather than separate store and sync copies.
+#[cfg(test)]
+pub(crate) const TEST_SCHEMA: &str = "\
+    DEFINE TABLE diary_entries SCHEMAFULL PERMISSIONS NONE;
+    DEFINE FIELD id ON diary_entries TYPE string;
+    DEFINE FIELD written_at ON diary_entries TYPE int;
+    DEFINE FIELD body ON diary_entries TYPE string;
+    DEFINE FIELD reply_to ON diary_entries TYPE option<string>;";
 
 /// The saved-or-deduped outcome [`save_entry`] reports.
+#[derive(Clone, Debug, PartialEq, Eq)]
 pub struct SavedWrite {
-    pub id: String,
-    pub written_at: i64,
+    pub entry: DiaryEntry,
     pub deduped: bool,
 }
 
+impl SavedWrite {
+    fn new(entry: DiaryEntry, deduped: bool) -> Self {
+        Self { entry, deduped }
+    }
+}
+
+impl Deref for SavedWrite {
+    type Target = DiaryEntry;
+
+    fn deref(&self) -> &Self::Target {
+        &self.entry
+    }
+}
+
 pub enum SaveError {
+    /// The remote's shared acceptance policy rejected this composed value.
+    Rejected(EntryRejection),
     /// Every probed second held a different entry — give up rather than
     /// stamp the entry minutes away from its composition time.
     Exhausted,
     Store(String),
-}
-
-/// Accept a reply target only when it is a real diary permalink (or absent).
-/// Empty / whitespace becomes `None`; anything else that does not parse is
-/// invalid — the page only offers reply on predicted ids, so a bad value is
-/// a bug or a tampered form, not something to store.
-pub fn normalize_reply_to(raw: Option<&str>) -> Option<Option<String>> {
-    match raw.map(str::trim).filter(|value| !value.is_empty()) {
-        None => Some(None),
-        Some(id) if eastern::parse_public_path(id).is_some() => Some(Some(id.to_string())),
-        Some(_) => None,
-    }
 }
 
 /// The record key a UTC epoch second projects to: the Eastern public path
@@ -89,7 +96,7 @@ pub async fn entry_page(db: &Db, page_number: usize) -> Result<(Vec<DiaryEntry>,
     // the DST-fold pair (…-04-00 before …-05-00) even sorts chronologically.
     let mut response = db
         .query(format!(
-            "SELECT record::id(id) AS id, written_at, body, reply_to FROM diary_entries \
+            "SELECT {PROJECTION} FROM diary_entries \
                  ORDER BY written_at DESC, id DESC LIMIT {PAGE_SIZE} START {start};
              SELECT count() FROM diary_entries GROUP ALL;"
         ))
@@ -107,13 +114,14 @@ pub async fn entry_page(db: &Db, page_number: usize) -> Result<(Vec<DiaryEntry>,
     Ok((entries, total))
 }
 
-/// Every entry, oldest first — the pull snapshot's source.
+/// Every entry, oldest first — the pull snapshot's source. (On a local
+/// store the extra state columns are simply not projected.)
 pub async fn all_entries(db: &Db) -> Result<Vec<DiaryEntry>, String> {
     let mut response = db
-        .query(
-            "SELECT record::id(id) AS id, written_at, body, reply_to FROM diary_entries \
-             ORDER BY written_at ASC, id ASC",
-        )
+        .query(format!(
+            "SELECT {PROJECTION} FROM diary_entries \
+             ORDER BY written_at ASC, id ASC"
+        ))
         .await
         .map_err(|error| error.to_string())?
         .check()
@@ -123,10 +131,9 @@ pub async fn all_entries(db: &Db) -> Result<Vec<DiaryEntry>, String> {
 
 pub async fn entry_by_id(db: &Db, id: &str) -> Result<Option<DiaryEntry>, String> {
     let mut response = db
-        .query(
-            "SELECT record::id(id) AS id, written_at, body, reply_to \
-             FROM type::record('diary_entries', $id)",
-        )
+        .query(format!(
+            "SELECT {PROJECTION} FROM type::record('diary_entries', $id)"
+        ))
         .bind(("id", id.to_string()))
         .await
         .map_err(|error| error.to_string())?
@@ -137,44 +144,30 @@ pub async fn entry_by_id(db: &Db, id: &str) -> Result<Option<DiaryEntry>, String
 }
 
 /// CREATE, not UPSERT: two entries in the same second would collide on the
-/// key, and overwriting a diary entry is worse than asking to resubmit.
-/// Two statement shapes rather than binding an Option: whether a bound
-/// `None` lands as SurrealQL `NONE` or `null` is exactly the kind of
-/// result-shape trap docs/surrealdb-notes.md exists for.
-pub async fn insert_entry(
-    db: &Db,
-    id: &str,
-    written_at: i64,
-    body: &str,
-    reply_to: Option<&str>,
-) -> Result<(), String> {
-    let statement = match reply_to {
-        Some(_) => {
-            "CREATE ONLY type::record('diary_entries', $id)
-             SET written_at = $written_at,
-                 body = $body,
-                 reply_to = $reply_to"
-        }
-        None => {
-            "CREATE ONLY type::record('diary_entries', $id)
-             SET written_at = $written_at,
-                 body = $body"
-        }
-    };
-    let mut query = db
-        .query(statement)
-        .bind(("id", id.to_string()))
-        .bind(("written_at", written_at))
-        .bind(("body", body.to_string()));
-    if let Some(reply_to) = reply_to {
-        query = query.bind(("reply_to", reply_to.to_string()));
-    }
-    query
+/// key, and overwriting a diary entry is worse than asking to resubmit. The
+/// canonical composed value is the whole row content; future optional fields
+/// do not create another SET/bind branch here.
+pub async fn insert_entry(db: &Db, entry: &DiaryEntry) -> Result<(), String> {
+    let mut response = db
+        .query(
+            "CREATE ONLY type::record('diary_entries', $id) CONTENT $entry \
+             RETURN VALUE record::id(id)",
+        )
+        .bind(("id", entry.id.clone()))
+        .bind(("entry", entry.composed.clone()))
         .await
         .map_err(|error| error.to_string())?
         .check()
         .map_err(|error| error.to_string())?;
-    Ok(())
+    let created: Option<String> = response.take(0).map_err(|error| error.to_string())?;
+    if created.as_deref() == Some(entry.id.as_str()) {
+        Ok(())
+    } else {
+        // Record permissions filter denied CREATEs to an empty successful
+        // result. Treat that as a failed write: direct sync must never
+        // acknowledge content the database did not actually persist.
+        Err("diary entry create returned no matching id".to_string())
+    }
 }
 
 /// Idempotent: deleting an already-deleted entry succeeds quietly.
@@ -188,73 +181,50 @@ pub async fn remove_entry(db: &Db, id: &str) -> Result<(), String> {
     Ok(())
 }
 
-fn same_content(existing: &DiaryEntry, body: &str, reply_to: Option<&str>) -> bool {
-    existing.body == body && existing.reply_to.as_deref() == reply_to
-}
-
 /// Replay-safe insert. The id derives from the entry's composition epoch; a
-/// collision holding the SAME body and reply target is a replay of a write
-/// whose response was lost, so it counts as saved. A different body (or a
-/// different reply target) probes forward one second at a time, re-running
-/// the dedupe check at EVERY probed id — the killer replay is "bumped to
-/// T+1, response lost, retried from T", which must land on the T+1 dedupe,
-/// not insert again at T+2. Check-first, then CREATE, then re-check when
-/// CREATE fails: a lost race is indistinguishable from a replayed twin, and
-/// neither is an error (never sniff the store's error strings). Never
-/// overwrites.
+/// collision holding the SAME Entry Content is a replay of a write whose
+/// response was lost, so it counts as saved. Different content probes
+/// forward one second at a time, re-running the dedupe check at EVERY probed id — the killer
+/// replay is "bumped to T+1, response lost, retried from T", which must land
+/// on the T+1 dedupe, not insert again at T+2. Check-first, then CREATE,
+/// then re-check when CREATE fails: a lost race is indistinguishable from a
+/// replayed twin, and neither is an error (never sniff the store's error
+/// strings). Never overwrites.
 ///
 /// Invariant: the stored `written_at` is always the epoch its id projects
 /// from, so `ORDER BY written_at DESC, id DESC` and the permalink agree
 /// about when an entry happened.
 pub async fn save_entry(
     db: &Db,
-    written_at: i64,
-    body: &str,
-    reply_to: Option<&str>,
+    entry: ComposedEntry,
+    validation_now: i64,
 ) -> Result<SavedWrite, SaveError> {
-    for offset in 0..COLLISION_PROBES {
-        let epoch = written_at + offset;
-        let Some(id) = entry_key(epoch) else {
-            return Err(SaveError::Store(format!("unprojectable epoch {epoch}")));
-        };
-        match entry_by_id(db, &id).await.map_err(SaveError::Store)? {
-            Some(existing) if same_content(&existing, body, reply_to) => {
-                return Ok(SavedWrite {
-                    id,
-                    written_at: existing.written_at,
-                    deduped: true,
-                });
-            }
-            Some(_) => continue,
-            None => {}
-        }
-        match insert_entry(db, &id, epoch, body, reply_to).await {
-            Ok(()) => {
-                return Ok(SavedWrite {
-                    id,
-                    written_at: epoch,
-                    deduped: false,
-                });
-            }
-            Err(error) => match entry_by_id(db, &id).await.map_err(SaveError::Store)? {
-                Some(existing) if same_content(&existing, body, reply_to) => {
-                    return Ok(SavedWrite {
-                        id,
-                        written_at: existing.written_at,
-                        deduped: true,
-                    });
-                }
-                Some(_) => continue,
-                None => return Err(SaveError::Store(error)),
-            },
-        }
+    let entry = accept_for_save(entry, validation_now).map_err(SaveError::Rejected)?;
+    let placed = placement::place(
+        &entry,
+        |epoch| {
+            entry_key(epoch).ok_or_else(|| SaveError::Store(format!("unprojectable epoch {epoch}")))
+        },
+        |id| async move {
+            entry_by_id(db, &id)
+                .await
+                .map(|entry| entry.map(Occupant::Known))
+                .map_err(SaveError::Store)
+        },
+        |candidate| async move { insert_entry(db, &candidate).await.map_err(SaveError::Store) },
+    )
+    .await?;
+    match placed {
+        Placement::Placed(entry) => Ok(SavedWrite::new(entry, false)),
+        Placement::Deduped(entry) => Ok(SavedWrite::new(entry, true)),
+        Placement::Exhausted => Err(SaveError::Exhausted),
     }
-    Err(SaveError::Exhausted)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::placement::COLLISION_PROBES;
 
     /// Same `mem://` isomorphism proof the outbox tests run: these functions
     /// execute against the identical handle type the server and the device
@@ -267,17 +237,11 @@ mod tests {
             .await
             .expect("mem engine opens");
         db.use_ns("diary").use_db("diary").await.expect("ns");
-        db.query(
-            "DEFINE TABLE diary_entries SCHEMAFULL PERMISSIONS NONE;
-             DEFINE FIELD id ON diary_entries TYPE string;
-             DEFINE FIELD written_at ON diary_entries TYPE int;
-             DEFINE FIELD body ON diary_entries TYPE string;
-             DEFINE FIELD reply_to ON diary_entries TYPE option<string>;",
-        )
-        .await
-        .expect("schema applies")
-        .check()
-        .expect("schema statements succeed");
+        db.query(TEST_SCHEMA)
+            .await
+            .expect("schema applies")
+            .check()
+            .expect("schema statements succeed");
         db
     }
 
@@ -285,9 +249,63 @@ mod tests {
     fn saved(result: Result<SavedWrite, SaveError>) -> SavedWrite {
         match result {
             Ok(write) => write,
+            Err(SaveError::Rejected(rejection)) => panic!("save rejected: {rejection:?}"),
             Err(SaveError::Exhausted) => panic!("save exhausted its probes"),
             Err(SaveError::Store(error)) => panic!("store failed: {error}"),
         }
+    }
+
+    async fn save_at(db: &Db, written_at: i64, body: &str) -> Result<SavedWrite, SaveError> {
+        save_entry(db, ComposedEntry::new(written_at, body), written_at).await
+    }
+
+    async fn save_reply_at(
+        db: &Db,
+        written_at: i64,
+        body: &str,
+        reply_to: &str,
+    ) -> Result<SavedWrite, SaveError> {
+        save_entry(
+            db,
+            ComposedEntry::new(written_at, body).with_reply_to(Some(reply_to.to_string())),
+            written_at,
+        )
+        .await
+    }
+
+    #[tokio::test]
+    async fn save_rejects_before_touching_the_store() {
+        use crate::entry::{EntryRejection, MAX_ENTRY_CHARS};
+
+        let db = store().await;
+        let result = save_entry(
+            &db,
+            ComposedEntry::new(100, "x".repeat(MAX_ENTRY_CHARS + 1)),
+            100,
+        )
+        .await;
+        assert!(matches!(
+            result,
+            Err(SaveError::Rejected(EntryRejection::BodyTooLong))
+        ));
+        assert!(all_entries(&db).await.unwrap().is_empty());
+    }
+
+    #[tokio::test]
+    async fn save_rejects_a_malformed_reply_target_before_touching_the_store() {
+        let db = store().await;
+        let result = save_entry(
+            &db,
+            ComposedEntry::new(100, "reply")
+                .with_reply_to(Some("/diary/not-a-permalink".to_string())),
+            100,
+        )
+        .await;
+        assert!(matches!(
+            result,
+            Err(SaveError::Rejected(EntryRejection::InvalidReplyTarget))
+        ));
+        assert!(all_entries(&db).await.unwrap().is_empty());
     }
 
     #[test]
@@ -316,19 +334,6 @@ mod tests {
     }
 
     #[test]
-    fn reply_targets_must_be_permalinks() {
-        assert_eq!(normalize_reply_to(None), Some(None));
-        assert_eq!(normalize_reply_to(Some("")), Some(None));
-        assert_eq!(normalize_reply_to(Some("  ")), Some(None));
-        assert_eq!(
-            normalize_reply_to(Some("2026-07-27T14-30-45-04-00")),
-            Some(Some("2026-07-27T14-30-45-04-00".to_string()))
-        );
-        assert_eq!(normalize_reply_to(Some("failed-99-1")), None);
-        assert_eq!(normalize_reply_to(Some("garbage")), None);
-    }
-
-    #[test]
     fn collision_probes_stay_valid_across_the_fold() {
         // Probing +1s across the fall-back instant keeps producing distinct,
         // parseable keys. (They are NOT string-monotonic across the fold —
@@ -346,11 +351,23 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn typed_entry_content_round_trips_through_content_write() {
+        let db = store().await;
+        let parent = "2026-07-27T14-30-45-04-00";
+        let entry = DiaryEntry::new(
+            entry_key(100).unwrap(),
+            ComposedEntry::new(100, "typed row").with_reply_to(Some(parent.to_string())),
+        );
+        insert_entry(&db, &entry).await.unwrap();
+        assert_eq!(entry_by_id(&db, &entry.id).await.unwrap(), Some(entry));
+    }
+
+    #[tokio::test]
     async fn save_dedupes_a_replayed_twin() {
         let db = store().await;
-        let first = saved(save_entry(&db, 100, "Dear diary,", None).await);
+        let first = saved(save_at(&db, 100, "Dear diary,").await);
         assert!(!first.deduped);
-        let replay = saved(save_entry(&db, 100, "Dear diary,", None).await);
+        let replay = saved(save_at(&db, 100, "Dear diary,").await);
         assert!(replay.deduped);
         assert_eq!(replay.id, first.id);
         assert_eq!(replay.written_at, first.written_at);
@@ -361,8 +378,8 @@ mod tests {
     #[tokio::test]
     async fn save_probes_forward_on_a_different_body() {
         let db = store().await;
-        let first = saved(save_entry(&db, 100, "one", None).await);
-        let second = saved(save_entry(&db, 100, "two", None).await);
+        let first = saved(save_at(&db, 100, "one").await);
+        let second = saved(save_at(&db, 100, "two").await);
         assert_eq!(second.written_at, 101);
         assert_ne!(second.id, first.id);
         // The stored written_at is always the epoch the id projects from.
@@ -370,27 +387,29 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn save_probes_forward_when_only_the_reply_target_differs() {
+    async fn same_body_with_a_different_parent_is_not_a_replay() {
         let db = store().await;
-        let parent_a = "2026-07-27T14-30-45-04-00";
-        let parent_b = "2026-07-27T14-30-46-04-00";
-        let first = saved(save_entry(&db, 100, "same words", Some(parent_a)).await);
-        let second = saved(save_entry(&db, 100, "same words", Some(parent_b)).await);
-        assert_eq!(second.written_at, 101);
-        assert_ne!(second.id, first.id);
-        let fetched = entry_by_id(&db, &second.id).await.unwrap().unwrap();
-        assert_eq!(fetched.reply_to.as_deref(), Some(parent_b));
+        let parent = "2026-07-27T14-30-45-04-00";
+        let top_level = saved(save_at(&db, 100, "same words").await);
+        let reply = saved(save_reply_at(&db, 100, "same words", parent).await);
+        assert_eq!(reply.written_at, 101);
+        assert_ne!(reply.id, top_level.id);
+        assert_eq!(reply.reply_to.as_deref(), Some(parent));
+
+        let replay = saved(save_reply_at(&db, 100, "same words", parent).await);
+        assert!(replay.deduped);
+        assert_eq!(replay.id, reply.id);
     }
 
     #[tokio::test]
     async fn the_killer_replay_lands_on_the_bumped_dedupe() {
         let db = store().await;
-        saved(save_entry(&db, 100, "occupant", None).await);
+        saved(save_at(&db, 100, "occupant").await);
         // Bumped to T+1, response lost…
-        let bumped = saved(save_entry(&db, 100, "mine", None).await);
+        let bumped = saved(save_at(&db, 100, "mine").await);
         assert_eq!(bumped.written_at, 101);
         // …retried from T: must dedupe at T+1, never insert at T+2.
-        let retried = saved(save_entry(&db, 100, "mine", None).await);
+        let retried = saved(save_at(&db, 100, "mine").await);
         assert!(retried.deduped);
         assert_eq!(retried.id, bumped.id);
         let (_, total) = entry_page(&db, 1).await.unwrap();
@@ -401,14 +420,14 @@ mod tests {
     async fn save_exhausts_after_bounded_probes() {
         let db = store().await;
         for offset in 0..COLLISION_PROBES {
-            let saved = save_entry(&db, 100 + offset, &format!("filler {offset}"), None)
+            let saved = save_at(&db, 100 + offset, &format!("filler {offset}"))
                 .await
                 .ok()
                 .unwrap();
             assert_eq!(saved.written_at, 100 + offset);
         }
         assert!(matches!(
-            save_entry(&db, 100, "no room", None).await,
+            save_at(&db, 100, "no room").await,
             Err(SaveError::Exhausted)
         ));
     }
@@ -417,7 +436,7 @@ mod tests {
     async fn pages_read_newest_first_with_totals() {
         let db = store().await;
         for (epoch, body) in [(100, "oldest"), (200, "middle"), (300, "newest")] {
-            saved(save_entry(&db, epoch, body, None).await);
+            saved(save_at(&db, epoch, body).await);
         }
         let (entries, total) = entry_page(&db, 1).await.unwrap();
         assert_eq!(total, 3);
@@ -425,26 +444,9 @@ mod tests {
         assert_eq!(bodies, ["newest", "middle", "oldest"]);
         let fetched = entry_by_id(&db, &entries[0].id).await.unwrap().unwrap();
         assert_eq!(fetched.body, "newest");
-        assert_eq!(fetched.reply_to, None);
         remove_entry(&db, &entries[0].id).await.unwrap();
         remove_entry(&db, &entries[0].id).await.unwrap();
         let (_, total) = entry_page(&db, 1).await.unwrap();
         assert_eq!(total, 2);
-    }
-
-    #[tokio::test]
-    async fn reply_to_round_trips_through_explicit_projection() {
-        let db = store().await;
-        let parent = "2026-07-27T14-30-45-04-00";
-        let reply = saved(save_entry(&db, 100, "a reply", Some(parent)).await);
-        let fetched = entry_by_id(&db, &reply.id).await.unwrap().unwrap();
-        assert_eq!(fetched.reply_to.as_deref(), Some(parent));
-        let (page, _) = entry_page(&db, 1).await.unwrap();
-        assert_eq!(page[0].reply_to.as_deref(), Some(parent));
-        // A top-level neighbour must still deserialize with reply_to = None
-        // (the SELECT * NONE-omission trap this projection exists to avoid).
-        let _ = saved(save_entry(&db, 200, "top level", None).await);
-        let all = all_entries(&db).await.unwrap();
-        assert_eq!(all[1].reply_to, None);
     }
 }

@@ -126,7 +126,7 @@ function hookForm() {
 function replyTarget() {
   const input = document.getElementById("diary-reply-to");
   const value = input && input.value.trim();
-  return value || null;
+  return value || undefined;
 }
 
 function setReplyTarget(id, box) {
@@ -174,10 +174,12 @@ function save(form, box) {
     id: null,
     written_at: Math.floor(Date.now() / 1000),
     body: raw.replace(/\r\n?/g, "\n").trim(),
-    reply_to: parent,
     state: "draft",
     reason: null,
   };
+  if (parent) {
+    draft.reply_to = parent;
+  }
   const bubble = appendBubble(draft, true);
   box.value = "";
   clearReplyTarget(box);
@@ -187,8 +189,20 @@ function save(form, box) {
 async function persist(form, box, raw, draft, bubble, parent) {
   try {
     const wasm = await ensureWasm();
+    const content = { written_at: draft.written_at, body: raw };
+    // Absence is the canonical top-level-entry shape. In particular, do not
+    // send a null optional field through the exact wire decoder.
+    if (parent) {
+      content.reply_to = parent;
+    }
     const entry = JSON.parse(
-      await wasm.diary_enqueue(draft.written_at, raw, Date.now(), parent),
+      await wasm.diary_enqueue(
+        JSON.stringify({
+          version: wasm.diary_wire_version(),
+          entry: content,
+          enqueued_at_ms: Date.now(),
+        }),
+      ),
     );
     const existing = byId(entry.id);
     if (existing && existing !== bubble) {
@@ -262,37 +276,45 @@ function applyEntry(bubble, entry) {
   if (!bubble) {
     return;
   }
-  if (entry.id) {
-    bubble.dataset.id = entry.id;
-  }
-  bubble.dataset.state = entry.state;
-  bubble.dataset.replyTo = entry.reply_to || "";
   const body = bubble.querySelector(".diary-body");
   if (body) {
     body.textContent = entry.body;
   }
+  const parent = entry.reply_to || "";
+  bubble.dataset.replyTo = parent;
   const replyTo = bubble.querySelector(".diary-reply-to");
   const replyLink = replyTo && replyTo.querySelector("a");
   if (replyTo && replyLink) {
-    if (entry.reply_to) {
+    if (parent) {
       replyTo.hidden = false;
-      replyLink.href = SCOPE + "/" + encodeURIComponent(entry.reply_to);
-      replyLink.textContent = "↳ " + stampOf({ id: entry.reply_to, written_at: 0 });
+      replyLink.href = SCOPE + "/" + encodeURIComponent(parent);
+      replyLink.textContent = "↳ " + stampOf({ id: parent, written_at: 0 });
     } else {
       replyTo.hidden = true;
       replyLink.removeAttribute("href");
       replyLink.textContent = "";
     }
   }
+  applyEntryState(bubble, entry);
+}
+
+/* Identity and sync-state presentation are one transition. Business
+ * presentation stays in applyEntry; a delivery acknowledgement can carry
+ * only the SavedRef and still unlock every state-dependent control. */
+function applyEntryState(bubble, entry) {
+  if (entry.id) {
+    bubble.dataset.id = entry.id;
+  }
+  bubble.dataset.state = entry.state;
   const note = bubble.querySelector(".diary-note");
-  const link = bubble.querySelector("p.mt-2 > a.quiet-link");
+  const link = bubble.querySelector(".diary-permalink");
   const reply = bubble.querySelector(".diary-reply");
   const discard = bubble.querySelector(".diary-discard");
   const queuedLook =
     entry.state === "failed" || (entry.state === "pending" && lastBlocked);
   bubble.classList.toggle("diary-message-queued", Boolean(queuedLook));
   if (reply) {
-    reply.hidden = !entry.id;
+    reply.hidden = entry.state !== "synced" || !entry.id;
   }
   if (entry.state === "synced") {
     link.hidden = false;
@@ -405,16 +427,14 @@ async function renderFromStore() {
  * store — one path for labels, prunes, and mid-flush page opens. */
 function onReport(report) {
   lastBlocked = report.blocked;
-  for (const ref of report.saved_entries || []) {
+  for (const ref of report.saved_refs || report.saved_entries || []) {
     const bubble = byId(ref.qid);
     if (!bubble || bubble.dataset.state === "synced") {
       continue;
     }
-    applyEntry(bubble, {
+    applyEntryState(bubble, {
       id: ref.id,
       written_at: ref.written_at,
-      body: ref.body,
-      reply_to: ref.reply_to || null,
       state: "synced",
       reason: null,
     });
@@ -494,7 +514,13 @@ function hookReplies() {
       return;
     }
     const bubble = button.closest(".diary-message");
-    const id = bubble && bubble.dataset.id;
+    // A reply can point only at a server-confirmed permalink. Keep this
+    // guard even though Rust markup and applyEntryState hide the control:
+    // programmatic clicks must not bypass the state rule.
+    if (!bubble || bubble.dataset.state !== "synced") {
+      return;
+    }
+    const id = bubble.dataset.id;
     if (!id) {
       return;
     }
