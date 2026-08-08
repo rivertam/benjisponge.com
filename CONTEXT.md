@@ -74,7 +74,9 @@ _Avoid_: Delivery flag
 - A synced **Device Entry** exposes its key as an **Entry Reference**
 - Only a synced **Device Entry** exposes its **Entry Reference** for selection
   as a **Reply Target**
-- Every newly persisted **Diary Entry** is stamped with one **Entry Generation**
+- Every current writer stamps a newly persisted **Diary Entry** with one
+  **Entry Generation**; a still-live predecessor token may create only a
+  legacy unversioned row during the first rollout
 - A direct-sync token may read or create only rows whose **Entry Generation**
   it understands
 - An unprojectable legacy entry is failed under a **Recovery Key**, which can
